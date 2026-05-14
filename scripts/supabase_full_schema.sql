@@ -97,7 +97,7 @@ CREATE TABLE IF NOT EXISTS fl_clients (
 CREATE TABLE IF NOT EXISTS fl_articles (
   id                       TEXT PRIMARY KEY,
   nom                      TEXT NOT NULL,
-  "nomAr"                  TEXT DEFAULT '',
+  nom_ar                   TEXT DEFAULT '',
   famille                  TEXT DEFAULT '',
   unite                    TEXT DEFAULT 'kg',
   um                       TEXT,
@@ -152,6 +152,126 @@ CREATE TABLE IF NOT EXISTS fl_articles (
   created_at               TIMESTAMPTZ DEFAULT now(),
   updated_at               TIMESTAMPTZ DEFAULT now()
 );
+
+-- ============================================================
+-- ALTER TABLE pour tables pre-existantes (idempotent)
+-- Si fl_users/fl_clients/fl_articles existent deja, on ajoute
+-- les colonnes manquantes sans toucher les donnees existantes.
+-- ============================================================
+
+-- fl_users : colonnes additionnelles
+ALTER TABLE fl_users ADD COLUMN IF NOT EXISTS access_type TEXT;
+ALTER TABLE fl_users ADD COLUMN IF NOT EXISTS secteur TEXT;
+ALTER TABLE fl_users ADD COLUMN IF NOT EXISTS phone TEXT;
+ALTER TABLE fl_users ADD COLUMN IF NOT EXISTS telephone TEXT;
+ALTER TABLE fl_users ADD COLUMN IF NOT EXISTS photo_url TEXT;
+ALTER TABLE fl_users ADD COLUMN IF NOT EXISTS can_view_achat BOOLEAN DEFAULT false;
+ALTER TABLE fl_users ADD COLUMN IF NOT EXISTS can_view_commercial BOOLEAN DEFAULT false;
+ALTER TABLE fl_users ADD COLUMN IF NOT EXISTS can_view_logistique BOOLEAN DEFAULT false;
+ALTER TABLE fl_users ADD COLUMN IF NOT EXISTS can_view_stock BOOLEAN DEFAULT false;
+ALTER TABLE fl_users ADD COLUMN IF NOT EXISTS can_view_cash BOOLEAN DEFAULT false;
+ALTER TABLE fl_users ADD COLUMN IF NOT EXISTS can_view_finance BOOLEAN DEFAULT false;
+ALTER TABLE fl_users ADD COLUMN IF NOT EXISTS can_view_recap BOOLEAN DEFAULT false;
+ALTER TABLE fl_users ADD COLUMN IF NOT EXISTS can_view_database BOOLEAN DEFAULT false;
+ALTER TABLE fl_users ADD COLUMN IF NOT EXISTS objectif_clients NUMERIC;
+ALTER TABLE fl_users ADD COLUMN IF NOT EXISTS objectif_tonnage NUMERIC;
+ALTER TABLE fl_users ADD COLUMN IF NOT EXISTS objectif_journalier_ca NUMERIC;
+ALTER TABLE fl_users ADD COLUMN IF NOT EXISTS objectif_hebdomadaire_ca NUMERIC;
+ALTER TABLE fl_users ADD COLUMN IF NOT EXISTS objectif_mensuel_ca NUMERIC;
+ALTER TABLE fl_users ADD COLUMN IF NOT EXISTS objectif_journalier_clients NUMERIC;
+ALTER TABLE fl_users ADD COLUMN IF NOT EXISTS objectif_hebdomadaire_clients NUMERIC;
+ALTER TABLE fl_users ADD COLUMN IF NOT EXISTS objectif_mensuel_clients NUMERIC;
+ALTER TABLE fl_users ADD COLUMN IF NOT EXISTS notif_achat BOOLEAN DEFAULT false;
+ALTER TABLE fl_users ADD COLUMN IF NOT EXISTS notif_commercial BOOLEAN DEFAULT false;
+ALTER TABLE fl_users ADD COLUMN IF NOT EXISTS notif_livraison BOOLEAN DEFAULT false;
+ALTER TABLE fl_users ADD COLUMN IF NOT EXISTS notif_recap BOOLEAN DEFAULT false;
+ALTER TABLE fl_users ADD COLUMN IF NOT EXISTS notif_besoin_achat BOOLEAN DEFAULT false;
+ALTER TABLE fl_users ADD COLUMN IF NOT EXISTS fournisseur_id TEXT;
+ALTER TABLE fl_users ADD COLUMN IF NOT EXISTS client_id TEXT;
+ALTER TABLE fl_users ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT now();
+
+-- fl_clients : colonnes additionnelles
+ALTER TABLE fl_clients ADD COLUMN IF NOT EXISTS zone TEXT DEFAULT '';
+ALTER TABLE fl_clients ADD COLUMN IF NOT EXISTS type TEXT DEFAULT 'autre';
+ALTER TABLE fl_clients ADD COLUMN IF NOT EXISTS "typeAutre" TEXT;
+ALTER TABLE fl_clients ADD COLUMN IF NOT EXISTS taille TEXT DEFAULT '50-100kg';
+ALTER TABLE fl_clients ADD COLUMN IF NOT EXISTS "typeProduits" TEXT DEFAULT 'moyenne';
+ALTER TABLE fl_clients ADD COLUMN IF NOT EXISTS rotation TEXT DEFAULT 'journalier';
+ALTER TABLE fl_clients ADD COLUMN IF NOT EXISTS "modalitePaiement" TEXT;
+ALTER TABLE fl_clients ADD COLUMN IF NOT EXISTS "plafondCredit" NUMERIC;
+ALTER TABLE fl_clients ADD COLUMN IF NOT EXISTS "creditAutorise" BOOLEAN DEFAULT false;
+ALTER TABLE fl_clients ADD COLUMN IF NOT EXISTS "delaiRecouvrement" TEXT;
+ALTER TABLE fl_clients ADD COLUMN IF NOT EXISTS "creditWorkflowValidateur" TEXT;
+ALTER TABLE fl_clients ADD COLUMN IF NOT EXISTS "creditWorkflowValidateurNom" TEXT;
+ALTER TABLE fl_clients ADD COLUMN IF NOT EXISTS "creditStatut" TEXT;
+ALTER TABLE fl_clients ADD COLUMN IF NOT EXISTS "creditSolde" NUMERIC DEFAULT 0;
+ALTER TABLE fl_clients ADD COLUMN IF NOT EXISTS "gpsLat" NUMERIC;
+ALTER TABLE fl_clients ADD COLUMN IF NOT EXISTS "gpsLng" NUMERIC;
+ALTER TABLE fl_clients ADD COLUMN IF NOT EXISTS ice TEXT;
+ALTER TABLE fl_clients ADD COLUMN IF NOT EXISTS "createdBy" TEXT DEFAULT '';
+ALTER TABLE fl_clients ADD COLUMN IF NOT EXISTS "createdAt" TEXT DEFAULT '';
+ALTER TABLE fl_clients ADD COLUMN IF NOT EXISTS "prevendeurId" TEXT;
+ALTER TABLE fl_clients ADD COLUMN IF NOT EXISTS "teamLeadId" TEXT;
+ALTER TABLE fl_clients ADD COLUMN IF NOT EXISTS "defaultHeureLivraison" TEXT;
+ALTER TABLE fl_clients ADD COLUMN IF NOT EXISTS segment TEXT DEFAULT 'standard';
+ALTER TABLE fl_clients ADD COLUMN IF NOT EXISTS "loyaltyPoints" NUMERIC DEFAULT 0;
+ALTER TABLE fl_clients ADD COLUMN IF NOT EXISTS "loyaltyOptIn" BOOLEAN DEFAULT false;
+ALTER TABLE fl_clients ADD COLUMN IF NOT EXISTS categorie TEXT;
+ALTER TABLE fl_clients ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT now();
+
+-- fl_articles : colonnes additionnelles
+-- Note: la colonne s'appelle nom_ar (snake_case) dans la table existante
+ALTER TABLE fl_articles ADD COLUMN IF NOT EXISTS nom_ar TEXT DEFAULT '';
+ALTER TABLE fl_articles ADD COLUMN IF NOT EXISTS famille TEXT DEFAULT '';
+ALTER TABLE fl_articles ADD COLUMN IF NOT EXISTS unite TEXT DEFAULT 'kg';
+ALTER TABLE fl_articles ADD COLUMN IF NOT EXISTS um TEXT;
+ALTER TABLE fl_articles ADD COLUMN IF NOT EXISTS "colisageParUM" NUMERIC;
+ALTER TABLE fl_articles ADD COLUMN IF NOT EXISTS "colisageCaisses" NUMERIC;
+ALTER TABLE fl_articles ADD COLUMN IF NOT EXISTS "colisageDemiCaisses" NUMERIC;
+ALTER TABLE fl_articles ADD COLUMN IF NOT EXISTS "stockDisponible" NUMERIC DEFAULT 0;
+ALTER TABLE fl_articles ADD COLUMN IF NOT EXISTS "stockDefect" NUMERIC DEFAULT 0;
+ALTER TABLE fl_articles ADD COLUMN IF NOT EXISTS "stockReel" NUMERIC;
+ALTER TABLE fl_articles ADD COLUMN IF NOT EXISTS "stockReelDate" TEXT;
+ALTER TABLE fl_articles ADD COLUMN IF NOT EXISTS "stockReelSaisiPar" TEXT;
+ALTER TABLE fl_articles ADD COLUMN IF NOT EXISTS "stockTheorique" NUMERIC;
+ALTER TABLE fl_articles ADD COLUMN IF NOT EXISTS "shelfLifeJours" NUMERIC;
+ALTER TABLE fl_articles ADD COLUMN IF NOT EXISTS "alerteShelfLifeJours" NUMERIC DEFAULT 2;
+ALTER TABLE fl_articles ADD COLUMN IF NOT EXISTS "prixLiquidation" NUMERIC;
+ALTER TABLE fl_articles ADD COLUMN IF NOT EXISTS lots JSONB DEFAULT '[]';
+ALTER TABLE fl_articles ADD COLUMN IF NOT EXISTS "prixAchat" NUMERIC DEFAULT 0;
+ALTER TABLE fl_articles ADD COLUMN IF NOT EXISTS "pvMethode" TEXT DEFAULT 'pourcentage';
+ALTER TABLE fl_articles ADD COLUMN IF NOT EXISTS "pvValeur" NUMERIC DEFAULT 0;
+ALTER TABLE fl_articles ADD COLUMN IF NOT EXISTS "margeMethode" TEXT;
+ALTER TABLE fl_articles ADD COLUMN IF NOT EXISTS "historiquePrixAchat" JSONB DEFAULT '[]';
+ALTER TABLE fl_articles ADD COLUMN IF NOT EXISTS photos JSONB DEFAULT '[]';
+ALTER TABLE fl_articles ADD COLUMN IF NOT EXISTS actif BOOLEAN DEFAULT true;
+ALTER TABLE fl_articles ADD COLUMN IF NOT EXISTS "catalogueVisible" BOOLEAN DEFAULT true;
+ALTER TABLE fl_articles ADD COLUMN IF NOT EXISTS "marketplaceActif" BOOLEAN DEFAULT false;
+ALTER TABLE fl_articles ADD COLUMN IF NOT EXISTS "marketplaceStatut" TEXT DEFAULT 'disponible';
+ALTER TABLE fl_articles ADD COLUMN IF NOT EXISTS "marketplaceCommentaire" TEXT;
+ALTER TABLE fl_articles ADD COLUMN IF NOT EXISTS "marketplacePrixPublic" NUMERIC DEFAULT 0;
+ALTER TABLE fl_articles ADD COLUMN IF NOT EXISTS "marketplacePromo" JSONB;
+ALTER TABLE fl_articles ADD COLUMN IF NOT EXISTS "marketplaceSeuilShortStock" NUMERIC;
+ALTER TABLE fl_articles ADD COLUMN IF NOT EXISTS "marketplaceTags" JSONB DEFAULT '[]';
+ALTER TABLE fl_articles ADD COLUMN IF NOT EXISTS "marketplaceOrdre" NUMERIC DEFAULT 0;
+ALTER TABLE fl_articles ADD COLUMN IF NOT EXISTS "marketplaceDescription" TEXT;
+ALTER TABLE fl_articles ADD COLUMN IF NOT EXISTS "marketplaceDescriptionAr" TEXT;
+ALTER TABLE fl_articles ADD COLUMN IF NOT EXISTS "prixCHR" NUMERIC;
+ALTER TABLE fl_articles ADD COLUMN IF NOT EXISTS "prixMarchand" NUMERIC;
+ALTER TABLE fl_articles ADD COLUMN IF NOT EXISTS "prixParticulier" NUMERIC;
+ALTER TABLE fl_articles ADD COLUMN IF NOT EXISTS "promoCHR" NUMERIC;
+ALTER TABLE fl_articles ADD COLUMN IF NOT EXISTS "promoMarchand" NUMERIC;
+ALTER TABLE fl_articles ADD COLUMN IF NOT EXISTS "promoParticulier" NUMERIC;
+ALTER TABLE fl_articles ADD COLUMN IF NOT EXISTS statut_web TEXT DEFAULT 'disponible';
+ALTER TABLE fl_articles ADD COLUMN IF NOT EXISTS visible_web BOOLEAN DEFAULT false;
+ALTER TABLE fl_articles ADD COLUMN IF NOT EXISTS promo_active BOOLEAN DEFAULT false;
+ALTER TABLE fl_articles ADD COLUMN IF NOT EXISTS promo_taux NUMERIC DEFAULT 0;
+ALTER TABLE fl_articles ADD COLUMN IF NOT EXISTS promo_label TEXT;
+ALTER TABLE fl_articles ADD COLUMN IF NOT EXISTS promo_fin TEXT;
+ALTER TABLE fl_articles ADD COLUMN IF NOT EXISTS criteres_qualite JSONB DEFAULT '{}';
+ALTER TABLE fl_articles ADD COLUMN IF NOT EXISTS tags JSONB DEFAULT '[]';
+ALTER TABLE fl_articles ADD COLUMN IF NOT EXISTS position_catalogue NUMERIC DEFAULT 0;
+ALTER TABLE fl_articles ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT now();
 
 -- ============================================================
 -- 4. fl_fournisseurs
@@ -590,7 +710,7 @@ CREATE OR REPLACE VIEW v_marketplace_catalogue AS
 SELECT
   id,
   nom,
-  "nomAr"                AS nom_ar,
+  nom_ar,
   famille,
   unite,
   photo,
