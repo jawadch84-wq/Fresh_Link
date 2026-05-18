@@ -126,6 +126,31 @@ const ROLE_TEMPLATES: RoleTemplate[] = [
     },
   },
   {
+    id: "livreur_interne",
+    label: "Livreur Interne",
+    labelAr: "السائق الداخلي",
+    color: "bg-yellow-100 border-yellow-400 text-yellow-900",
+    icon: "M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0",
+    description: "Employé Empire Fresh — BL, tournée, encaissement, retours clients",
+    perms: {
+      perm_view_logistique: true, perm_view_livraison: true,
+      perm_validate_bl: true, perm_manage_retour: true,
+      perm_view_cash: true, perm_validate_cash: true,
+    },
+  },
+  {
+    id: "livreur_externe",
+    label: "Livreur Externe",
+    labelAr: "السائق الخارجي",
+    color: "bg-orange-100 border-orange-400 text-orange-900",
+    icon: "M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1",
+    description: "Prestataire / sous-traitant — BL et signature uniquement, pas d'accès aux prix ni au cash",
+    perms: {
+      perm_view_logistique: true, perm_view_livraison: true,
+      perm_validate_bl: true, perm_manage_retour: true,
+    },
+  },
+  {
     id: "logisticien",
     label: "Logisticien",
     labelAr: "مسؤول اللوجستيك",
@@ -409,7 +434,7 @@ const ALL_ROLES: UserRole[] = [
   "super_super_admin","super_admin","admin","resp_commercial","team_leader",
   "cash_man","financier","comptable",
   "rh_manager",
-  "prevendeur","resp_logistique","magasinier","dispatcheur","livreur",
+  "prevendeur","resp_logistique","magasinier","dispatcheur","livreur","livreur_interne","livreur_externe",
   "acheteur","ctrl_achat","ctrl_prep",
   "client","fournisseur",
   "investisseur","qualite","it_admin","auditeur",
@@ -423,7 +448,7 @@ const USER_GRADE_CATEGORIES = [
   { id: "finance", label: "💰 Finance & Comptabilité", labelAr: "المالية", roles: ["financier", "cash_man", "comptable", "charge_recouvrement"] },
   { id: "rh", label: "👥 RH & Administration", labelAr: "الموارد البشرية", roles: ["rh_manager", "auditeur", "it_admin"] },
   { id: "qualite", label: "✅ Qualité", labelAr: "الجودة", roles: ["qualite", "chef_depot"] },
-  { id: "terrain", label: "🚛 Terrain & Opérations", labelAr: "الميدان", roles: ["prevendeur", "magasinier", "dispatcheur", "livreur", "acheteur", "ctrl_achat", "ctrl_prep", "suivi_commande"] },
+  { id: "terrain", label: "🚛 Terrain & Opérations", labelAr: "الميدان", roles: ["prevendeur", "magasinier", "dispatcheur", "livreur", "livreur_interne", "livreur_externe", "acheteur", "ctrl_achat", "ctrl_prep", "suivi_commande"] },
   { id: "investisseurs", label: "📈 Investisseurs", labelAr: "المستثمرون", roles: ["investisseur"] },
   { id: "clients_marche", label: "🏪 Clients — Marchands / CHR", labelAr: "الزبائن التجاريون", roles: ["client"] },
   { id: "fournisseurs_marche", label: "🌿 Fournisseurs — Marché / Ferme", labelAr: "موردو السوق والمزرعة", roles: ["fournisseur"] },
@@ -449,7 +474,7 @@ const ROLE_GROUPS: { label: string; labelAr: string; roles: UserRole[] }[] = [
   {
     label: "Mobile — Terrain",
     labelAr: "الميدان",
-    roles: ["prevendeur", "resp_logistique", "magasinier", "dispatcheur", "livreur"],
+    roles: ["prevendeur", "resp_logistique", "magasinier", "dispatcheur", "livreur", "livreur_interne", "livreur_externe"],
   },
   {
     label: "Direction & Accès spéciaux",
@@ -1008,7 +1033,7 @@ export default function BOUsers({ currentUser }: { currentUser: User }) {
 
   const TEAM_LEADER_ALLOWED: Record<string, UserRole[]> = {
     resp_commercial: ["prevendeur", "team_leader"],
-    resp_logistique: ["magasinier", "dispatcheur", "livreur"],
+    resp_logistique: ["magasinier", "dispatcheur", "livreur", "livreur_interne", "livreur_externe"],
   }
   const isTeamLeader = currentUser.role === "resp_commercial" || currentUser.role === "resp_logistique"
   const teamAllowedRoles: UserRole[] = TEAM_LEADER_ALLOWED[currentUser.role] ?? []
@@ -1247,6 +1272,8 @@ export default function BOUsers({ currentUser }: { currentUser: User }) {
     { role: "magasinier",       label: "Magasinier",           acces: "Mobile",              droits: "RECEPTION marchandise, VALIDATION BL, preparation commandes, controle prep",                  reception: true  },
     { role: "dispatcheur",      label: "Dispatcheur",          acces: "Mobile",              droits: "Affectation livreurs, planning tournees, RECEPTION MARCHANDISE",                                reception: true  },
     { role: "livreur",          label: "Livreur",              acces: "Mobile",              droits: "Bons de livraison, rapport tournee, retours clients",                                           reception: false },
+    { role: "livreur_interne",  label: "Livreur Interne",      acces: "Mobile",              droits: "Employe Empire Fresh — BL, tournee, encaissement, retours clients",                              reception: false },
+    { role: "livreur_externe",  label: "Livreur Externe",      acces: "Mobile",              droits: "Prestataire / sous-traitant — BL et signature uniquement, pas d'acces aux prix ni au cash",      reception: false },
     { role: "acheteur",         label: "Acheteur",             acces: "Mobile",              droits: "Bons d'achat, besoin par SKU, historique prix fournisseurs — PAS de reception",                reception: false },
     { role: "ctrl_achat",       label: "Controleur Achat",     acces: "Mobile",              droits: "Verification qualite et prix des achats effectues",                                             reception: false },
     { role: "ctrl_prep",        label: "Controleur Preparation",acces:"Mobile",              droits: "Verification des bons de preparation avant depart livreur",                                    reception: false },
@@ -1757,7 +1784,7 @@ export default function BOUsers({ currentUser }: { currentUser: User }) {
                   </div>
 
                   {/* Depot assignment — visible for roles that need depot access */}
-                  {(form.role === "magasinier" || form.role === "acheteur" || form.role === "livreur" || form.role === "admin" || form.role === "super_admin") && (
+                  {(form.role === "magasinier" || form.role === "acheteur" || form.role === "livreur" || form.role === "livreur_interne" || form.role === "livreur_externe" || form.role === "admin" || form.role === "super_admin") && (
                     <div className="flex flex-col gap-1 sm:col-span-2">
                       <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
                         <svg className="w-3.5 h-3.5 text-primary shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">

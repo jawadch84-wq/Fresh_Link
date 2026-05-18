@@ -8,7 +8,7 @@
 export type UserRole =
   | "super_super_admin"
   | "super_admin" | "admin" | "resp_commercial" | "team_leader"
-  | "prevendeur" | "resp_logistique" | "magasinier" | "dispatcheur" | "livreur"
+  | "prevendeur" | "resp_logistique" | "magasinier" | "dispatcheur" | "livreur" | "livreur_interne" | "livreur_externe"
   | "acheteur" | "ctrl_achat" | "ctrl_prep"
   | "cash_man" | "financier"
   | "rh_manager" | "comptable"
@@ -1403,6 +1403,8 @@ export const ROLE_LABELS: Record<UserRole, string> = {
   magasinier: "Magasinier",
   dispatcheur: "Dispatcheur",
   livreur: "Livreur",
+  livreur_interne: "Livreur Interne",
+  livreur_externe: "Livreur Externe",
   acheteur: "Acheteur",
   ctrl_achat: "Controleur Achat",
   ctrl_prep: "Controleur Prep",
@@ -1433,6 +1435,8 @@ export const ROLE_LABELS_AR: Record<UserRole, string> = {
   magasinier: "أمين المخزن",
   dispatcheur: "موزع الرحلات",
   livreur: "السائق",
+  livreur_interne: "السائق الداخلي",
+  livreur_externe: "السائق الخارجي",
   acheteur: "المشتري",
   ctrl_achat: "مراقب الشراء",
   ctrl_prep: "مراقب التحضير",
@@ -1463,6 +1467,8 @@ export const ROLE_COLORS: Record<UserRole, string> = {
   magasinier: "bg-amber-600",
   dispatcheur: "bg-rose-600",
   livreur: "bg-yellow-600",
+  livreur_interne: "bg-yellow-700",
+  livreur_externe: "bg-orange-500",
   acheteur: "bg-lime-600",
   ctrl_achat: "bg-sky-700",
   ctrl_prep: "bg-violet-700",
@@ -1489,7 +1495,7 @@ export const FAMILLES_ARTICLES = [
 ]
 
 export function isMobileRole(role: UserRole): boolean {
-  return ["prevendeur", "resp_logistique", "magasinier", "dispatcheur", "livreur", "acheteur", "ctrl_achat", "ctrl_prep", "client", "fournisseur", "chef_depot", "suivi_commande"].includes(role)
+  return ["prevendeur", "resp_logistique", "magasinier", "dispatcheur", "livreur", "livreur_interne", "livreur_externe", "acheteur", "ctrl_achat", "ctrl_prep", "client", "fournisseur", "chef_depot", "suivi_commande"].includes(role)
 }
 
 export const JAWAD_USER: User = {
