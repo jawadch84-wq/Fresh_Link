@@ -78,6 +78,7 @@ const BOGPSTracker           = dynamic(() => import("./BOGPSTracker"),          
 const FeedbackPanel          = dynamic(() => import("./FeedbackPanel"),          { ssr: false, loading: L("Chargement feedbacks...") })
 const TripChargesPanel       = dynamic(() => import("./TripChargesPanel"),       { ssr: false, loading: L("Chargement charges...") })
 const AnalyseAchatPanel      = dynamic(() => import("./AnalyseAchatPanel"),      { ssr: false, loading: L("Chargement analyse achat...") })
+const BOCaisseAcheteurs      = dynamic(() => import("./BOCaisseAcheteurs"),      { ssr: false, loading: L("Chargement caisse acheteurs...") })
 const AnalyseReceptionPanel  = dynamic(() => import("./AnalyseReceptionPanel"),  { ssr: false, loading: L("Chargement analyse reception...") })
 const ShelfLifePanel         = dynamic(() => import("./ShelfLifePanel"),         { ssr: false, loading: L("Chargement shelf life...") })
 const ForecastPanel          = dynamic(() => import("./ForecastPanel"),          { ssr: false, loading: L("Chargement forecast...") })
@@ -138,6 +139,7 @@ export type Tab =
   | "documents"
   | "category_pricing"
   | "firebase_archive"
+  | "caisse_acheteurs"
 
 interface NavItem {
   id: Tab
@@ -215,6 +217,7 @@ const NAV_GROUPS: NavGroup[] = [
       { id: "pricing",           label: "Relevé de Prix Marché",    labelAr: "رصد الأسعار",        permKey: "canViewAchat", icon: <Icon d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" /> },
       { id: "analyse_achat",     label: "Analyse Achat",            labelAr: "تحليل المشتريات",    permKey: "canViewAchat", icon: <Icon d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /> },
       { id: "analyse_reception", label: "Analyse Réception",        labelAr: "تحليل الاستلام",     permKey: "canViewAchat", icon: <Icon d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /> },
+      { id: "caisse_acheteurs",  label: "Caisse Acheteurs",         labelAr: "صندوق المشترين",     permKey: "canViewAchat", icon: <Icon d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /> },
     ],
   },
   // ── LOGISTIQUE & STOCK ────────────────────────────────────────────────────
@@ -321,6 +324,7 @@ const PANELS: Record<Tab, (u: User) => React.ReactNode> = {
   caisses_vides:     (_u) => <CaissesVidesPanel />,
   analyse_achat:       (_u) => <AnalyseAchatPanel />,
   analyse_reception:   (_u) => <AnalyseReceptionPanel />,
+  caisse_acheteurs:    (_u) => <BOCaisseAcheteurs />,
   shelf_life:          (_u) => <ShelfLifePanel />,
   forecast:            (_u) => <ForecastPanel />,
   ashel_market:        (_u) => <ASHELMarketPanel />,
