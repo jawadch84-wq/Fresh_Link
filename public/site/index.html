@@ -1,0 +1,1552 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Empire Fresh — Fruits &amp; Légumes Frais · Casablanca</title>
+<meta name="description" content="Distribution fruits et légumes frais Casablanca. Livraison standard et express.">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:"DM Sans",sans-serif;background:#FAFAF5;color:#0D1B0F;overflow-x:hidden;line-height:1.6}
+:root{
+  --g1:#1B4332;--g2:#2D6A4F;--gp:#D8F3DC;--gd:#080F09;
+  --o1:#B8960C;--o2:#D4A843;--op:#FFF8E1;
+  --gy:#5A6B5C;--gl:#E2E8E3;--wh:#fff;--cr:#FAFAF5;
+}
+nav{background:var(--gd);height:76px;padding:0 40px;display:flex;align-items:center;
+  justify-content:space-between;position:sticky;top:0;z-index:1000;
+  box-shadow:0 2px 30px rgba(0,0,0,.55)}
+.nav-logo{height:52px;width:auto;display:block;object-fit:contain;cursor:pointer}
+nav ul{display:flex;gap:26px;list-style:none}
+nav ul a{font-size:14px;font-weight:500;color:rgba(255,255,255,.65);text-decoration:none;
+  transition:.2s;padding-bottom:2px;border-bottom:2px solid transparent}
+nav ul a:hover{color:var(--o2);border-color:var(--o2)}
+.nav-r{display:flex;align-items:center;gap:10px}
+.btn-wa{display:flex;align-items:center;gap:7px;background:#25D366;color:#fff;
+  padding:9px 16px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;transition:.2s}
+.btn-wa:hover{background:#1DAA52;transform:translateY(-1px)}
+.btn-cart{display:flex;align-items:center;gap:8px;background:rgba(184,150,12,.15);
+  border:1.5px solid var(--o1);padding:9px 14px;border-radius:8px;
+  font-size:13px;font-weight:700;color:var(--o2);cursor:pointer;transition:.2s}
+.btn-cart:hover{background:var(--o1);color:var(--gd)}
+.cbadge{background:var(--o1);color:var(--gd);width:20px;height:20px;border-radius:50%;
+  font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.hero{background:linear-gradient(135deg,#030805,var(--gd),#0F1E10,var(--g1),#0A1A0C);
+  background-size:300% 300%;animation:gradientShift 12s ease infinite;
+  min-height:600px;display:flex;align-items:center;padding:80px 40px;
+  position:relative;overflow:hidden}
+.hero::before{content:"";position:absolute;right:-80px;top:-80px;width:580px;height:580px;
+  border-radius:50%;background:rgba(184,150,12,.07)}
+.hero::after{content:"";position:absolute;left:40%;bottom:-90px;width:480px;height:480px;
+  border-radius:50%;background:rgba(27,67,50,.45)}
+.hero-txt{max-width:560px;position:relative;z-index:2}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(184,150,12,.13);
+  color:var(--o2);border:1px solid rgba(184,150,12,.3);padding:7px 18px;border-radius:24px;
+  font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:28px;
+  animation:fadeSlideUp .6s cubic-bezier(.22,1,.36,1) both}
+.hero h1{font-family:"Playfair Display",serif;font-size:54px;line-height:1.08;
+  color:#fff;font-weight:900;margin-bottom:20px;animation:fadeSlideUp .75s .15s cubic-bezier(.22,1,.36,1) both}
+.hero h1 em{color:var(--o2);font-style:normal}
+.hero p{font-size:16px;color:rgba(255,255,255,.68);line-height:1.8;max-width:460px;margin-bottom:36px;
+  animation:fadeSlideUp .75s .3s cubic-bezier(.22,1,.36,1) both}
+.hero-btns{display:flex;gap:14px;flex-wrap:wrap;animation:fadeSlideUp .75s .42s cubic-bezier(.22,1,.36,1) both}
+.btn-gold{background:linear-gradient(135deg,var(--o1),var(--o2));color:var(--gd);
+  padding:14px 28px;border-radius:10px;font-size:15px;font-weight:700;border:none;
+  font-family:"DM Sans",sans-serif;transition:.25s;text-decoration:none;display:inline-block;cursor:pointer;position:relative;overflow:hidden}
+.btn-gold:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(184,150,12,.45)}
+.btn-gold::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.18),transparent);
+  transform:translateX(-100%);transition:transform .5s}
+.btn-gold:hover::after{transform:translateX(100%)}
+.btn-ol{background:transparent;color:#fff;padding:14px 28px;border-radius:10px;
+  font-size:15px;font-weight:500;border:1.5px solid rgba(255,255,255,.3);
+  font-family:"DM Sans",sans-serif;transition:.25s;text-decoration:none;display:inline-block}
+.btn-ol:hover{background:rgba(255,255,255,.08)}
+.hero-stats{display:flex;gap:32px;margin-top:48px;padding-top:32px;border-top:1px solid rgba(255,255,255,.1);
+  animation:fadeSlideUp .75s .55s cubic-bezier(.22,1,.36,1) both}
+.hs-num{font-size:28px;font-weight:700;background:linear-gradient(135deg,var(--o2),#FFE066);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hs-lbl{font-size:12px;color:rgba(255,255,255,.45);margin-top:2px}
+.hero-cards{position:absolute;right:40px;top:50%;transform:translateY(-50%);
+  display:grid;grid-template-columns:1fr 1fr;gap:13px;width:340px;z-index:2;
+  animation:scaleIn .8s .4s cubic-bezier(.22,1,.36,1) both}
+.hcard{background:rgba(255,255,255,.07);border:1px solid rgba(184,150,12,.2);
+  border-radius:13px;overflow:hidden;transition:.3s;cursor:pointer;animation:floatY 4s ease-in-out infinite}
+.hcard:nth-child(2){animation-delay:.6s}
+.hcard:nth-child(3){animation-delay:1.1s}
+.hcard:nth-child(4){animation-delay:1.7s}
+.hcard:hover{border-color:rgba(184,150,12,.55);transform:translateY(-3px);box-shadow:0 8px 32px rgba(184,150,12,.25)}
+.hcard-img{width:100%;height:82px;object-fit:cover;display:block;background:#132015}
+.hcard-b{padding:9px 11px}
+.hcard-n{font-size:12px;color:rgba(255,255,255,.85);font-weight:500}
+.hcard-p{font-size:13px;color:var(--o2);font-weight:700;margin-top:2px}
+.strip{background:var(--g1);padding:16px 40px;overflow:hidden}
+.strip-inner{display:flex;gap:44px;width:max-content;animation:slideStrip 20s linear infinite}
+.strip-inner:hover{animation-play-state:paused}
+.si{display:flex;align-items:center;gap:8px;color:rgba(255,255,255,.9);font-size:13px;font-weight:500;white-space:nowrap}
+.erp-bar{background:#0A1208;border-bottom:1px solid rgba(168,216,120,.15);
+  padding:8px 40px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.erp-status{display:flex;align-items:center;gap:8px;font-size:12px;color:rgba(255,255,255,.6)}
+.erp-dot{width:8px;height:8px;border-radius:50%;background:#6FCF97;animation:pulse-dot 2s infinite;box-shadow:0 0 8px rgba(111,207,151,.7)}
+.erp-dot.offline{background:#E24B4A;animation:none;box-shadow:0 0 8px rgba(226,75,74,.7)}
+.erp-dot.loading{background:var(--o2);animation:pulse-dot 1s infinite}
+@keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:.4}}
+.erp-last{font-size:11px;color:rgba(255,255,255,.35)}
+.erp-refresh{background:none;border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.5);
+  padding:4px 10px;border-radius:5px;font-size:11px;cursor:pointer;font-family:"DM Sans",sans-serif;transition:.2s}
+.erp-refresh:hover{border-color:rgba(255,255,255,.4);color:rgba(255,255,255,.8)}
+.sw{max-width:1200px;margin:0 auto;padding:0 40px}
+.slbl{font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:var(--o1);font-weight:700;margin-bottom:8px}
+.slbl::after{content:"";display:block;width:32px;height:2px;background:var(--o1);margin-top:6px;border-radius:2px}
+.stit{font-family:"Playfair Display",serif;font-size:36px;font-weight:700;line-height:1.2;margin-bottom:12px}
+.sdesc{font-size:15px;color:var(--gy);line-height:1.8;max-width:520px}
+.cats-sec{padding:64px 0 36px}
+.cats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:40px}
+.ccat{background:var(--wh);border-radius:14px;padding:28px 18px;text-align:center;
+  cursor:pointer;border:2px solid var(--gl);transition:.3s;position:relative;overflow:hidden}
+.ccat::before{content:"";position:absolute;top:0;left:0;right:0;height:4px;
+  background:linear-gradient(90deg,var(--g1),var(--o1));transform:scaleX(0);transition:.3s}
+.ccat:hover::before,.ccat.on::before{transform:scaleX(1)}
+.ccat:hover{border-color:var(--g2);transform:translateY(-4px);box-shadow:0 14px 36px rgba(27,67,50,.12)}
+.ccat.on{border-color:var(--g1);background:var(--gp)}
+.ccat-em{font-size:42px;margin-bottom:11px;display:block}
+.ccat-n{font-size:14px;font-weight:600;margin-bottom:3px}
+.ccat-c{font-size:12px;color:var(--gy)}
+.ccat-new{position:absolute;top:10px;right:10px;background:var(--o1);color:var(--gd);
+  font-size:10px;padding:2px 8px;border-radius:6px;font-weight:700}
+.prod-sec{background:var(--wh);padding:52px 0}
+.fbar{display:flex;gap:8px;flex-wrap:wrap;margin:24px 0;align-items:center}
+.fb{padding:8px 18px;border-radius:22px;font-size:12px;font-weight:500;cursor:pointer;
+  border:1px solid var(--gl);background:var(--wh);color:var(--gy);
+  font-family:"DM Sans",sans-serif;transition:.2s}
+.fb:hover,.fb.on{background:var(--g1);color:#fff;border-color:var(--g1)}
+.erp-sync-badge{margin-left:auto;display:flex;align-items:center;gap:6px;
+  font-size:11px;color:var(--gy);background:var(--cr);border:1px solid var(--gl);
+  padding:4px 10px;border-radius:6px}
+.erp-sync-badge .dot{width:6px;height:6px;border-radius:50%;background:#6FCF97}
+.erp-sync-badge .dot.loading{background:var(--o2);animation:pulse-dot 1s infinite}
+.pgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+.skel{background:var(--cr);border-radius:14px;overflow:hidden;border:1px solid var(--gl)}
+.skel-img{height:168px;background:linear-gradient(90deg,var(--gl) 25%,var(--wh) 50%,var(--gl) 75%);
+  background-size:200% 100%;animation:shimmer 1.5s infinite}
+.skel-body{padding:14px}
+.skel-line{height:12px;border-radius:6px;margin-bottom:10px;
+  background:linear-gradient(90deg,var(--gl) 25%,var(--wh) 50%,var(--gl) 75%);
+  background-size:200% 100%;animation:shimmer 1.5s infinite}
+.skel-line.short{width:60%}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.pc{background:var(--cr);border-radius:14px;overflow:hidden;border:1px solid var(--gl);transition:.3s;position:relative}
+.pc:hover{transform:translateY(-4px);box-shadow:0 18px 44px rgba(0,0,0,.1)}
+.pc-img{height:168px;position:relative;overflow:hidden;
+  background:linear-gradient(135deg,#E8F5E9,#C8E6C9);
+  display:flex;align-items:center;justify-content:center;font-size:56px}
+.pc-img img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0;transition:.4s}
+.pc:hover .pc-img img{transform:scale(1.06)}
+.pc-tag{position:absolute;top:9px;left:9px;font-size:10px;font-weight:700;
+  padding:3px 9px;border-radius:7px;backdrop-filter:blur(4px);z-index:1}
+.tf{background:rgba(216,243,220,.92);color:#1B4332}
+.te{background:rgba(255,243,225,.92);color:#7A4F00}
+.tl{background:rgba(220,235,255,.92);color:#1A3A7A}
+.tc{background:rgba(240,225,255,.92);color:#4A1A7A}
+.tp{background:rgba(255,220,220,.92);color:#7A1A1A}
+.out-badge{position:absolute;inset:0;background:rgba(0,0,0,.55);
+  display:flex;align-items:center;justify-content:center;z-index:2;
+  font-size:13px;font-weight:700;color:#fff}
+.pc-body{padding:14px}
+.pc-n{font-size:14px;font-weight:600;margin-bottom:2px}
+.pc-ori{font-size:11px;color:var(--gy);margin-bottom:9px}
+.pc-opts{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px}
+.po{font-size:10px;background:var(--gp);color:var(--g1);padding:2px 8px;
+  border-radius:7px;font-weight:500}
+.pc-foot{display:flex;align-items:center;justify-content:space-between}
+.pc-p{font-size:17px;font-weight:700;color:var(--g1)}
+.pc-p span{font-size:11px;color:var(--gy);font-weight:400}
+.pc-p del{font-size:12px;color:var(--gy);font-weight:400;margin-left:4px}
+.pc-promo{font-size:10px;font-weight:700;background:var(--tp, #FFE0E0);color:#7A1A1A;
+  padding:2px 7px;border-radius:5px;margin-top:3px;display:inline-block}
+.qc{display:flex;align-items:center;gap:7px}
+.qb{width:28px;height:28px;border-radius:7px;border:1.5px solid var(--g1);
+  background:#fff;color:var(--g1);font-size:16px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:.2s;font-weight:700;
+  font-family:"DM Sans",sans-serif}
+.qb:hover{background:var(--g1);color:#fff}
+.qb:disabled{opacity:.35;cursor:not-allowed;border-color:var(--gl);color:var(--gy)}
+.qb:disabled:hover{background:transparent;color:var(--gy)}
+.qv{font-size:14px;font-weight:700;min-width:16px;text-align:center}
+.no-prods{grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--gy)}
+.no-prods-icon{font-size:48px;margin-bottom:16px;display:block}
+.no-prods h3{font-size:18px;font-weight:600;margin-bottom:8px;color:var(--gd)}
+.ord-sec{padding:64px 0}
+.ogrid{display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-top:44px}
+.oform{background:var(--wh);border-radius:18px;padding:32px;
+  border:1px solid var(--gl);box-shadow:0 4px 24px rgba(0,0,0,.06)}
+.ftit{font-size:18px;font-weight:700;margin-bottom:24px;display:flex;align-items:center;gap:9px}
+.ctabs{display:flex;border:1px solid var(--gl);border-radius:10px;overflow:hidden;margin-bottom:22px}
+.ctab{flex:1;padding:10px;text-align:center;font-size:12px;font-weight:500;cursor:pointer;
+  background:var(--cr);color:var(--gy);border:none;font-family:"DM Sans",sans-serif;transition:.2s}
+.ctab.on{background:var(--g1);color:#fff}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.fg{margin-bottom:16px}
+.fg label{display:block;font-size:11px;font-weight:700;color:var(--gy);
+  margin-bottom:6px;text-transform:uppercase;letter-spacing:.7px}
+.fg input,.fg select,.fg textarea{width:100%;padding:11px 14px;
+  border:1.5px solid var(--gl);border-radius:9px;font-family:"DM Sans",sans-serif;
+  font-size:13px;background:var(--cr);color:var(--gd);transition:.2s;outline:none;
+  -webkit-appearance:none;appearance:none}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--g1);background:#fff}
+.fg textarea{height:82px;resize:vertical}
+.fsec{font-size:11px;font-weight:700;color:var(--gd);text-transform:uppercase;
+  letter-spacing:1px;margin:20px 0 12px;padding-top:16px;border-top:1px solid var(--gl)}
+.dopts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.dopt{border:2px solid var(--gl);border-radius:11px;padding:14px;cursor:pointer;transition:.25s;position:relative}
+.dopt.on{border-color:var(--g1);background:var(--gp)}
+.dopt.exo{border-color:#FFD580;background:#FFFBEB}
+.dopt.exo.on{border-color:var(--o1);background:var(--op)}
+.di{font-size:22px;margin-bottom:7px}
+.dt{font-size:13px;font-weight:700}
+.ds{font-size:11px;color:var(--gy);margin-top:2px}
+.dp{font-size:12px;font-weight:700;color:var(--g1);margin-top:7px}
+.exo .dp{color:var(--o1)}
+.ebadge{position:absolute;top:9px;right:9px;background:var(--o1);color:var(--gd);
+  font-size:9px;padding:2px 7px;border-radius:5px;font-weight:800}
+.popts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.popt{border:1.5px solid var(--gl);border-radius:9px;padding:10px 7px;cursor:pointer;
+  transition:.2s;text-align:center;font-size:11px;font-weight:500;user-select:none}
+.popt:hover{border-color:var(--g1)}
+.popt.on{background:var(--g1);color:#fff;border-color:var(--g1)}
+.pi2{font-size:18px;display:block;margin-bottom:3px}
+.sbtn{width:100%;background:linear-gradient(135deg,var(--g1),var(--g2));color:#fff;
+  padding:15px;border-radius:11px;font-size:15px;font-weight:700;border:none;cursor:pointer;
+  font-family:"DM Sans",sans-serif;margin-top:18px;transition:.25s;
+  display:flex;align-items:center;justify-content:center;gap:9px}
+.sbtn:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(27,67,50,.4)}
+.sbtn:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
+.osum{background:var(--gd);border-radius:18px;padding:32px;color:#fff;position:sticky;top:88px}
+.osum-h{font-size:18px;font-weight:700;margin-bottom:24px}
+.ci{display:flex;align-items:center;justify-content:space-between;
+  padding:11px 0;border-bottom:1px solid rgba(255,255,255,.07)}
+.ci-l{display:flex;align-items:center;gap:10px}
+.ci-em{width:38px;height:38px;border-radius:8px;background:rgba(255,255,255,.07);
+  display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.ci-n{font-size:13px;color:rgba(255,255,255,.9);font-weight:500}
+.ci-m{font-size:11px;color:rgba(255,255,255,.4);margin-top:2px}
+.ci-p{font-size:14px;font-weight:700;color:var(--o2)}
+.crm{background:none;border:none;color:rgba(255,255,255,.25);cursor:pointer;font-size:15px;
+  transition:.2s;padding:3px;font-family:"DM Sans",sans-serif}
+.crm:hover{color:#FF6B6B}
+.cempty{text-align:center;padding:36px 0;color:rgba(255,255,255,.3);font-size:13px;line-height:1.8}
+.ibox{background:rgba(184,150,12,.1);border:1px solid rgba(184,150,12,.25);
+  border-radius:10px;padding:12px;margin:16px 0;display:flex;gap:9px}
+.ibox-t{font-size:12px;color:rgba(255,255,255,.72);line-height:1.6}
+.tr{display:flex;justify-content:space-between;font-size:13px;color:rgba(255,255,255,.55);padding:7px 0}
+.tf2{display:flex;justify-content:space-between;padding:14px 0 0;margin-top:7px;border-top:1px solid rgba(255,255,255,.12)}
+.tl2{font-size:15px;font-weight:600;color:rgba(255,255,255,.8)}
+.ta{font-size:30px;font-weight:700;color:#fff}
+.erp-note{background:rgba(27,67,50,.4);border:1px solid rgba(27,67,50,.7);
+  border-radius:10px;padding:12px;margin-top:18px;font-size:11px;color:rgba(255,255,255,.5);line-height:1.8}
+.erp-note strong{color:var(--o2);display:block;margin-bottom:3px;font-size:12px}
+.cbtn{width:100%;background:linear-gradient(135deg,var(--o1),var(--o2));color:var(--gd);
+  padding:15px;border-radius:11px;font-size:15px;font-weight:800;border:none;cursor:pointer;
+  font-family:"DM Sans",sans-serif;margin-top:18px;transition:.25s}
+.cbtn:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(184,150,12,.4)}
+.erp-sec{background:linear-gradient(135deg,var(--gd) 0%,#050D06 100%);padding:72px 0;color:#fff}
+.erp-g{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center;margin-top:44px}
+.erp-t{font-family:"Playfair Display",serif;font-size:38px;font-weight:700;line-height:1.2}
+.erp-t em{color:var(--o2);font-style:normal}
+.erp-d{font-size:15px;color:rgba(255,255,255,.58);line-height:1.85;margin:18px 0 28px}
+.efs{display:flex;flex-direction:column;gap:16px}
+.ef{display:flex;align-items:flex-start;gap:14px}
+.efi{width:40px;height:40px;background:rgba(184,150,12,.12);border:1px solid rgba(184,150,12,.25);
+  border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.efc strong{font-size:14px;color:rgba(255,255,255,.95);display:block;margin-bottom:2px}
+.efc span{font-size:12px;color:rgba(255,255,255,.45);line-height:1.6}
+.ediag{background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.07);border-radius:18px;padding:28px}
+.dl{font-size:10px;text-transform:uppercase;letter-spacing:2px;color:rgba(255,255,255,.3);margin-bottom:20px}
+.df{display:flex;flex-direction:column;gap:5px}
+.dn{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);
+  border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:12px;position:relative}
+.dn.hl{border-color:rgba(184,150,12,.35);background:rgba(184,150,12,.06)}
+.dni{font-size:18px;width:30px;text-align:center}
+.dnn{font-size:13px;font-weight:600;color:rgba(255,255,255,.9)}
+.dns{font-size:11px;color:rgba(255,255,255,.35)}
+.dst{position:absolute;right:12px;top:50%;transform:translateY(-50%);
+  font-size:9px;padding:2px 8px;border-radius:7px;font-weight:700}
+.sl{background:rgba(27,67,50,.6);color:#6FCF97}
+.sa{background:rgba(184,150,12,.15);color:var(--o2)}
+.da{text-align:center;color:rgba(184,150,12,.3);font-size:13px;padding:1px 0}
+.z-sec{background:var(--gp);padding:64px 0}
+.zgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:40px}
+.zc{background:var(--wh);border-radius:12px;padding:22px;border-left:5px solid var(--g1);box-shadow:0 2px 10px rgba(0,0,0,.05)}
+.zc.exp{border-left-color:var(--o1)}
+.zi{font-size:24px;margin-bottom:9px}
+.zn{font-size:15px;font-weight:700;margin-bottom:4px}
+.zd{font-size:12px;color:var(--gy);line-height:1.6}
+.zdels{display:flex;gap:7px;margin-top:9px;flex-wrap:wrap}
+.zt{font-size:10px;padding:2px 9px;border-radius:7px;font-weight:600}
+.zts{background:#D8F3DC;color:var(--g1)}
+.zte{background:var(--op);color:#7A4F00}
+.zp{font-size:12px;font-weight:700;color:var(--g1);margin-top:9px}
+.zc.exp .zp{color:var(--o1)}
+.t-sec{padding:64px 0;background:var(--wh)}
+.tg{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-top:40px;perspective:1000px}
+.tc2{background:var(--cr);border-radius:14px;padding:26px;border:1px solid var(--gl);transition:transform .35s,box-shadow .35s}
+.tc2:hover{transform:translateY(-6px) rotateX(2deg);box-shadow:0 16px 40px rgba(0,0,0,.09)}
+.stars{color:var(--o1);font-size:15px;margin-bottom:12px}
+.tt{font-size:13px;color:var(--gy);line-height:1.8;font-style:italic;margin-bottom:18px}
+.ta2{display:flex;align-items:center;gap:11px}
+.av{width:42px;height:42px;border-radius:50%;background:var(--gp);
+  border:2px solid var(--g1);display:flex;align-items:center;justify-content:center;font-size:19px}
+.an{font-size:13px;font-weight:600}
+.ar{font-size:11px;color:var(--gy)}
+footer{background:var(--gd);color:rgba(255,255,255,.5);padding:56px 0 24px}
+.fg2{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:36px;margin-bottom:44px}
+.fbp{font-size:12px;line-height:1.9;max-width:280px}
+.fct{margin-top:14px;display:flex;flex-direction:column;gap:8px}
+.fct a{font-size:12px;color:var(--o2);text-decoration:none;transition:.2s}
+.fct a:hover{opacity:.7}
+.fct span{font-size:12px}
+.fcol h4{font-size:11px;font-weight:700;color:rgba(255,255,255,.9);
+  text-transform:uppercase;letter-spacing:1.5px;margin-bottom:16px}
+.fcol ul{list-style:none;display:flex;flex-direction:column;gap:9px}
+.fcol ul a{font-size:12px;color:rgba(255,255,255,.42);text-decoration:none;transition:.2s}
+.fcol ul a:hover{color:rgba(255,255,255,.85)}
+.fbot{border-top:1px solid rgba(255,255,255,.07);padding-top:22px;
+  display:flex;justify-content:space-between;font-size:11px;flex-wrap:wrap;gap:8px}
+.waf{position:fixed;bottom:96px;right:28px;z-index:999;background:#25D366;color:#fff;
+  width:58px;height:58px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:26px;text-decoration:none;box-shadow:0 6px 24px rgba(37,211,102,.5);
+  transition:.3s;animation:wap 2.5s infinite}
+.waf:hover{transform:scale(1.1)}
+@keyframes wap{0%,100%{box-shadow:0 6px 24px rgba(37,211,102,.5)}50%{box-shadow:0 6px 36px rgba(37,211,102,.85)}}
+.cfg-fab{position:fixed;bottom:28px;left:28px;z-index:900;
+  background:linear-gradient(135deg,var(--g1),var(--g2));color:#fff;border:none;
+  width:54px;height:54px;border-radius:50%;font-size:22px;cursor:pointer;
+  box-shadow:0 4px 20px rgba(27,67,50,.55);transition:.3s;
+  display:flex;align-items:center;justify-content:center}
+.cfg-fab:hover{transform:scale(1.08)}
+.cfg-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1001;
+  display:none;backdrop-filter:blur(4px)}
+.cfg-overlay.show{display:block}
+.cfg-drawer{position:fixed;right:-480px;top:0;bottom:0;width:480px;background:#fff;
+  z-index:1002;transition:.4s cubic-bezier(.25,.8,.25,1);display:flex;flex-direction:column;
+  box-shadow:-8px 0 48px rgba(0,0,0,.25)}
+.cfg-drawer.show{right:0}
+.cfg-hdr{background:linear-gradient(135deg,var(--g1),var(--g2));padding:20px 24px;
+  display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.cfg-hdr-title{font-size:16px;font-weight:700;color:#fff}
+.cfg-hdr-sub{font-size:11px;color:rgba(255,255,255,.65);margin-top:1px}
+.cfg-hdr-close{background:rgba(255,255,255,.15);border:none;color:#fff;
+  width:36px;height:36px;border-radius:50%;font-size:18px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:.2s;
+  font-family:"DM Sans",sans-serif}
+.cfg-hdr-close:hover{background:rgba(255,255,255,.3)}
+.cfg-tabs{display:flex;border-bottom:2px solid var(--gl);flex-shrink:0;overflow-x:auto}
+.cfg-tab{white-space:nowrap;padding:12px 14px;text-align:center;font-size:12px;font-weight:600;
+  cursor:pointer;color:var(--gy);border:none;background:none;
+  font-family:"DM Sans",sans-serif;transition:.2s;border-bottom:3px solid transparent;margin-bottom:-2px}
+.cfg-tab.on{color:var(--g1);border-color:var(--g1)}
+.cfg-body{flex:1;overflow-y:auto;padding:22px 24px}
+.cfg-sec{display:none}
+.cfg-sec.on{display:block}
+.cfg-grp{font-size:12px;font-weight:700;color:var(--g1);margin:20px 0 13px;
+  display:flex;align-items:center;gap:7px;padding-bottom:8px;border-bottom:1px solid var(--gl)}
+.cfg-grp:first-child{margin-top:0}
+.cfg-f{margin-bottom:16px}
+.cfg-f label{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;
+  color:var(--gy);margin-bottom:6px;text-transform:uppercase;letter-spacing:.7px}
+.cfg-f input,.cfg-f select,.cfg-f textarea{width:100%;padding:10px 13px;border:1.5px solid var(--gl);
+  border-radius:9px;font-family:"DM Sans",sans-serif;font-size:13px;color:var(--gd);
+  transition:.2s;outline:none;background:#FAFAF5;-webkit-appearance:none;appearance:none}
+.cfg-f input:focus,.cfg-f select:focus,.cfg-f textarea:focus{border-color:var(--g1);background:#fff;
+  box-shadow:0 0 0 3px rgba(27,67,50,.08)}
+.cfg-f textarea{height:76px;resize:vertical}
+.cfg-hint{font-size:11px;color:var(--gy);margin-top:4px;line-height:1.5}
+.cfg-row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.erp-conn-box{background:var(--cr);border:1.5px solid var(--gl);border-radius:10px;padding:14px;margin-bottom:14px}
+.erp-conn-status{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600}
+.erp-conn-dot{width:10px;height:10px;border-radius:50%;background:#6FCF97;flex-shrink:0}
+.erp-conn-dot.err{background:#E24B4A}
+.erp-conn-dot.warn{background:var(--o2)}
+.erp-conn-sub{font-size:11px;color:var(--gy);margin-top:4px}
+.code-block{background:#0A1208;border-radius:10px;padding:14px;
+  font-family:monospace;font-size:11px;color:#A8D878;line-height:1.9;overflow-x:auto;
+  white-space:pre;margin-top:6px}
+.test-btn{width:100%;background:rgba(27,67,50,.1);border:1.5px solid var(--g1);
+  color:var(--g1);padding:11px;border-radius:9px;font-family:"DM Sans",sans-serif;
+  font-size:13px;font-weight:700;cursor:pointer;transition:.2s;margin-top:8px}
+.test-btn:hover{background:var(--gp)}
+.price-box{background:var(--gp);border-radius:10px;padding:13px;margin-top:10px;font-size:12px;color:var(--g1);line-height:1.9}
+.price-box strong{display:block;font-weight:700;margin-bottom:3px;font-size:13px}
+.cfg-footer{padding:16px 24px;border-top:1px solid var(--gl);background:#FAFAF5;flex-shrink:0}
+.cfg-save{width:100%;background:linear-gradient(135deg,var(--g1),var(--g2));color:#fff;
+  padding:14px;border-radius:10px;border:none;font-family:"DM Sans",sans-serif;
+  font-size:14px;font-weight:700;cursor:pointer;transition:.25s;
+  display:flex;align-items:center;justify-content:center;gap:8px}
+.cfg-save:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(27,67,50,.4)}
+.cfg-saved-msg{text-align:center;font-size:12px;color:var(--g2);margin-top:7px;height:16px}
+.mov{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:2000;
+  display:none;align-items:center;justify-content:center;backdrop-filter:blur(6px)}
+.mov.show{display:flex}
+.mod{background:#fff;border-radius:22px;padding:40px;max-width:460px;width:90%;
+  text-align:center;position:relative;max-height:90vh;overflow-y:auto}
+.mod-x{position:absolute;top:16px;right:20px;background:none;border:none;
+  font-size:20px;cursor:pointer;color:var(--gy);font-family:"DM Sans",sans-serif}
+.mod-ic{font-size:56px;margin-bottom:14px}
+.mod-t{font-family:"Playfair Display",serif;font-size:24px;font-weight:700;margin-bottom:10px}
+.mod-d{font-size:14px;color:var(--gy);line-height:1.7;margin-bottom:20px}
+.mod-erp{background:var(--gp);border:1px solid #8BC34A;border-radius:10px;
+  padding:13px;font-size:12px;color:var(--g1);margin-bottom:20px;text-align:left;line-height:1.8}
+.mod-erp strong{display:block;margin-bottom:3px;font-weight:700}
+.mbtn{display:inline-block;padding:13px 24px;border-radius:10px;font-size:14px;
+  font-weight:700;text-decoration:none;cursor:pointer;border:none;
+  font-family:"DM Sans",sans-serif;transition:.2s;margin:3px}
+.mbtn:hover{transform:translateY(-2px)}
+.mwa{background:linear-gradient(135deg,#25D366,#1DAA52);color:#fff}
+.mcl{background:var(--gl);color:var(--gd)}
+.toast{position:fixed;bottom:96px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:var(--g1);color:#fff;padding:12px 22px;border-radius:10px;
+  font-size:13px;font-weight:500;z-index:3000;opacity:0;transition:.35s;
+  pointer-events:none;border-left:4px solid var(--o1);white-space:nowrap;
+  box-shadow:0 4px 20px rgba(0,0,0,.3)}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+/* Animations */
+@keyframes fadeSlideUp{from{opacity:0;transform:translateY(36px)}to{opacity:1;transform:translateY(0)}}
+@keyframes scaleIn{from{opacity:0;transform:scale(.88)}to{opacity:1;transform:scale(1)}}
+@keyframes floatY{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+@keyframes gradientShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+@keyframes slideStrip{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+/* Reveal */
+.reveal{opacity:0;transform:translateY(30px);transition:opacity .65s cubic-bezier(.22,1,.36,1),transform .65s cubic-bezier(.22,1,.36,1)}
+.reveal.visible{opacity:1;transform:translateY(0)}
+/* Responsive */
+@media(max-width:1024px){
+  .hero-cards{display:none}
+  .pgrid{grid-template-columns:repeat(3,1fr)}
+  .cats{grid-template-columns:repeat(2,1fr)}
+  .erp-g{grid-template-columns:1fr;gap:36px}
+  .fg2{grid-template-columns:1fr 1fr;gap:24px}
+  .cfg-drawer{width:100%;right:-100%}
+}
+@media(max-width:768px){
+  nav{padding:0 16px}
+  nav ul{display:none}
+  .hero{padding:56px 16px}
+  .hero h1{font-size:34px}
+  .sw{padding:0 16px}
+  .pgrid{grid-template-columns:repeat(2,1fr)}
+  .ogrid{grid-template-columns:1fr}
+  .zgrid{grid-template-columns:1fr 1fr}
+  .tg{grid-template-columns:1fr}
+  .fg2{grid-template-columns:1fr}
+  .frow{grid-template-columns:1fr}
+  .strip{padding:14px}
+  .erp-bar{padding:8px 16px}
+  .popts{grid-template-columns:repeat(2,1fr)}
+  .dopts{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- CONFIG FAB -->
+<button class="cfg-fab" onclick="openCfg()" title="Configuration Admin">⚙️</button>
+
+<!-- OVERLAY -->
+<div class="cfg-overlay" id="cfg-overlay" onclick="closeCfg()"></div>
+
+<!-- CONFIG DRAWER -->
+<div class="cfg-drawer" id="cfg-drawer">
+  <div class="cfg-hdr">
+    <div>
+      <div class="cfg-hdr-title">⚙️ Configuration Admin</div>
+      <div class="cfg-hdr-sub">Empire Fresh — Panneau de contrôle</div>
+    </div>
+    <button class="cfg-hdr-close" onclick="closeCfg()">✕</button>
+  </div>
+  <div class="cfg-tabs">
+    <button class="cfg-tab on"  onclick="cfgTab(this,'s-contact')">📱 Contact</button>
+    <button class="cfg-tab"     onclick="cfgTab(this,'s-livraison')">🚚 Livraison</button>
+    <button class="cfg-tab"     onclick="cfgTab(this,'s-supabase')">🔗 Supabase</button>
+    <button class="cfg-tab"     onclick="cfgTab(this,'s-guide')">📖 Guide</button>
+  </div>
+  <div class="cfg-body">
+
+    <!-- CONTACT -->
+    <div class="cfg-sec on" id="s-contact">
+      <div class="cfg-grp">📱 Coordonnées principales</div>
+      <div class="cfg-f">
+        <label>Numéro WhatsApp</label>
+        <input id="c-wa" type="tel" placeholder="212661234567">
+        <div class="cfg-hint">Sans le + — ex: 212661234567</div>
+      </div>
+      <div class="cfg-f">
+        <label>Email</label>
+        <input id="c-email" type="email" placeholder="sales@empire-fresh.co.site">
+      </div>
+      <div class="cfg-f">
+        <label>Adresse / Ville</label>
+        <input id="c-addr" type="text" placeholder="Casablanca, Maroc">
+      </div>
+      <div class="cfg-grp">🌍 Réseaux sociaux</div>
+      <div class="cfg-f">
+        <label>Facebook</label>
+        <input id="c-fb" type="url" placeholder="https://facebook.com/empirefreshmaroc">
+      </div>
+      <div class="cfg-f">
+        <label>Instagram</label>
+        <input id="c-ig" type="url" placeholder="https://instagram.com/empirefreshmaroc">
+      </div>
+    </div>
+
+    <!-- LIVRAISON -->
+    <div class="cfg-sec" id="s-livraison">
+      <div class="cfg-grp">⚡ Livraison Express</div>
+      <div class="cfg-row2">
+        <div class="cfg-f">
+          <label>Frais express (MAD)</label>
+          <input id="c-exp" type="number" placeholder="20" oninput="refreshPriceBox()">
+        </div>
+        <div class="cfg-f">
+          <label>Délai express</label>
+          <select id="c-expdelay">
+            <option value="1h">En 1h</option>
+            <option value="2h" selected>En 2h</option>
+            <option value="3h">En 3h</option>
+            <option value="4h">En 4h</option>
+          </select>
+        </div>
+      </div>
+      <div class="cfg-grp">🚚 Livraison Standard</div>
+      <div class="cfg-row2">
+        <div class="cfg-f">
+          <label>Gratuite dès (MAD)</label>
+          <input id="c-free" type="number" placeholder="150" oninput="refreshPriceBox()">
+        </div>
+        <div class="cfg-f">
+          <label>Frais si sous seuil (MAD)</label>
+          <input id="c-std" type="number" placeholder="15" oninput="refreshPriceBox()">
+        </div>
+      </div>
+      <div class="price-box" id="price-box">
+        <strong>📊 Aperçu actuel</strong>
+        Express : <b>20 MAD</b> — Standard gratuite dès <b>150 MAD</b> — Sinon <b>15 MAD</b>
+      </div>
+    </div>
+
+    <!-- SUPABASE -->
+    <div class="cfg-sec" id="s-supabase">
+      <div class="cfg-grp">🔗 Connexion Supabase (FreshLink ERP)</div>
+      <div class="erp-conn-box">
+        <div class="erp-conn-status">
+          <div class="erp-conn-dot warn" id="sb-conn-dot"></div>
+          <span id="sb-conn-label">Vérification...</span>
+        </div>
+        <div class="erp-conn-sub" id="sb-conn-sub">Connexion Supabase en cours...</div>
+      </div>
+      <div class="cfg-f">
+        <label>🌐 Supabase URL</label>
+        <input id="c-sb-url" type="url" placeholder="https://xxx.supabase.co">
+        <div class="cfg-hint">URL du projet Supabase FreshLink.</div>
+      </div>
+      <div class="cfg-f">
+        <label>🔑 Supabase Anon Key (publique)</label>
+        <input id="c-sb-key" type="text" placeholder="eyJhbGci...">
+        <div class="cfg-hint">Clé anon/publique uniquement — jamais la service role key.</div>
+      </div>
+      <button class="test-btn" onclick="testSupabase()">🔄 Tester &amp; synchroniser le catalogue</button>
+      <div class="cfg-grp" style="margin-top:20px">📋 Informations catalogue</div>
+      <div class="erp-conn-box" id="sb-stats-box" style="display:none">
+        <div id="sb-stats-text" style="font-size:12px;color:var(--g1);line-height:1.8"></div>
+      </div>
+    </div>
+
+    <!-- GUIDE -->
+    <div class="cfg-sec" id="s-guide">
+      <div class="cfg-grp">🚀 Comment publier ce site</div>
+      <div style="font-size:13px;color:var(--gy);line-height:1.8;margin-bottom:16px">
+        Ce site est un fichier HTML autonome — aucun serveur requis. Déployez-le en glissant le dossier sur Netlify.
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;gap:11px">
+          <div style="width:26px;height:26px;border-radius:50%;background:var(--g1);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">1</div>
+          <div><strong style="display:block;font-size:13px;color:var(--gd)">Téléchargez ce fichier HTML</strong><p style="font-size:12px;color:var(--gy)">Renommez-le <code style="font-size:11px;background:var(--cr);padding:1px 6px;border-radius:4px;font-family:monospace">index.html</code></p></div>
+        </div>
+        <div style="display:flex;gap:11px">
+          <div style="width:26px;height:26px;border-radius:50%;background:var(--g1);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">2</div>
+          <div><strong style="display:block;font-size:13px;color:var(--gd)">Netlify Drop</strong><p style="font-size:12px;color:var(--gy)">Ouvrez netlify.com/drop et glissez votre fichier → site en ligne en 30 secondes</p></div>
+        </div>
+        <div style="display:flex;gap:11px">
+          <div style="width:26px;height:26px;border-radius:50%;background:var(--g1);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">3</div>
+          <div><strong style="display:block;font-size:13px;color:var(--gd)">Connexion Supabase</strong><p style="font-size:12px;color:var(--gy)">Dans l'onglet Supabase, entrez votre URL et Anon Key pour activer la synchronisation temps réel</p></div>
+        </div>
+      </div>
+      <div class="cfg-grp" style="margin-top:20px">🔗 API FreshLink utilisées</div>
+      <div class="code-block">Vue : v_marketplace_catalogue
+Table : fl_commandes_web
+Table : fl_company_contacts
+Realtime : fl_articles (changes)</div>
+    </div>
+  </div>
+
+  <div class="cfg-footer">
+    <button class="cfg-save" onclick="saveConfig()">💾 Enregistrer la configuration</button>
+    <div class="cfg-saved-msg" id="cfg-saved"></div>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav>
+  <img class="nav-logo" src="../empire-fresh-logo.png" alt="Empire Fresh" onerror="this.style.display='none'">
+  <ul>
+    <li><a href="#produits">Catalogue</a></li>
+    <li><a href="#commander">Commander</a></li>
+    <li><a href="#erp">Espace Pro</a></li>
+    <li><a href="#livraison">Livraison</a></li>
+  </ul>
+  <div class="nav-r">
+    <a class="btn-wa" id="nav-wa" href="#" target="_blank">💬 WhatsApp</a>
+    <button class="btn-cart" onclick="document.getElementById('commander').scrollIntoView({behavior:'smooth'})">
+      🛒 <span id="cart-n">0</span><div class="cbadge" id="cart-badge" style="display:none">0</div>
+    </button>
+  </div>
+</nav>
+
+<!-- SUPABASE STATUS BAR -->
+<div class="erp-bar">
+  <div class="erp-status">
+    <div class="erp-dot loading" id="erp-bar-dot"></div>
+    <span id="erp-bar-label">Connexion FreshLink ERP — chargement...</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <span class="erp-last" id="erp-last-sync"></span>
+    <button class="erp-refresh" onclick="syncFromSupabase()">🔄 Sync temps réel</button>
+  </div>
+</div>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-orb1"></div>
+  <div class="hero-orb2"></div>
+  <div class="hero-txt">
+    <div class="hero-badge">🇲🇦 Distribution à Casablanca — Maroc</div>
+    <h1>Fruits &amp; Légumes<br><em>Frais du Marché</em><br>livrés chez vous</h1>
+    <p>Produits frais, épluchés ou lavés — livrés en standard ou express dans tout Casablanca. Pour particuliers, restaurants, hôtels et marchands professionnels.</p>
+    <div class="hero-btns">
+      <a class="btn-gold" href="#commander">Commander maintenant</a>
+      <a class="btn-ol" href="#produits">Voir le catalogue</a>
+    </div>
+    <div class="hero-stats">
+      <div><div class="hs-num" id="stat-prods">50+</div><div class="hs-lbl">Produits frais</div></div>
+      <div><div class="hs-num">2h</div><div class="hs-lbl">Livraison express</div></div>
+      <div><div class="hs-num">B2C+B2B</div><div class="hs-lbl">Tous types clients</div></div>
+    </div>
+  </div>
+  <div class="hero-cards" id="hero-cards"></div>
+</section>
+
+<div class="strip">
+  <div class="strip-inner">
+    <div class="si"><span>🚚</span>Standard &amp; express</div>
+    <div class="si"><span>🔪</span>Épluchés &amp; lavés</div>
+    <div class="si"><span>💧</span>Prêts à cuisiner</div>
+    <div class="si"><span>🏪</span>Pro &amp; Marchands</div>
+    <div class="si"><span>⚡</span>Sync temps réel FreshLink</div>
+    <div class="si"><span>🌿</span>Fraîcheur garantie</div>
+    <div class="si"><span>🚚</span>Standard &amp; express</div>
+    <div class="si"><span>🔪</span>Épluchés &amp; lavés</div>
+    <div class="si"><span>💧</span>Prêts à cuisiner</div>
+    <div class="si"><span>🏪</span>Pro &amp; Marchands</div>
+    <div class="si"><span>⚡</span>Sync temps réel FreshLink</div>
+    <div class="si"><span>🌿</span>Fraîcheur garantie</div>
+  </div>
+</div>
+
+<!-- CATEGORIES -->
+<section class="cats-sec" id="produits">
+  <div class="sw">
+    <div class="slbl">Notre catalogue</div>
+    <div class="stit">Choisissez votre catégorie</div>
+    <div class="sdesc">Produits frais livrés chaque matin. Stock et prix synchronisés avec FreshLink ERP en temps réel.</div>
+    <div class="cats">
+      <div class="ccat on" onclick="fcat('tous',this)"><span class="ccat-em">🛒</span><div class="ccat-n">Tout voir</div><div class="ccat-c" id="cat-count-tous">Chargement...</div></div>
+      <div class="ccat" onclick="fcat('fruits',this)"><span class="ccat-em">🍎</span><div class="ccat-n">Fruits frais</div><div class="ccat-c" id="cat-count-fruits">...</div><div class="ccat-new">Saison</div></div>
+      <div class="ccat" onclick="fcat('legumes',this)"><span class="ccat-em">🥦</span><div class="ccat-n">Légumes</div><div class="ccat-c" id="cat-count-legumes">...</div></div>
+      <div class="ccat" onclick="fcat('prepare',this)"><span class="ccat-em">🔪</span><div class="ccat-n">Prêt à cuisiner</div><div class="ccat-c" id="cat-count-prepare">...</div><div class="ccat-new">Nouveau</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- PRODUCTS -->
+<div class="prod-sec">
+  <div class="sw">
+    <div class="fbar">
+      <button class="fb on" onclick="filt(this,'tous')">Tous</button>
+      <button class="fb" onclick="filt(this,'frais')">🌿 Frais</button>
+      <button class="fb" onclick="filt(this,'epluche')">🔪 Épluché</button>
+      <button class="fb" onclick="filt(this,'lave')">💧 Lavé</button>
+      <button class="fb" onclick="filt(this,'combo')">✨ Épluché+Lavé</button>
+      <button class="fb" onclick="filt(this,'promo')">🔥 Promo</button>
+      <div class="erp-sync-badge">
+        <div class="dot loading" id="sync-dot"></div>
+        <span id="sync-label">Connexion...</span>
+      </div>
+    </div>
+    <div class="pgrid" id="pgrid"></div>
+  </div>
+</div>
+
+<!-- ORDER -->
+<section class="ord-sec" id="commander">
+  <div class="sw">
+    <div class="slbl">Passez votre commande</div>
+    <div class="stit">Commander en ligne</div>
+    <div class="sdesc">Standard ou express, avec ou sans préparation.</div>
+    <div class="ogrid">
+      <div class="oform">
+        <div class="ftit">📋 Vos informations</div>
+        <div class="ctabs">
+          <button class="ctab on" onclick="setCt(this,'part')">🏠 Particulier</button>
+          <button class="ctab" onclick="setCt(this,'pro')">🏢 Professionnel</button>
+          <button class="ctab" onclick="setCt(this,'resto')">🍽️ Restaurant</button>
+        </div>
+        <div class="frow">
+          <div class="fg"><label>Prénom &amp; Nom</label><input id="f-nom" type="text" placeholder="Mohammed Alami"></div>
+          <div class="fg"><label>Téléphone WhatsApp</label><input id="f-tel" type="tel" placeholder="+212 6XX XXX XXX"></div>
+        </div>
+        <div class="fg" id="co-row" style="display:none">
+          <label>Raison sociale / Enseigne</label><input id="f-co" type="text" placeholder="Restaurant Al Fès...">
+        </div>
+        <div class="fg"><label>Email (optionnel)</label><input id="f-email" type="email" placeholder="email@exemple.com"></div>
+        <div class="fg"><label>Adresse complète — Casablanca</label><input id="f-adr" type="text" placeholder="N° rue, quartier, bâtiment, étage..."></div>
+        <div class="fg"><label>Quartier / Zone</label>
+          <select id="f-zone">
+            <option value="">— Sélectionnez votre quartier —</option>
+            <option>Maarif</option><option>Ain Diab / Anfa</option><option>Centre-ville</option>
+            <option>Hay Mohammadi</option><option>Sidi Bernoussi</option><option>Derb Sultan</option>
+            <option>Moulay Rachid</option><option>Ain Sebaa</option><option>Hay Hassani</option>
+            <option>Bernoussi / Sidi Moumen</option><option>Autre quartier</option>
+          </select>
+        </div>
+        <div class="fsec">🚚 Mode de livraison</div>
+        <div class="dopts">
+          <div class="dopt on" id="d-std" onclick="setDel('std')">
+            <div class="di">🚚</div><div class="dt">Standard</div>
+            <div class="ds">Livraison sous 24h</div>
+            <div class="dp" id="std-lbl">Gratuit dès 150 MAD</div>
+          </div>
+          <div class="dopt exo" id="d-exp" onclick="setDel('exp')">
+            <div class="ebadge">RAPIDE</div>
+            <div class="di">⚡</div><div class="dt">Express</div>
+            <div class="ds" id="exp-delay-lbl">Livraison en 2h</div>
+            <div class="dp" id="exp-lbl">+20 MAD</div>
+          </div>
+        </div>
+        <div class="fsec">🔪 Préparation souhaitée</div>
+        <div class="popts">
+          <div class="popt on" onclick="this.classList.toggle('on')"><span class="pi2">🌿</span>Frais tel quel</div>
+          <div class="popt" onclick="this.classList.toggle('on')"><span class="pi2">🔪</span>Épluché (+5%)</div>
+          <div class="popt" onclick="this.classList.toggle('on')"><span class="pi2">💧</span>Lavé (+3%)</div>
+          <div class="popt" onclick="this.classList.toggle('on')"><span class="pi2">✨</span>Épluché+Lavé (+7%)</div>
+          <div class="popt" onclick="this.classList.toggle('on')"><span class="pi2">🧺</span>Coupé (+10%)</div>
+          <div class="popt" onclick="this.classList.toggle('on')"><span class="pi2">📦</span>Emballé</div>
+        </div>
+        <div class="fg" style="margin-top:18px"><label>Notes / Instructions</label>
+          <textarea id="f-notes" placeholder="Heure préférée, accès immeuble, allergies..."></textarea>
+        </div>
+        <div class="fg"><label>Mode de paiement</label>
+          <select id="f-pay">
+            <option>💵 Cash à la livraison</option>
+            <option>🏦 Virement bancaire</option>
+            <option>💳 Paiement en ligne (bientôt)</option>
+          </select>
+        </div>
+        <button class="sbtn" id="submit-btn" onclick="submitOrder()">
+          ✅ Envoyer ma commande — <span id="total-btn">0 MAD</span>
+        </button>
+      </div>
+
+      <div class="osum">
+        <div class="osum-h">🛒 Votre panier</div>
+        <div id="cart-items"><div class="cempty">Votre panier est vide.<br>Ajoutez des produits depuis le catalogue.</div></div>
+        <div id="cart-totals" style="display:none">
+          <div class="ibox"><span style="font-size:18px">ℹ️</span>
+            <div class="ibox-t" id="del-info">Livraison standard — gratuite dès 150 MAD.</div>
+          </div>
+          <div class="tr"><span>Sous-total</span><span id="t-sub">0 MAD</span></div>
+          <div class="tr"><span>Livraison</span><span id="t-del">Gratuite</span></div>
+          <div class="tf2"><div class="tl2">Total</div><div class="ta" id="t-tot">0 MAD</div></div>
+          <div class="erp-note">
+            <strong>🔗 Synchronisé avec FreshLink ERP</strong>
+            Commande enregistrée — bon de livraison — notification WhatsApp
+          </div>
+          <button class="cbtn" onclick="submitOrder()">⚡ Confirmer — <span id="t-conf">0 MAD</span></button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ESPACE PRO -->
+<section class="erp-sec" id="erp">
+  <div class="sw">
+    <div class="slbl" style="color:var(--o2)">⚡ Espace Professionnel</div>
+    <div class="erp-g" style="align-items:start">
+      <div>
+        <div class="erp-t">Rejoignez notre <em>réseau pro</em></div>
+        <div class="erp-d">Accédez à vos prix négociés, suivez vos commandes et gérez votre compte directement en ligne.</div>
+        <div class="efs">
+          <div class="ef"><div class="efi">💰</div><div class="efc"><strong>Prix négociés</strong><span>Tarifs réservés aux professionnels selon votre profil.</span></div></div>
+          <div class="ef"><div class="efi">📋</div><div class="efc"><strong>Suivi de commandes</strong><span>Historique complet, statut en temps réel, bons de livraison.</span></div></div>
+          <div class="ef"><div class="efi">📞</div><div class="efc"><strong>Support dédié</strong><span>Un commercial attribué à votre compte.</span></div></div>
+          <div class="ef"><div class="efi">⚡</div><div class="efc"><strong>Accès prioritaire</strong><span>Stock réservé, livraison express, catalogue exclusif.</span></div></div>
+        </div>
+        <div style="margin-top:28px">
+          <a href="#commander" style="display:inline-block;padding:13px 26px;background:var(--o2);color:#000;border-radius:10px;font-weight:700;text-decoration:none">Commander maintenant</a>
+        </div>
+      </div>
+      <div class="ediag">
+        <div class="dl">🔗 Connexion FreshLink ERP — Temps réel</div>
+        <div class="df">
+          <div class="dn hl"><div class="dni">🌐</div><div><div class="dnn">Site web public</div><div class="dns">Catalogue synchronisé</div></div><div class="dst sl">● EN LIGNE</div></div>
+          <div class="da">↕️</div>
+          <div class="dn hl"><div class="dni">⚡</div><div><div class="dnn">Supabase Realtime</div><div class="dns">Mises à jour instantanées</div></div><div class="dst sl">● ACTIF</div></div>
+          <div class="da">↕️</div>
+          <div class="dn"><div class="dni">📦</div><div><div class="dnn">FreshLink ERP</div><div class="dns">Stock · Prix · Commandes</div></div><div class="dst sa">⚡ SYNC</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ZONES LIVRAISON -->
+<section class="z-sec" id="livraison">
+  <div class="sw">
+    <div class="slbl">Zones desservies</div>
+    <div class="stit">Livraison dans tout Casablanca</div>
+    <div class="zdels" style="margin-bottom:24px">
+      <span class="zt zts">Standard 24h</span>
+      <span class="zt zte">Express 2h</span>
+    </div>
+    <div class="zgrid">
+      <div class="zc"><div class="zi">🏙️</div><div class="zn">Centre-ville / Maarif</div><div class="zd">Livraison standard &amp; express</div><div class="zdels"><span class="zt zts">Standard</span><span class="zt zte">Express</span></div><div class="zp">Gratuit dès 150 MAD</div></div>
+      <div class="zc"><div class="zi">🌊</div><div class="zn">Ain Diab / Anfa</div><div class="zd">Côte et résidences</div><div class="zdels"><span class="zt zts">Standard</span><span class="zt zte">Express</span></div><div class="zp">Gratuit dès 150 MAD</div></div>
+      <div class="zc"><div class="zi">🏘️</div><div class="zn">Hay Mohammadi / Bernoussi</div><div class="zd">Quartiers populaires</div><div class="zdels"><span class="zt zts">Standard</span></div><div class="zp">Gratuit dès 150 MAD</div></div>
+      <div class="zc exp"><div class="zi">🏭</div><div class="zn">Ain Sebaa / Sidi Moumen</div><div class="zd">Zone industrielle &amp; commerciale</div><div class="zdels"><span class="zt zts">Standard</span><span class="zt zte">Express</span></div><div class="zp">+15 MAD standard</div></div>
+      <div class="zc"><div class="zi">🌿</div><div class="zn">Hay Hassani / Moulay Rachid</div><div class="zd">Sud de Casablanca</div><div class="zdels"><span class="zt zts">Standard</span></div><div class="zp">Gratuit dès 200 MAD</div></div>
+      <div class="zc exp"><div class="zi">📦</div><div class="zn">Autres quartiers</div><div class="zd">Sur demande — contactez-nous</div><div class="zdels"><span class="zt zts">Standard</span></div><div class="zp">Nous consulter</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- TEMOIGNAGES -->
+<section class="t-sec">
+  <div class="sw">
+    <div class="slbl">Avis clients</div>
+    <div class="stit">Ce que disent nos clients</div>
+    <div class="tg">
+      <div class="tc2"><div class="stars">★★★★★</div><div class="tt">"Produits toujours frais, livrés à l'heure. Le service express est parfait pour mon restaurant."</div><div class="ta2"><div class="av">👨‍🍳</div><div><div class="an">Hassan B.</div><div class="ar">Restaurateur, Maarif</div></div></div></div>
+      <div class="tc2"><div class="stars">★★★★★</div><div class="tt">"Commande le soir, livraison le lendemain matin avant l'ouverture. Parfait pour mon épicerie."</div><div class="ta2"><div class="av">🏪</div><div><div class="an">Fatima Z.</div><div class="ar">Épicière, Ain Sebaa</div></div></div></div>
+      <div class="tc2"><div class="stars">★★★★☆</div><div class="tt">"Les légumes épluchés sont un gain de temps incroyable pour ma cuisine de collectivité."</div><div class="ta2"><div class="av">🍽️</div><div><div class="an">Karim M.</div><div class="ar">Chef cuisinier, Centre-ville</div></div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="sw">
+    <div class="fg2">
+      <div>
+        <img src="../empire-fresh-logo.png" alt="Empire Fresh" style="height:52px;margin-bottom:16px;object-fit:contain;filter:brightness(0) invert(1)" onerror="this.style.display='none'">
+        <div class="fbp">Distribution de fruits et légumes frais à Casablanca. Standard sous 24h, express en 2h. Particuliers, restaurants, hôtels et marchands.</div>
+        <div class="fct">
+          <a id="footer-wa" href="#">💬 WhatsApp</a>
+          <a id="footer-email" href="#">📧 Email</a>
+          <span id="footer-addr">📍 Casablanca, Maroc</span>
+        </div>
+      </div>
+      <div class="fcol">
+        <h4>Navigation</h4>
+        <ul>
+          <li><a href="#produits">Catalogue</a></li>
+          <li><a href="#commander">Commander</a></li>
+          <li><a href="#erp">Espace Pro</a></li>
+          <li><a href="#livraison">Zones livraison</a></li>
+        </ul>
+      </div>
+      <div class="fcol">
+        <h4>Services</h4>
+        <ul>
+          <li><a href="#">Livraison standard</a></li>
+          <li><a href="#">Livraison express</a></li>
+          <li><a href="#">Fruits frais</a></li>
+          <li><a href="#">Légumes</a></li>
+          <li><a href="#">Prêt à cuisiner</a></li>
+        </ul>
+      </div>
+      <div class="fcol">
+        <h4>Contact</h4>
+        <ul>
+          <li><a id="footer-wa2" href="#">WhatsApp commande</a></li>
+          <li><a id="footer-fb" href="#" style="display:none">Facebook</a></li>
+          <li><a id="footer-ig" href="#" style="display:none">Instagram</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="fbot">
+      <span>© 2025 Empire Fresh — Tous droits réservés</span>
+      <span>Synchronisé avec FreshLink ERP ⚡ Supabase Realtime</span>
+    </div>
+  </div>
+</footer>
+
+<a class="waf" id="wa-float" href="#" target="_blank">💬</a>
+<div class="toast" id="toast"></div>
+
+<!-- MODAL CONFIRMATION -->
+<div class="mov" id="modal">
+  <div class="mod">
+    <button class="mod-x" onclick="document.getElementById('modal').classList.remove('show')">✕</button>
+    <div class="mod-ic">✅</div>
+    <div class="mod-t">Commande envoyée !</div>
+    <div class="mod-d">Votre commande a bien été enregistrée dans FreshLink ERP. Notre équipe vous contactera dans les plus brefs délais.</div>
+    <div class="mod-erp" id="mod-erp-info">
+      <strong>🔗 Enregistrée dans FreshLink ERP</strong>
+      Numéro de commande : <span id="mod-order-num">—</span>
+    </div>
+    <a class="mbtn mwa" id="mod-wa" href="#" target="_blank">💬 Confirmer sur WhatsApp</a>
+    <button class="mbtn mcl" onclick="document.getElementById('modal').classList.remove('show');cart={};updateCartUI()">Fermer</button>
+  </div>
+</div>
+
+<script>
+(function() {
+
+// ── CONFIG ──
+var CFG = {
+  wa: "212600000000",
+  email: "sales@empire-fresh.co.site",
+  addr: "Casablanca, Maroc",
+  fb: "", ig: "",
+  exp: 20, expDelay: "2h", free: 150, std: 15,
+  sbUrl: "https://jwdrwapuetqoqnankgma.supabase.co",
+  sbKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp3ZHJ3YXB1ZXRxb3FuYW5rZ21hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0NDE1NzUsImV4cCI6MjA5NDAxNzU3NX0.9l0e2eE9milvCWg29TIoGXgWY-ULOmTVrPmWRCsIvtw"
+};
+try { Object.assign(CFG, JSON.parse(localStorage.getItem("ef_cfg_v2") || "{}")); } catch(e){}
+
+// ── SUPABASE ──
+var sb = null;
+var realtimeChannel = null;
+
+function initSupabase() {
+  try {
+    if (!CFG.sbUrl || !CFG.sbKey) return null;
+    return window.supabase.createClient(CFG.sbUrl, CFG.sbKey);
+  } catch(e) {
+    console.error("[Supabase] init error:", e);
+    return null;
+  }
+}
+
+// ── EMOJI MAP ──
+var EMOJI_MAP = {
+  tomate:"🍅", avocat:"🥑", orange:"🍊", carotte:"🥕", citron:"🍋",
+  brocoli:"🥦", oignon:"🧅", raisin:"🍇", laitue:"🥬", salade:"🥬",
+  aubergine:"🍆", mais:"🌽", fraise:"🍓", concombre:"🥒", banane:"🍌",
+  poivron:"🫑", pomme:"🍎", pasteque:"🍉", courgette:"🥬", ail:"🧄",
+  mangue:"🥭", peche:"🍑", poire:"🍐", prune:"🍑", melon:"🍈",
+  kiwi:"🥝", ananas:"🍍", cerise:"🍒", abricot:"🍑", figues:"🍇",
+  grenade:"🧃", epinard:"🌿", chou:"🥬", haricot:"🟢", pois:"🫘",
+  celeri:"🌿", persil:"🌿", coriandre:"🌿", menthe:"🌿", gingembre:"🫚",
+  patate:"🥔", betterave:"🟣", radis:"🔴", navet:"⚪", fenouil:"🌿"
+};
+
+function getEmoji(nom, famille) {
+  if (!nom) return famille === "fruits" ? "🍎" : famille === "prepare" ? "🔪" : "🥦";
+  var n = nom.toLowerCase();
+  for (var k in EMOJI_MAP) {
+    if (n.includes(k)) return EMOJI_MAP[k];
+  }
+  return famille === "fruits" ? "🍎" : famille === "prepare" ? "🔪" : "🥦";
+}
+
+function mapFamille(f) {
+  if (!f) return "legumes";
+  var fl = (f + "").toLowerCase();
+  if (fl.includes("fruit")) return "fruits";
+  if (fl.includes("prépare") || fl.includes("prepare") || fl.includes("prêt") || fl.includes("pret") || fl.includes("pluche") || fl.includes("lave")) return "prepare";
+  return "legumes";
+}
+
+// Tag label / class
+var TL = {frais:"🌿 Frais", epluche:"🔪 Épluché", lave:"💧 Lavé", combo:"✨ Épluché+Lavé", promo:"🔥 Promo"};
+var TC = {frais:"tf", epluche:"te", lave:"tl", combo:"tc", promo:"tp"};
+
+// Cart & delivery
+var cart = {}, delMode = "std", currentFilter = "tous";
+
+// ── DEFAULT PRODUCTS (fallback offline) ──
+var DEFAULT_PRODS = [
+  {id:"t1", em:"🍅", n:"Tomates",        o:"Souss",       p:8,  u:"kg",  cat:"legumes", tags:["frais","epluche"], t:"frais",   dispo:true},
+  {id:"t2", em:"🥑", n:"Avocats",         o:"Marrakech",   p:35, u:"kg",  cat:"fruits",  tags:["frais"],           t:"frais",   dispo:true},
+  {id:"t3", em:"🍊", n:"Oranges",         o:"Maroc",       p:6,  u:"kg",  cat:"fruits",  tags:["frais","epluche"], t:"frais",   dispo:true},
+  {id:"t4", em:"🥕", n:"Carottes",        o:"Gharb",       p:5,  u:"kg",  cat:"legumes", tags:["frais","lave"],    t:"lave",    dispo:true},
+  {id:"t5", em:"🥦", n:"Brocolis",        o:"Meknès",      p:18, u:"kg",  cat:"prepare", tags:["frais","combo"],   t:"combo",   dispo:true},
+  {id:"t6", em:"🧅", n:"Oignons",         o:"Settat",      p:7,  u:"kg",  cat:"legumes", tags:["frais","epluche"], t:"epluche", dispo:true},
+  {id:"t7", em:"🍇", n:"Raisins",         o:"Meknès",      p:28, u:"kg",  cat:"fruits",  tags:["frais","promo"],   t:"promo",   dispo:true},
+  {id:"t8", em:"🧄", n:"Ail épluché",     o:"Meknès",      p:40, u:"kg",  cat:"prepare", tags:["epluche","combo"], t:"epluche", dispo:true}
+];
+
+var PRODS = DEFAULT_PRODS.slice();
+
+// ── SUPABASE SYNC ──
+var sbSynced = false;
+
+function syncFromSupabase() {
+  if (!sb) {
+    sb = initSupabase();
+  }
+  if (!sb) {
+    setERPBar("offline", "Catalogue local (Supabase non configuré)", "");
+    setSyncBadge("offline", "Local");
+    renderProds();
+    updateCatCounts();
+    return;
+  }
+
+  setERPBar("loading", "Synchronisation avec FreshLink ERP...", "");
+  setSyncBadge("loading", "Sync...");
+
+  sb.from("v_marketplace_catalogue")
+    .select("*")
+    .order("position_catalogue", {ascending: true})
+    .then(function(result) {
+      if (result.error) throw result.error;
+      var data = result.data || [];
+      if (!data.length) throw new Error("Aucun produit visible_web");
+
+      PRODS = data.map(function(row) {
+        var cat = mapFamille(row.famille);
+        var tags = Array.isArray(row.tags) ? row.tags : [];
+        var firstTag = tags[0] || "frais";
+        var prix = row.promo_active && row.prix_promo ? parseFloat(row.prix_promo) : parseFloat(row.prix || 0);
+        return {
+          id: row.id,
+          em: getEmoji(row.nom, cat),
+          n: row.nom || "",
+          o: row.description || row.famille || "Maroc",
+          p: prix,
+          prixBase: parseFloat(row.prix || prix),
+          u: row.unite || "kg",
+          cat: cat,
+          tags: tags,
+          t: firstTag,
+          dispo: row.stock_actuel > 0,
+          stock: row.stock_actuel,
+          img: row.photo || "",
+          promo: row.promo_active,
+          promoLabel: row.promo_label || (row.promo_taux ? "-" + row.promo_taux + "%" : ""),
+          fromSupabase: true
+        };
+      });
+
+      sbSynced = true;
+      var now = new Date().toLocaleTimeString("fr-FR", {hour:"2-digit", minute:"2-digit"});
+      setERPBar("online", "FreshLink ERP — synchronisé en temps réel", "Dernière sync : " + now);
+      setSyncBadge("online", "Temps réel");
+      renderProds();
+      renderHero();
+      updateCatCounts();
+      showToast("✅ Catalogue synchronisé depuis FreshLink ERP !");
+      updateERPConnBox(true, "Connecté — " + PRODS.length + " produits disponibles");
+
+      // Realtime subscription
+      subscribeRealtime();
+    })
+    .catch(function(err) {
+      console.error("[Supabase] sync error:", err);
+      setERPBar("offline", "ERP hors ligne — catalogue local affiché", "");
+      setSyncBadge("offline", "Local");
+      renderProds();
+      updateCatCounts();
+      updateERPConnBox(false, "Erreur : " + (err.message || err));
+    });
+}
+
+function subscribeRealtime() {
+  if (realtimeChannel) {
+    try { sb.removeChannel(realtimeChannel); } catch(e){}
+  }
+  realtimeChannel = sb
+    .channel("fl-articles-changes")
+    .on("postgres_changes", {event: "*", schema: "public", table: "fl_articles"}, function() {
+      syncFromSupabase();
+    })
+    .subscribe(function(status) {
+      if (status === "SUBSCRIBED") {
+        var dot = document.getElementById("erp-bar-dot");
+        if (dot) dot.className = "erp-dot";
+      }
+    });
+}
+
+function setERPBar(state, label, sub) {
+  var dot = document.getElementById("erp-bar-dot");
+  var lbl = document.getElementById("erp-bar-label");
+  var last = document.getElementById("erp-last-sync");
+  if (dot) dot.className = "erp-dot" + (state === "online" ? "" : state === "loading" ? " loading" : " offline");
+  if (lbl) lbl.textContent = label;
+  if (last && sub) last.textContent = sub;
+}
+
+function setSyncBadge(state, label) {
+  var dot = document.getElementById("sync-dot");
+  var lbl = document.getElementById("sync-label");
+  if (dot) dot.className = "dot" + (state === "loading" ? " loading" : "");
+  if (lbl) lbl.textContent = label;
+}
+
+function updateERPConnBox(ok, msg) {
+  var dot = document.getElementById("sb-conn-dot");
+  var lbl = document.getElementById("sb-conn-label");
+  var sub = document.getElementById("sb-conn-sub");
+  if (dot) dot.className = "erp-conn-dot" + (ok ? "" : " err");
+  if (lbl) lbl.textContent = ok ? "Connecté à FreshLink ERP" : "Erreur de connexion";
+  if (sub) sub.textContent = msg;
+}
+
+function testSupabase() {
+  var url = document.getElementById("c-sb-url").value.trim();
+  var key = document.getElementById("c-sb-key").value.trim();
+  if (url) CFG.sbUrl = url;
+  if (key) CFG.sbKey = key;
+  sb = initSupabase();
+  syncFromSupabase();
+}
+
+// ── RENDER HERO ──
+function renderHero() {
+  var avail = PRODS.filter(function(p) { return p.dispo; }).slice(0, 4);
+  document.getElementById("hero-cards").innerHTML = avail.map(function(p) {
+    var src = p.img || "";
+    return '<div class="hcard" onclick="document.getElementById(\'commander\').scrollIntoView({behavior:\'smooth\'})">'
+      + (src ? '<img class="hcard-img" src="' + src + '" alt="' + p.n + '" onerror="this.style.display=\'none\'">' : '<div class="hcard-img" style="display:flex;align-items:center;justify-content:center;font-size:40px">' + p.em + '</div>')
+      + '<div class="hcard-b">'
+      + '<div class="hcard-n">' + p.em + ' ' + p.n + '</div>'
+      + '<div class="hcard-p">' + p.p + ' MAD/' + p.u + '</div>'
+      + '</div></div>';
+  }).join("");
+  var sp = document.getElementById("stat-prods");
+  if (sp) sp.textContent = PRODS.filter(function(p){ return p.dispo; }).length + "+";
+}
+
+// ── SKELETON ──
+function showSkeletons(n) {
+  var html = "";
+  for (var i = 0; i < n; i++) {
+    html += '<div class="skel"><div class="skel-img"></div><div class="skel-body">'
+      + '<div class="skel-line"></div><div class="skel-line short"></div></div></div>';
+  }
+  document.getElementById("pgrid").innerHTML = html;
+}
+
+// ── RENDER PRODUCTS ──
+function renderProds(f) {
+  if (f !== undefined) currentFilter = f;
+  var filter = currentFilter;
+  var specTags = ["frais", "epluche", "lave", "combo", "promo"];
+  var list;
+  if (filter === "tous") {
+    list = PRODS;
+  } else if (specTags.indexOf(filter) >= 0) {
+    list = PRODS.filter(function(p) { return p.tags && p.tags.indexOf(filter) >= 0; });
+  } else {
+    list = PRODS.filter(function(p) { return p.cat === filter; });
+  }
+
+  if (!list.length) {
+    document.getElementById("pgrid").innerHTML =
+      '<div class="no-prods"><span class="no-prods-icon">🔍</span>'
+      + '<h3>Aucun produit trouvé</h3>'
+      + '<p>Essayez une autre catégorie ou attendez la synchronisation.</p></div>';
+    return;
+  }
+
+  document.getElementById("pgrid").innerHTML = list.map(function(p) {
+    var qty = cart[p.id] ? cart[p.id].qty : 0;
+    var outStock = !p.dispo;
+    var tagType = p.t || (p.tags && p.tags[0]) || "frais";
+    var tagClass = TC[tagType] || "tf";
+    var tagLabel = TL[tagType] || "🌿 Frais";
+    var promoHtml = p.promo && p.promoLabel ? '<span class="pc-promo">' + p.promoLabel + '</span>' : "";
+    var prixHtml = p.promo && p.prixBase && p.prixBase !== p.p
+      ? p.p + ' MAD <del>' + p.prixBase + '</del><span>/ ' + p.u + '</span>'
+      : p.p + ' MAD <span>/ ' + p.u + '</span>';
+    var imgHtml = p.img
+      ? '<img src="' + p.img + '" alt="' + p.n + '" onerror="this.style.display=\'none\'" loading="lazy">'
+      : "";
+    var tagsHtml = (p.tags || []).map(function(t) {
+      return TL[t] ? '<span class="po">' + TL[t] + '</span>' : '';
+    }).join("");
+
+    return '<div class="pc">'
+      + '<div class="pc-img"><span>' + p.em + '</span>' + imgHtml
+      + '<span class="pc-tag ' + tagClass + '">' + tagLabel + '</span>'
+      + (outStock ? '<div class="out-badge">Rupture de stock</div>' : '')
+      + '</div>'
+      + '<div class="pc-body">'
+      + '<div class="pc-n">' + p.n + '</div>'
+      + '<div class="pc-ori">📍 ' + p.o + '</div>'
+      + '<div class="pc-opts">' + tagsHtml + promoHtml + '</div>'
+      + (p.stock !== undefined ? '<div style="font-size:10px;color:var(--gy);margin-bottom:6px">Stock : ' + p.stock + ' ' + p.u + '</div>' : '')
+      + '<div class="pc-foot">'
+      + '<div class="pc-p">' + prixHtml + '</div>'
+      + '<div class="qc">'
+      + '<button class="qb" onclick="upCart(\'' + p.id + '\',-1)" ' + (outStock ? 'disabled' : '') + '>−</button>'
+      + '<span class="qv" id="q' + p.id + '">' + qty + '</span>'
+      + '<button class="qb" onclick="upCart(\'' + p.id + '\',1)" ' + (outStock ? 'disabled title="Rupture de stock"' : '') + '>+</button>'
+      + '</div></div></div></div>';
+  }).join("");
+}
+
+// ── CATEGORY COUNTS ──
+function updateCatCounts() {
+  var counts = {tous:0, fruits:0, legumes:0, prepare:0};
+  PRODS.forEach(function(p) {
+    if (p.dispo) {
+      counts.tous++;
+      if (counts[p.cat] !== undefined) counts[p.cat]++;
+    }
+  });
+  ["tous","fruits","legumes","prepare"].forEach(function(k) {
+    var el = document.getElementById("cat-count-" + k);
+    if (el) el.textContent = counts[k] + " produit" + (counts[k] > 1 ? "s" : "");
+  });
+}
+
+// ── CART ──
+function upCart(id, d) {
+  var p = PRODS.find(function(x) { return x.id === id || x.id === parseInt(id); });
+  if (!p || !p.dispo) return;
+  if (!cart[id]) cart[id] = Object.assign({}, p, {qty:0});
+  cart[id].qty = Math.max(0, cart[id].qty + parseInt(d));
+  if (!cart[id].qty) delete cart[id];
+  var el = document.getElementById("q" + id);
+  if (el) el.textContent = cart[id] ? cart[id].qty : 0;
+  updateCartUI();
+  showToast(parseInt(d) > 0 ? "🛒 Ajouté au panier !" : "🗑️ Retiré du panier");
+}
+
+function updateCartUI() {
+  var items = Object.values(cart);
+  var total = items.reduce(function(s,p){ return s + p.qty; }, 0);
+  document.getElementById("cart-n").textContent = total;
+  var badge = document.getElementById("cart-badge");
+  if (badge) { badge.textContent = total; badge.style.display = total ? "flex" : "none"; }
+
+  var sub = items.reduce(function(s,p){ return s + p.p * p.qty; }, 0);
+  var df = delMode === "exp" ? CFG.exp : (sub >= CFG.free ? 0 : CFG.std);
+  var tot = sub + df;
+  document.getElementById("total-btn").textContent = tot + " MAD";
+
+  var ci = document.getElementById("cart-items");
+  var ct = document.getElementById("cart-totals");
+  if (!items.length) {
+    ci.innerHTML = '<div class="cempty">Votre panier est vide.<br>Ajoutez des produits depuis le catalogue.</div>';
+    ct.style.display = "none";
+    return;
+  }
+  ci.innerHTML = items.map(function(p) {
+    return '<div class="ci">'
+      + '<div class="ci-l"><div class="ci-em">' + p.em + '</div>'
+      + '<div><div class="ci-n">' + p.n + '</div>'
+      + '<div class="ci-m">' + p.qty + ' ' + p.u + ' × ' + p.p + ' MAD</div></div></div>'
+      + '<div style="display:flex;align-items:center;gap:9px">'
+      + '<div class="ci-p">' + (p.p * p.qty) + ' MAD</div>'
+      + '<button class="crm" onclick="upCart(\'' + p.id + '\',-' + p.qty + ')">✕</button>'
+      + '</div></div>';
+  }).join("");
+  ct.style.display = "block";
+  document.getElementById("t-sub").textContent = sub + " MAD";
+  document.getElementById("t-del").textContent = df === 0 ? "Gratuite" : "+" + df + " MAD";
+  document.getElementById("t-tot").textContent = tot + " MAD";
+  document.getElementById("t-conf").textContent = tot + " MAD";
+  document.getElementById("del-info").textContent = delMode === "exp"
+    ? "⚡ Express — livraison en " + CFG.expDelay + ", supplément +" + CFG.exp + " MAD."
+    : sub >= CFG.free
+    ? "🚛 Standard gratuite — commande ≥ " + CFG.free + " MAD."
+    : "🚛 Standard — gratuite dès " + CFG.free + " MAD (actuellement +" + CFG.std + " MAD).";
+}
+
+// ── FILTERS ──
+function filt(el, f) {
+  document.querySelectorAll(".fb").forEach(function(b){ b.classList.remove("on"); });
+  el.classList.add("on");
+  renderProds(f);
+}
+function fcat(cat, el) {
+  document.querySelectorAll(".ccat").forEach(function(c){ c.classList.remove("on"); });
+  el.classList.add("on");
+  renderProds(cat);
+  document.getElementById("produits").scrollIntoView({behavior:"smooth"});
+}
+function setDel(m) {
+  delMode = m;
+  document.getElementById("d-std").classList.toggle("on", m === "std");
+  document.getElementById("d-exp").classList.toggle("on", m === "exp");
+  updateCartUI();
+}
+function setCt(el, t) {
+  document.querySelectorAll(".ctab").forEach(function(x){ x.classList.remove("on"); });
+  el.classList.add("on");
+  document.getElementById("co-row").style.display = t !== "part" ? "block" : "none";
+}
+
+// ── SUBMIT ORDER ──
+function submitOrder() {
+  var nom = document.getElementById("f-nom").value.trim();
+  var tel = document.getElementById("f-tel").value.trim();
+  var adr = document.getElementById("f-adr").value.trim();
+  if (!nom || !tel || !adr) { showToast("⚠️ Remplissez nom, téléphone et adresse"); return; }
+  if (!Object.keys(cart).length) { showToast("🛒 Panier vide — ajoutez des produits"); return; }
+
+  var btn = document.getElementById("submit-btn");
+  btn.disabled = true;
+  btn.textContent = "⏳ Envoi en cours...";
+
+  var items = Object.values(cart);
+  var sub = items.reduce(function(s,p){ return s + p.p * p.qty; }, 0);
+  var df = delMode === "exp" ? CFG.exp : (sub >= CFG.free ? 0 : CFG.std);
+  var tot = sub + df;
+
+  var co = (document.getElementById("f-co") || {}).value || "";
+  var email = document.getElementById("f-email").value || "";
+  var zone = document.getElementById("f-zone").value;
+  var notes = document.getElementById("f-notes").value;
+  var pay = document.getElementById("f-pay").value;
+  var preps = Array.from(document.querySelectorAll(".popt.on")).map(function(e){ return e.textContent.trim(); }).join(", ");
+
+  var lignes = items.map(function(p) {
+    return {id: p.id, nom: p.n, qty: p.qty, prix_unitaire: p.p, total: p.p * p.qty, unite: p.u};
+  });
+
+  var orderData = {
+    nom_client: nom + (co ? " (" + co + ")" : ""),
+    telephone: tel,
+    email: email || null,
+    adresse_livraison: adr + (zone ? " — " + zone : ""),
+    lignes: lignes,
+    montant_total: tot,
+    creneau: delMode === "exp" ? "Express " + CFG.expDelay : "Standard 24h",
+    instructions: [preps ? "Préparation: " + preps : "", notes].filter(Boolean).join(" | ") || null,
+    statut: "recu"
+  };
+
+  // WA message
+  var msg = "🍃 *COMMANDE EMPIRE FRESH*\n\n";
+  msg += "👤 *Client :* " + nom + "\n";
+  if (co) msg += "🏢 *Enseigne :* " + co + "\n";
+  msg += "📱 *Tél :* " + tel + "\n";
+  msg += "📍 *Adresse :* " + adr + "\n";
+  if (zone) msg += "🗺️ *Zone :* " + zone + "\n";
+  msg += "\n🛒 *Produits :*\n";
+  items.forEach(function(p) { msg += "  • " + p.em + " " + p.n + " — " + p.qty + " " + p.u + " × " + p.p + " MAD = *" + (p.p * p.qty) + " MAD*\n"; });
+  msg += "\n🔪 *Préparation :* " + (preps || "Frais tel quel") + "\n";
+  msg += "🚚 *Livraison :* " + (delMode === "exp" ? "EXPRESS ⚡ (" + CFG.expDelay + ")" : "Standard 24h") + "\n";
+  msg += "💳 *Paiement :* " + pay + "\n";
+  if (notes) msg += "📝 *Notes :* " + notes + "\n";
+  msg += "\n💰 *Sous-total :* " + sub + " MAD\n";
+  msg += "🚚 *Livraison :* " + (df === 0 ? "Gratuite" : "+" + df + " MAD") + "\n";
+  msg += "✅ *TOTAL : " + tot + " MAD*\n";
+  msg += "📅 " + new Date().toLocaleDateString("fr-FR", {weekday:"long",year:"numeric",month:"long",day:"numeric"});
+
+  document.getElementById("mod-wa").href = "https://wa.me/" + CFG.wa + "?text=" + encodeURIComponent(msg);
+
+  // Save to Supabase
+  if (sb) {
+    sb.from("fl_commandes_web")
+      .insert([orderData])
+      .select("numero")
+      .then(function(result) {
+        btn.disabled = false;
+        btn.innerHTML = "✅ Envoyer ma commande — <span id='total-btn'>" + tot + " MAD</span>";
+        if (result.error) {
+          console.error("[Supabase] insert error:", result.error);
+          document.getElementById("mod-erp-info").style.display = "none";
+        } else {
+          var num = result.data && result.data[0] && result.data[0].numero;
+          document.getElementById("mod-order-num").textContent = num || "—";
+        }
+        document.getElementById("modal").classList.add("show");
+      });
+  } else {
+    btn.disabled = false;
+    btn.innerHTML = "✅ Envoyer ma commande — <span id='total-btn'>" + tot + " MAD</span>";
+    document.getElementById("mod-erp-info").style.display = "none";
+    document.getElementById("modal").classList.add("show");
+  }
+}
+
+// ── CONFIG PANEL ──
+function openCfg() {
+  document.getElementById("cfg-overlay").classList.add("show");
+  document.getElementById("cfg-drawer").classList.add("show");
+  loadCfgFields();
+}
+function closeCfg() {
+  document.getElementById("cfg-overlay").classList.remove("show");
+  document.getElementById("cfg-drawer").classList.remove("show");
+}
+function cfgTab(el, id) {
+  document.querySelectorAll(".cfg-tab").forEach(function(t){ t.classList.remove("on"); });
+  document.querySelectorAll(".cfg-sec").forEach(function(s){ s.classList.remove("on"); });
+  el.classList.add("on");
+  document.getElementById(id).classList.add("on");
+}
+function loadCfgFields() {
+  function set(id, v) { var el = document.getElementById(id); if (el) el.value = v || ""; }
+  set("c-wa", CFG.wa);
+  set("c-email", CFG.email);
+  set("c-addr", CFG.addr);
+  set("c-fb", CFG.fb);
+  set("c-ig", CFG.ig);
+  set("c-exp", CFG.exp);
+  set("c-free", CFG.free);
+  set("c-std", CFG.std);
+  set("c-sb-url", CFG.sbUrl);
+  set("c-sb-key", CFG.sbKey);
+  var ds = document.getElementById("c-expdelay");
+  if (ds) ds.value = CFG.expDelay || "2h";
+  updateERPConnBox(sbSynced, sbSynced ? CFG.sbUrl : "Non synchronisé");
+}
+function refreshPriceBox() {
+  var exp  = parseInt(document.getElementById("c-exp").value) || CFG.exp;
+  var free = parseInt(document.getElementById("c-free").value) || CFG.free;
+  var std  = parseInt(document.getElementById("c-std").value) || CFG.std;
+  var box  = document.getElementById("price-box");
+  if (box) box.innerHTML = '<strong>📊 Aperçu actuel</strong>Express : <b>' + exp + ' MAD</b> — Standard gratuite dès <b>' + free + ' MAD</b> — Sinon <b>' + std + ' MAD</b>';
+}
+function saveConfig() {
+  function get(id) { var el = document.getElementById(id); return el ? el.value.trim() : ""; }
+  CFG.wa = get("c-wa") || CFG.wa;
+  CFG.email = get("c-email") || CFG.email;
+  CFG.addr = get("c-addr") || CFG.addr;
+  CFG.fb = get("c-fb");
+  CFG.ig = get("c-ig");
+  CFG.exp = parseInt(get("c-exp")) || CFG.exp;
+  CFG.free = parseInt(get("c-free")) || CFG.free;
+  CFG.std = parseInt(get("c-std")) || CFG.std;
+  var expDelay = document.getElementById("c-expdelay");
+  CFG.expDelay = expDelay ? expDelay.value : CFG.expDelay;
+  var newUrl = get("c-sb-url");
+  var newKey = get("c-sb-key");
+  if (newUrl) CFG.sbUrl = newUrl;
+  if (newKey) CFG.sbKey = newKey;
+  localStorage.setItem("ef_cfg_v2", JSON.stringify(CFG));
+  updateContactLinks();
+  var msg = document.getElementById("cfg-saved");
+  if (msg) { msg.textContent = "✅ Configuration enregistrée !"; setTimeout(function(){ msg.textContent = ""; }, 3000); }
+  // Reinit Supabase if credentials changed
+  if (newUrl || newKey) { sb = initSupabase(); syncFromSupabase(); }
+}
+
+// ── CONTACT LINKS ──
+function updateContactLinks() {
+  var waLink = "https://wa.me/" + CFG.wa;
+  var navWa = document.getElementById("nav-wa");
+  var waFloat = document.getElementById("wa-float");
+  var footerWa = document.getElementById("footer-wa");
+  var footerWa2 = document.getElementById("footer-wa2");
+  if (navWa) navWa.href = waLink;
+  if (waFloat) waFloat.href = waLink;
+  if (footerWa) { footerWa.href = waLink; footerWa.textContent = "💬 WhatsApp"; }
+  if (footerWa2) { footerWa2.href = waLink; }
+  var fEmail = document.getElementById("footer-email");
+  if (fEmail) { fEmail.href = "mailto:" + CFG.email; fEmail.textContent = "📧 " + CFG.email; }
+  var fAddr = document.getElementById("footer-addr");
+  if (fAddr) fAddr.textContent = "📍 " + CFG.addr;
+  var fFb = document.getElementById("footer-fb");
+  if (fFb) { if (CFG.fb) { fFb.href = CFG.fb; fFb.style.display = ""; } else { fFb.style.display = "none"; } }
+  var fIg = document.getElementById("footer-ig");
+  if (fIg) { if (CFG.ig) { fIg.href = CFG.ig; fIg.style.display = ""; } else { fIg.style.display = "none"; } }
+  var expLbl = document.getElementById("exp-lbl");
+  if (expLbl) expLbl.textContent = "+" + CFG.exp + " MAD";
+  var expDelay = document.getElementById("exp-delay-lbl");
+  if (expDelay) expDelay.textContent = "Livraison en " + CFG.expDelay;
+  var stdLbl = document.getElementById("std-lbl");
+  if (stdLbl) stdLbl.textContent = "Gratuit dès " + CFG.free + " MAD";
+}
+
+// ── LOAD CONTACTS FROM SUPABASE ──
+function loadCompanyContacts() {
+  if (!sb) return;
+  sb.from("fl_company_contacts")
+    .select("*")
+    .eq("id", "main")
+    .single()
+    .then(function(result) {
+      if (result.error || !result.data) return;
+      var d = result.data;
+      if (d.whatsapp_principal) CFG.wa = d.whatsapp_principal.replace(/\D/g, "");
+      if (d.email_commercial || d.email_principal) CFG.email = d.email_commercial || d.email_principal;
+      if (d.adresse_ligne1 && d.ville) CFG.addr = d.adresse_ligne1 + ", " + d.ville;
+      if (d.facebook) CFG.fb = d.facebook;
+      if (d.instagram) CFG.ig = d.instagram;
+      updateContactLinks();
+    })
+    .catch(function(){});
+}
+
+// ── TOAST ──
+var toastTimer;
+function showToast(msg) {
+  var t = document.getElementById("toast");
+  clearTimeout(toastTimer);
+  t.textContent = msg;
+  t.classList.add("show");
+  toastTimer = setTimeout(function(){ t.classList.remove("show"); }, 2800);
+}
+
+// ── SCROLL REVEAL ──
+function initReveal() {
+  var obs = new IntersectionObserver(function(entries) {
+    entries.forEach(function(e) {
+      if (e.isIntersecting) { e.target.classList.add("visible"); obs.unobserve(e.target); }
+    });
+  }, {threshold: 0.15});
+  document.querySelectorAll(".reveal").forEach(function(el){ obs.observe(el); });
+}
+
+// ── INIT ──
+document.addEventListener("DOMContentLoaded", function() {
+  updateContactLinks();
+  showSkeletons(8);
+  sb = initSupabase();
+  syncFromSupabase();
+  loadCompanyContacts();
+  renderProds();
+  updateCatCounts();
+  initReveal();
+});
+
+// Expose globals for inline onclick
+window.filt = filt;
+window.fcat = fcat;
+window.setDel = setDel;
+window.setCt = setCt;
+window.upCart = upCart;
+window.submitOrder = submitOrder;
+window.openCfg = openCfg;
+window.closeCfg = closeCfg;
+window.cfgTab = cfgTab;
+window.saveConfig = saveConfig;
+window.refreshPriceBox = refreshPriceBox;
+window.syncFromSupabase = syncFromSupabase;
+window.testSupabase = testSupabase;
+window.showToast = showToast;
+
+})();
+</script>
+</body>
+</html>
