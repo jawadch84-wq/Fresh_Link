@@ -383,8 +383,8 @@ export default function BackOfficeLayout({ user, onLogout }: Props) {
       try {
         const { createClient } = await import("@/lib/supabase/client")
         const sb = createClient()
-        const { error } = await sb.from("fl_config").select("id").limit(1).maybeSingle()
-        if (!cancelled) setSbStatus(error ? "error" : "connected")
+        const { error } = await sb.from("fl_articles").select("id").limit(1).maybeSingle()
+        if (!cancelled) setSbStatus(error && error.code !== "PGRST116" ? "error" : "connected")
       } catch {
         if (!cancelled) setSbStatus("error")
       }

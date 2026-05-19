@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react"
 import { store, type User, type UserRole, type UserAccessType, type GranularPermissions, type Civilite, ROLE_LABELS, ROLE_COLORS, JAWAD_ID } from "@/lib/store"
 import { sendEmail } from "@/lib/email"
+import { deleteUser } from "@/lib/supabase/db"
 
 // ──────────────────────────────────────────────────────────────────────────────
 // GRANULAR RBAC — Ultra-detailed permissions (each action = independent toggle)
@@ -1003,6 +1004,7 @@ export default function BOUsers({ currentUser }: { currentUser: User }) {
   const [showPurge, setShowPurge] = useState(false)
   const [purging, setPurging] = useState(false)
   const [purgeCount, setPurgeCount] = useState(0)
+  const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(new Set())
 
   // Access check — computed AFTER hooks
   const canAccess = currentUser.role === "super_super_admin" || currentUser.role === "admin" || currentUser.role === "super_admin" || currentUser.role === "rh_manager"
@@ -1166,12 +1168,41 @@ export default function BOUsers({ currentUser }: { currentUser: User }) {
     if (idx >= 0) { all[idx].actif = !all[idx].actif; store.saveUsers(all); reload() }
   }
 
-  const handleDelete = (u: User) => {
+  const handleDelete = async (u: User) => {
     if (!canDeleteUser(u)) return
     if (!confirm(`Supprimer l'utilisateur "${u.name}" ?`)) return
+    await deleteUser(u.id)
     const all = store.getUsers().filter(x => x.id !== u.id)
     store.saveUsers(all)
     reload()
+  }
+
+  const handleBulkDelete = async () => {
+    const ids = [...selectedUserIds]
+    if (ids.length === 0) return
+    if (!confirm(`Supprimer ${ids.length} utilisateur(s) sélectionné(s) ?`)) return
+    for (const id of ids) await deleteUser(id)
+    const all = store.getUsers().filter(u => !ids.includes(u.id))
+    store.saveUsers(all)
+    setSelectedUserIds(new Set())
+    reload()
+  }
+
+  const toggleSelectUser = (id: string) => {
+    setSelectedUserIds(prev => {
+      const next = new Set(prev)
+      next.has(id) ? next.delete(id) : next.add(id)
+      return next
+    })
+  }
+
+  const toggleSelectAll = () => {
+    const deletable = filtered.filter(u => canDeleteUser(u) && u.id !== currentUser.id)
+    if (deletable.every(u => selectedUserIds.has(u.id))) {
+      setSelectedUserIds(new Set())
+    } else {
+      setSelectedUserIds(new Set(deletable.map(u => u.id)))
+    }
   }
 
   const handleGeneratePassword = async (u: User) => {
@@ -1311,6 +1342,15 @@ export default function BOUsers({ currentUser }: { currentUser: User }) {
               Importer JSON
               <input type="file" accept=".json" className="hidden" onChange={importJSON} />
             </label>
+          )}
+          {isFullAdmin && selectedUserIds.size > 0 && (
+            <button onClick={handleBulkDelete}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white bg-red-600 hover:bg-red-700 transition-colors">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+              Supprimer la sélection ({selectedUserIds.size})
+            </button>
           )}
           {canOpenNewForm && (
             <button onClick={openNew}
@@ -1519,6 +1559,14 @@ export default function BOUsers({ currentUser }: { currentUser: User }) {
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-sidebar text-sidebar-foreground">
+                {isFullAdmin && (
+                  <th className="px-3 py-3 w-10">
+                    <input type="checkbox"
+                      checked={filtered.filter(u => canDeleteUser(u) && u.id !== currentUser.id).length > 0 && filtered.filter(u => canDeleteUser(u) && u.id !== currentUser.id).every(u => selectedUserIds.has(u.id))}
+                      onChange={toggleSelectAll}
+                      className="w-4 h-4 rounded cursor-pointer accent-red-600" />
+                  </th>
+                )}
                 <th className="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wide">Nom / الاسم</th>
                 <th className="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wide">Contact</th>
                 <th className="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wide">Role</th>
@@ -1531,9 +1579,19 @@ export default function BOUsers({ currentUser }: { currentUser: User }) {
             </thead>
             <tbody>
               {filtered.length === 0 ? (
-                <tr><td colSpan={7} className="px-4 py-10 text-center text-muted-foreground">Aucun utilisateur trouve</td></tr>
+                <tr><td colSpan={8} className="px-4 py-10 text-center text-muted-foreground">Aucun utilisateur trouve</td></tr>
               ) : filtered.map((u, i) => (
-                <tr key={u.id} className={i % 2 === 0 ? "bg-card" : "bg-muted/30"} style={{ borderTop: "1px solid var(--border)" }}>
+                <tr key={u.id} className={`${i % 2 === 0 ? "bg-card" : "bg-muted/30"} ${selectedUserIds.has(u.id) ? "bg-red-50/60" : ""}`} style={{ borderTop: "1px solid var(--border)" }}>
+                  {isFullAdmin && (
+                    <td className="px-3 py-3">
+                      {canDeleteUser(u) && u.id !== currentUser.id && (
+                        <input type="checkbox"
+                          checked={selectedUserIds.has(u.id)}
+                          onChange={() => toggleSelectUser(u.id)}
+                          className="w-4 h-4 rounded cursor-pointer accent-red-600" />
+                      )}
+                    </td>
+                  )}
                   {/* Name — always visible */}
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2.5">
