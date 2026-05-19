@@ -116,6 +116,8 @@ export default function MobileCommercial({ user }: Props) {
   // Client habits: articleId -> { count, lastDate, qteTotal, dernierQte, dernierQteUM, dernierUM } — computed when client changes
   const [clientHabits, setClientHabits] = useState<Record<string, { count: number; lastDate: string; qteTotal: number; dernierQte: number; dernierQteUM?: number; dernierUM?: string }>>({})
   const [showMissedAlert, setShowMissedAlert] = useState(false)
+  const [showClientAlert, setShowClientAlert] = useState(false)
+  const [showQFR, setShowQFR] = useState(false)
 
   // Inline article selector state
   const [articleSearch, setArticleSearch] = useState("")
@@ -169,6 +171,76 @@ export default function MobileCommercial({ user }: Props) {
       .map(([artId]) => articles.find(a => a.id === artId))
       .filter(Boolean) as Article[]
   }, [clientHabits, lignes, articles, selectedClientId])
+
+  // Client last order date and inactivity
+  const clientLastOrderDate = useMemo(() => {
+    if (!selectedClientId) return null
+    const clientCmds = store.getCommandes().filter(c => c.clientId === selectedClientId)
+    if (clientCmds.length === 0) return null
+    return clientCmds.sort((a, b) => b.date.localeCompare(a.date))[0].date
+  }, [selectedClientId])
+
+  const clientInactivityDays = useMemo(() => {
+    if (!clientLastOrderDate) return null
+    return Math.floor((Date.now() - new Date(clientLastOrderDate).getTime()) / 86400000)
+  }, [clientLastOrderDate])
+
+  const alertClientInactivityThreshold = (store.getAlertConfig() as { inactivityDays: number; alertClientInactivityDays?: number }).alertClientInactivityDays ?? 30
+
+  // Client average basket
+  const clientAvgBasket = useMemo(() => {
+    if (!selectedClientId) return 0
+    const clientCmds = store.getCommandes().filter(c => c.clientId === selectedClientId)
+    if (clientCmds.length === 0) return 0
+    const totals = clientCmds.map(c => c.lignes.reduce((s, l) => s + l.quantite * l.prixVente, 0))
+    return totals.reduce((s, t) => s + t, 0) / totals.length
+  }, [selectedClientId])
+
+  const currentCartTotal = useMemo(() => {
+    return lignes.reduce((s, l) => {
+      const pv = parseFloat(l.prixVente) || 0
+      const qty = parseFloat(l.quantite) || 0
+      return s + qty * pv
+    }, 0)
+  }, [lignes])
+
+  const basketDropPct = useMemo(() => {
+    if (clientAvgBasket <= 0 || currentCartTotal <= 0) return 0
+    return Math.round((1 - currentCartTotal / clientAvgBasket) * 100)
+  }, [clientAvgBasket, currentCartTotal])
+
+  const alertBasketDropThreshold = (store.getAlertConfig() as { inactivityDays: number; alertBasketDropPct?: number }).alertBasketDropPct ?? 20
+
+  // QFR data — last 30 days: commanded vs delivered per article for selected client
+  // Key by articleNom since BL lignes have no articleId
+  const qfrData = useMemo(() => {
+    if (!selectedClientId) return []
+    const thirtyDaysAgo = new Date(); thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+    const cutoff = thirtyDaysAgo.toISOString().slice(0, 10)
+    const clientCmds = store.getCommandes().filter(c => c.clientId === selectedClientId && c.date >= cutoff)
+    const clientBLs = store.getBonsLivraison().filter(bl => bl.clientId === selectedClientId && bl.date >= cutoff)
+
+    const artMap = new Map<string, { nom: string; qteCommandee: number; qteLivree: number }>()
+    clientCmds.forEach(cmd => {
+      cmd.lignes.forEach(l => {
+        const key = l.articleNom
+        const existing = artMap.get(key) ?? { nom: l.articleNom, qteCommandee: 0, qteLivree: 0 }
+        artMap.set(key, { ...existing, qteCommandee: existing.qteCommandee + l.quantite })
+      })
+    })
+    clientBLs.forEach(bl => {
+      bl.lignes.forEach(l => {
+        const key = l.articleNom
+        const existing = artMap.get(key) ?? { nom: l.articleNom, qteCommandee: 0, qteLivree: 0 }
+        artMap.set(key, { ...existing, qteLivree: existing.qteLivree + l.quantite })
+      })
+    })
+    return [...artMap.entries()].map(([key, d]) => ({
+      artId: key,
+      ...d,
+      pct: d.qteCommandee > 0 ? Math.round(d.qteLivree / d.qteCommandee * 100) : 100,
+    })).sort((a, b) => a.pct - b.pct)
+  }, [selectedClientId])
 
   // My commandes — show last 7 days (not only today) so prevendeur can always see their history
   const [myCommandes, setMyCommandes] = useState(
@@ -292,7 +364,7 @@ export default function MobileCommercial({ user }: Props) {
   // Compute article habits from past commandes for selected client
   // Depends on both selectedClientId AND articles so it re-runs once articles are loaded
   useEffect(() => {
-    if (!selectedClientId) { setClientHabits({}); return }
+    if (!selectedClientId) { setClientHabits({}); setShowClientAlert(false); setShowQFR(false); return }
     // Guard: if articles not yet loaded, skip (will re-run when articles arrive)
     if (articles.length === 0) return
     const allCmds = store.getCommandes()
@@ -303,6 +375,8 @@ export default function MobileCommercial({ user }: Props) {
     if (pastCmds.length === 0) {
       setClientHabits({})
       setShowMissedAlert(false)
+      setShowClientAlert(false)
+      setShowQFR(false)
       return
     }
 
@@ -336,6 +410,8 @@ export default function MobileCommercial({ user }: Props) {
     })
     setClientHabits(validMap)
     setShowMissedAlert(false)
+    setShowClientAlert(false)
+    setShowQFR(false)
   }, [selectedClientId, articles])
 
   const getGPS = () => {
@@ -848,7 +924,7 @@ export default function MobileCommercial({ user }: Props) {
           ) : filteredClients.map(c => {
             const dist = gpsLat && c.gpsLat ? distKm(gpsLat, gpsLng!, c.gpsLat, c.gpsLng!) : null
             return (
-              <button key={c.id} onClick={() => { setSelectedClientId(c.id); setShowClientDropdown(false) }}
+              <button key={c.id} onClick={() => { setSelectedClientId(c.id); setShowClientDropdown(false); setShowClientAlert(false); setShowQFR(false) }}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all border ${selectedClientId === c.id ? "border-primary bg-primary/5" : "border-transparent hover:bg-muted/60"}`}>
                 <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary shrink-0">
                   {c.nom[0]}
@@ -1140,7 +1216,12 @@ export default function MobileCommercial({ user }: Props) {
                   className="w-10 h-10 rounded-xl object-cover border border-border shrink-0"
                   onError={e => { e.currentTarget.src = "https://placehold.co/40x40/e2e8f0/64748b?text=Art" }} />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-foreground truncate">{a.nom}</p>
+                  <p className="text-sm font-bold text-foreground truncate">
+                    {a.nom}
+                    {(globalRotation[a.id] ?? 0) < ((store.getAlertConfig() as { inactivityDays: number; alertLowDemandRotation?: number }).alertLowDemandRotation ?? 2) && (
+                      <span className="ml-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-600">Faible</span>
+                    )}
+                  </p>
                   <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
                     {(() => {
                       const vs = store.getVirtualStock(a.id)
@@ -1489,6 +1570,85 @@ export default function MobileCommercial({ user }: Props) {
                     style={{ background: "oklch(0.65 0.17 145)" }}>
                     + Ajouter
                   </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Client Inactivity Alert */}
+      {selectedClientId && clientInactivityDays !== null && clientInactivityDays > alertClientInactivityThreshold && (
+        <div className="bg-red-50 border border-red-300 rounded-2xl overflow-hidden">
+          <button onClick={() => setShowClientAlert(s => !s)} className="w-full flex items-center justify-between px-4 py-3">
+            <div className="flex items-center gap-2">
+              <svg className="w-4 h-4 text-red-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p className="text-sm font-bold text-red-800">
+                Client inactif depuis {clientInactivityDays} jours
+              </p>
+            </div>
+            <svg className={`w-4 h-4 text-red-600 transition-transform ${showClientAlert ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          {showClientAlert && (
+            <div className="px-4 pb-4 flex flex-col gap-1 text-xs text-red-700">
+              <p>Dernière commande : <strong>{clientLastOrderDate ?? "—"}</strong></p>
+              <p>Ce client n&apos;a pas commandé depuis <strong>{clientInactivityDays} jours</strong>. Relancez-le !</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Basket Decrease Alert */}
+      {selectedClientId && clientAvgBasket > 0 && currentCartTotal > 0 && basketDropPct >= alertBasketDropThreshold && (
+        <div className="bg-orange-50 border border-orange-300 rounded-2xl px-4 py-3 flex items-start gap-3">
+          <svg className="w-4 h-4 text-orange-600 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" />
+          </svg>
+          <div className="flex-1">
+            <p className="text-sm font-bold text-orange-800">Baisse du panier : -{basketDropPct}%</p>
+            <p className="text-xs text-orange-700 mt-0.5">
+              Panier actuel : <strong>{currentCartTotal.toLocaleString("fr-MA")} DH</strong>
+              {" "}· Moyenne habituelle : <strong>{Math.round(clientAvgBasket).toLocaleString("fr-MA")} DH</strong>
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* QFR Section */}
+      {selectedClientId && qfrData.length > 0 && (
+        <div className="bg-slate-50 border border-slate-200 rounded-2xl overflow-hidden">
+          <button onClick={() => setShowQFR(s => !s)} className="w-full flex items-center justify-between px-4 py-3">
+            <div className="flex items-center gap-2">
+              <svg className="w-4 h-4 text-slate-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+              <p className="text-sm font-bold text-slate-800">QFR — Livraison vs Commande (30j)</p>
+              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${qfrData.filter(d => d.pct < 90).length > 0 ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>
+                {qfrData.filter(d => d.pct < 90).length > 0 ? `${qfrData.filter(d => d.pct < 90).length} écart(s)` : "Complet"}
+              </span>
+            </div>
+            <svg className={`w-4 h-4 text-slate-600 transition-transform ${showQFR ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          {showQFR && (
+            <div className="px-4 pb-4 flex flex-col gap-2">
+              <p className="text-xs text-slate-500">30 derniers jours — comparaison commandé vs livré</p>
+              {qfrData.map(d => (
+                <div key={d.artId} className="flex items-center justify-between bg-white rounded-xl border border-slate-200 px-3 py-2.5 gap-2">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-slate-800 truncate">{d.nom}</p>
+                    <p className="text-[10px] text-slate-500">
+                      Cmd: <strong>{d.qteCommandee.toFixed(1)}</strong> · Livré: <strong>{d.qteLivree.toFixed(1)}</strong>
+                    </p>
+                  </div>
+                  <span className={`shrink-0 px-2 py-1 rounded-full text-xs font-black ${d.pct >= 95 ? "bg-green-100 text-green-700" : d.pct >= 80 ? "bg-amber-100 text-amber-700" : "bg-red-100 text-red-700"}`}>
+                    {d.pct}%
+                  </span>
                 </div>
               ))}
             </div>

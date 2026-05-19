@@ -300,6 +300,12 @@ nav ul a:hover{color:var(--o2);border-color:var(--o2)}
   border:2px solid var(--g1);display:flex;align-items:center;justify-content:center;font-size:19px}
 .an{font-size:13px;font-weight:600}
 .ar{font-size:11px;color:var(--gy)}
+.avis-tab{padding:9px 22px;border-radius:50px;border:1px solid rgba(255,255,255,0.18);background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.65);font-size:13px;font-weight:600;cursor:pointer;transition:all .22s}
+.avis-tab:hover{background:rgba(255,255,255,0.12);color:#fff}
+.avis-tab.active{background:var(--g1);border-color:var(--g1);color:#fff;box-shadow:0 4px 14px rgba(74,222,128,0.3)}
+.star-btn{font-size:26px;cursor:pointer;color:rgba(255,255,255,0.2);transition:color .15s,transform .15s;user-select:none}
+.star-btn.lit{color:#facc15}
+.star-btn:hover{transform:scale(1.15)}
 footer{background:var(--gd);color:rgba(255,255,255,.5);padding:56px 0 24px}
 .fg2{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:36px;margin-bottom:44px}
 .fbp{font-size:12px;line-height:1.9;max-width:280px}
@@ -840,15 +846,74 @@ Realtime : fl_articles (changes)</div>
   </div>
 </section>
 
-<!-- TEMOIGNAGES -->
-<section class="t-sec">
+<!-- AVIS CLIENTS / FOURNISSEURS -->
+<section class="t-sec" id="avis-section">
   <div class="sw">
-    <div class="slbl">Avis clients</div>
-    <div class="stit">Ce que disent nos clients</div>
-    <div class="tg">
-      <div class="tc2"><div class="stars">★★★★★</div><div class="tt">"Produits toujours frais, livrés à l'heure. Le service express est parfait pour mon restaurant."</div><div class="ta2"><div class="av">👨‍🍳</div><div><div class="an">Hassan B.</div><div class="ar">Restaurateur, Maarif</div></div></div></div>
-      <div class="tc2"><div class="stars">★★★★★</div><div class="tt">"Commande le soir, livraison le lendemain matin avant l'ouverture. Parfait pour mon épicerie."</div><div class="ta2"><div class="av">🏪</div><div><div class="an">Fatima Z.</div><div class="ar">Épicière, Ain Sebaa</div></div></div></div>
-      <div class="tc2"><div class="stars">★★★★☆</div><div class="tt">"Les légumes épluchés sont un gain de temps incroyable pour ma cuisine de collectivité."</div><div class="ta2"><div class="av">🍽️</div><div><div class="an">Karim M.</div><div class="ar">Chef cuisinier, Centre-ville</div></div></div></div>
+    <div class="slbl">Avis & Témoignages</div>
+    <div class="stit">Ce que disent nos partenaires</div>
+
+    <!-- Onglets source -->
+    <div style="display:flex;gap:8px;justify-content:center;margin-bottom:28px;flex-wrap:wrap">
+      <button class="avis-tab active" data-source="all" onclick="filterAvis('all',this)">Tous</button>
+      <button class="avis-tab" data-source="client" onclick="filterAvis('client',this)">Clients</button>
+      <button class="avis-tab" data-source="fournisseur" onclick="filterAvis('fournisseur',this)">Fournisseurs</button>
+    </div>
+
+    <!-- Grille d'avis dynamiques -->
+    <div class="tg" id="avis-grid">
+      <!-- Static fallback shown until Supabase loads -->
+      <div class="tc2" data-source="client"><div class="stars">★★★★★</div><div class="tt">"Produits toujours frais, livrés à l'heure. Le service express est parfait pour mon restaurant."</div><div class="ta2"><div class="av">👨‍🍳</div><div><div class="an">Hassan B.</div><div class="ar">Restaurateur · Client</div></div></div></div>
+      <div class="tc2" data-source="client"><div class="stars">★★★★★</div><div class="tt">"Commande le soir, livraison le lendemain matin avant l'ouverture. Parfait pour mon épicerie."</div><div class="ta2"><div class="av">🏪</div><div><div class="an">Fatima Z.</div><div class="ar">Épicière · Client</div></div></div></div>
+      <div class="tc2" data-source="fournisseur"><div class="stars">★★★★☆</div><div class="tt">"Partenariat sérieux, paiements ponctuels et communication claire. Très professionnel."</div><div class="ta2"><div class="av">🚚</div><div><div class="an">Ahmed R.</div><div class="ar">Grossiste · Fournisseur</div></div></div></div>
+    </div>
+
+    <!-- Formulaire laisser un avis -->
+    <div id="review-form-wrap" style="margin-top:48px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);border-radius:20px;padding:32px;max-width:620px;margin-left:auto;margin-right:auto">
+      <div style="font-size:20px;font-weight:800;color:#fff;margin-bottom:6px">Partagez votre avis</div>
+      <div style="font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:24px">Votre retour nous aide à améliorer notre service</div>
+
+      <div id="review-success" style="display:none;background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.4);border-radius:12px;padding:16px;color:#34d399;font-size:14px;font-weight:600;margin-bottom:20px">
+        ✓ Merci ! Votre avis a été soumis et sera affiché après validation.
+      </div>
+
+      <form id="review-form" onsubmit="submitReview(event)">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+          <div>
+            <label style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:6px">Votre nom *</label>
+            <input id="rv-nom" required placeholder="Mohamed A." style="width:100%;padding:12px 14px;border-radius:10px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.07);color:#fff;font-size:14px;box-sizing:border-box;outline:none">
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:6px">Type de partenaire *</label>
+            <select id="rv-source" required style="width:100%;padding:12px 14px;border-radius:10px;border:1px solid rgba(255,255,255,0.15);background:rgba(30,40,30,0.9);color:#fff;font-size:14px;box-sizing:border-box;outline:none">
+              <option value="">Choisir...</option>
+              <option value="client">Client</option>
+              <option value="fournisseur">Fournisseur</option>
+            </select>
+          </div>
+        </div>
+        <div style="margin-bottom:14px">
+          <label style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:6px">Activité / Secteur</label>
+          <input id="rv-activite" placeholder="Restaurateur, Épicier, Grossiste..." style="width:100%;padding:12px 14px;border-radius:10px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.07);color:#fff;font-size:14px;box-sizing:border-box;outline:none">
+        </div>
+        <div style="margin-bottom:14px">
+          <label style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:8px">Note *</label>
+          <div id="star-picker" style="display:flex;gap:6px">
+            <span class="star-btn" data-v="1" onclick="setStars(1)">★</span>
+            <span class="star-btn" data-v="2" onclick="setStars(2)">★</span>
+            <span class="star-btn" data-v="3" onclick="setStars(3)">★</span>
+            <span class="star-btn" data-v="4" onclick="setStars(4)">★</span>
+            <span class="star-btn" data-v="5" onclick="setStars(5)">★</span>
+          </div>
+          <input type="hidden" id="rv-note" value="0">
+        </div>
+        <div style="margin-bottom:20px">
+          <label style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:6px">Votre avis *</label>
+          <textarea id="rv-message" required rows="4" placeholder="Décrivez votre expérience avec Empire Fresh..." style="width:100%;padding:12px 14px;border-radius:10px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.07);color:#fff;font-size:14px;resize:vertical;box-sizing:border-box;outline:none;font-family:inherit"></textarea>
+        </div>
+        <button type="submit" id="rv-submit" style="width:100%;padding:14px;border-radius:12px;background:linear-gradient(135deg,#4ade80,#22c55e);color:#fff;font-size:15px;font-weight:800;border:none;cursor:pointer;transition:opacity .2s">
+          Soumettre mon avis
+        </button>
+      </form>
     </div>
   </div>
 </section>
@@ -1545,6 +1610,102 @@ window.refreshPriceBox = refreshPriceBox;
 window.syncFromSupabase = syncFromSupabase;
 window.testSupabase = testSupabase;
 window.showToast = showToast;
+
+// ── AVIS / REVIEWS ──────────────────────────────────────────────────────────
+
+function filterAvis(source, btn) {
+  document.querySelectorAll('.avis-tab').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  document.querySelectorAll('#avis-grid .tc2').forEach(card => {
+    card.style.display = (source === 'all' || card.dataset.source === source) ? '' : 'none';
+  });
+}
+
+function setStars(n) {
+  document.querySelectorAll('.star-btn').forEach(s => {
+    s.classList.toggle('lit', parseInt(s.dataset.v) <= n);
+  });
+  document.getElementById('rv-note').value = n;
+}
+
+async function loadAvis() {
+  try {
+    if (!sb) sb = initSupabase();
+    if (!sb) return;
+    const { data } = await sb.from('fl_feedbacks')
+      .select('id,auteur,source,note,message,sujet')
+      .in('statut', ['traite'])
+      .order('date', { ascending: false })
+      .limit(20);
+    if (!data || !data.length) return;
+    const grid = document.getElementById('avis-grid');
+    // Remove static fallback cards
+    grid.innerHTML = '';
+    data.forEach(f => {
+      const stars = '★'.repeat(f.note || 5) + '☆'.repeat(5 - (f.note || 5));
+      const avatar = f.source === 'fournisseur' ? '🚚' : f.source === 'equipe' ? '👤' : '🏪';
+      const label = f.source === 'fournisseur' ? 'Fournisseur' : f.source === 'equipe' ? 'Équipe' : 'Client';
+      const card = document.createElement('div');
+      card.className = 'tc2';
+      card.dataset.source = f.source || 'client';
+      card.innerHTML = `<div class="stars">${stars}</div><div class="tt">"${f.message}"</div>
+        <div class="ta2"><div class="av">${avatar}</div><div>
+          <div class="an">${f.auteur}</div>
+          <div class="ar">${f.sujet ? f.sujet + ' · ' : ''}${label}</div>
+        </div></div>`;
+      grid.appendChild(card);
+    });
+  } catch (_) {}
+}
+
+async function submitReview(event) {
+  event.preventDefault();
+  const nom = document.getElementById('rv-nom').value.trim();
+  const source = document.getElementById('rv-source').value;
+  const activite = document.getElementById('rv-activite').value.trim();
+  const note = parseInt(document.getElementById('rv-note').value) || 0;
+  const message = document.getElementById('rv-message').value.trim();
+
+  if (!nom || !source || !message) return;
+  if (note < 1) { showToast('Veuillez sélectionner une note.'); return; }
+
+  const btn = document.getElementById('rv-submit');
+  btn.disabled = true;
+  btn.textContent = 'Envoi…';
+
+  try {
+    if (!sb) sb = initSupabase();
+    if (!sb) throw new Error('not configured');
+    const payload = {
+      id: 'rv_' + Date.now(),
+      source,
+      auteur: nom,
+      note,
+      message,
+      sujet: activite || 'Avis public',
+      date: new Date().toISOString().slice(0, 10),
+      statut: 'nouveau'
+    };
+    const { error } = await sb.from('fl_feedbacks').insert([payload]);
+    if (error) throw error;
+    document.getElementById('review-success').style.display = 'block';
+    document.getElementById('review-form').reset();
+    document.querySelectorAll('.star-btn').forEach(s => s.classList.remove('lit'));
+    document.getElementById('rv-note').value = '0';
+  } catch (e) {
+    showToast('Erreur lors de l\'envoi. Réessayez.');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Soumettre mon avis';
+  }
+}
+
+window.filterAvis = filterAvis;
+window.setStars = setStars;
+window.submitReview = submitReview;
+
+// Load reviews on page start
+loadAvis();
 
 })();
 </script>

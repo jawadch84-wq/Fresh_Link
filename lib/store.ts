@@ -2636,9 +2636,9 @@ export const store = {
   addMessage: (m: Message) => { const msgs = store.getMessages(); msgs.push(m); store.saveMessages(msgs) },
 
   // --- Alert inactivity config ---
-  getAlertConfig: (): { inactivityDays: number } =>
-    getLS("fl_alert_config", { inactivityDays: 30 }),
-  saveAlertConfig: (c: { inactivityDays: number }) => {
+  getAlertConfig: (): { inactivityDays: number; alertClientInactivityDays: number; alertBasketDropPct: number; alertLowDemandRotation: number; alertQFREnabled: boolean } =>
+    getLS("fl_alert_config", { inactivityDays: 30, alertClientInactivityDays: 30, alertBasketDropPct: 20, alertLowDemandRotation: 2, alertQFREnabled: true }),
+  saveAlertConfig: (c: { inactivityDays: number; alertClientInactivityDays: number; alertBasketDropPct: number; alertLowDemandRotation: number; alertQFREnabled: boolean }) => {
     setLS("fl_alert_config", c)
   },
 

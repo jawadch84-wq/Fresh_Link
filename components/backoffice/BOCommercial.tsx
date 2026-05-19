@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { store, type Commande, type User } from "@/lib/store"
+import { store, type Commande, type LigneCommande, type User } from "@/lib/store"
 
 interface Props { user: User }
 
@@ -13,11 +13,20 @@ export default function BOCommercial({ user }: Props) {
   const [emailConfig, setEmailConfig] = useState(store.getEmailConfig().commercial)
   const [motifRefus, setMotifRefus] = useState("")
   const [showRefusForm, setShowRefusForm] = useState<string | null>(null)
+  const [editingCommande, setEditingCommande] = useState<Commande | null>(null)
+  const [editForm, setEditForm] = useState<{
+    clientNom: string
+    heurelivraison: string
+    statut: Commande["statut"]
+    lignes: Array<{ articleNom: string; quantite: number; prixVente: number }>
+  } | null>(null)
   const mapRef = useRef<HTMLDivElement>(null)
   const leafletMapRef = useRef<unknown>(null)
+  const importInputRef = useRef<HTMLInputElement>(null)
 
   // Approval permissions
   const workflow = store.getWorkflowConfig()
+  const canManageCommande = user.role === "super_super_admin" || user.role === "super_admin" || user.role === "admin" || user.role === "resp_commercial"
   const canApprove = (() => {
     if (user.role === "super_admin" || user.role === "admin") return true
     if (user.role === "resp_commercial") return true
@@ -47,6 +56,94 @@ export default function BOCommercial({ user }: Props) {
     return () => window.removeEventListener("fl_store_updated", handler)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  const handleDeleteCommande = (id: string) => {
+    if (!confirm("Supprimer cette commande ?")) return
+    store.deleteCommande(id)
+    refresh()
+  }
+
+  const handleBulkDeleteCommandes = () => {
+    if (!confirm(`Supprimer ${selectedIds.size} commande(s) ?`)) return
+    Array.from(selectedIds).forEach(id => store.deleteCommande(id))
+    setSelectedIds(new Set())
+    refresh()
+  }
+
+  const openEditCommande = (c: Commande) => {
+    setEditingCommande(c)
+    setEditForm({
+      clientNom: c.clientNom,
+      heurelivraison: c.heurelivraison,
+      statut: c.statut,
+      lignes: c.lignes.map(l => ({ articleNom: l.articleNom, quantite: l.quantite, prixVente: l.prixVente })),
+    })
+  }
+
+  const handleSaveEdit = () => {
+    if (!editingCommande || !editForm) return
+    store.updateCommande(editingCommande.id, {
+      clientNom: editForm.clientNom,
+      heurelivraison: editForm.heurelivraison,
+      statut: editForm.statut,
+      lignes: editingCommande.lignes.map((l, i) => ({
+        ...l,
+        articleNom: editForm.lignes[i]?.articleNom ?? l.articleNom,
+        quantite: editForm.lignes[i]?.quantite ?? l.quantite,
+        prixVente: editForm.lignes[i]?.prixVente ?? l.prixVente,
+        total: (editForm.lignes[i]?.quantite ?? l.quantite) * (editForm.lignes[i]?.prixVente ?? l.prixVente),
+      })),
+    })
+    setEditingCommande(null)
+    setEditForm(null)
+    refresh()
+  }
+
+  const exportCSV = () => {
+    const header = "id,date,clientNom,commercialNom,zone,totalTTC,statut,heurelivraison"
+    const rows = filtered.map(c => {
+      const total = c.lignes.reduce((s, l) => s + l.quantite * l.prixVente, 0)
+      return [c.id, c.date, `"${c.clientNom}"`, `"${c.commercialNom}"`, `"${c.zone}"`, total.toFixed(2), c.statut, c.heurelivraison].join(",")
+    })
+    const csv = [header, ...rows].join("\n")
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = `commandes_${filter.date || "export"}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const handleImportCSV = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (ev) => {
+      const text = ev.target?.result as string
+      const lines = text.split("\n").slice(1) // skip header
+      let imported = 0
+      lines.forEach(line => {
+        if (!line.trim()) return
+        const [id, date, clientNom, commercialNom, zone, , statut, heurelivraison] = line.split(",").map(s => s.replace(/^"|"$/g, "").trim())
+        if (!id || !date) return
+        const existing = store.getCommandes().find(c => c.id === id)
+        if (!existing) return
+        store.updateCommande(id, {
+          clientNom: clientNom || existing.clientNom,
+          commercialNom: commercialNom || existing.commercialNom,
+          zone: zone || existing.zone,
+          statut: (statut as Commande["statut"]) || existing.statut,
+          heurelivraison: heurelivraison || existing.heurelivraison,
+        })
+        imported++
+      })
+      refresh()
+      alert(`${imported} commande(s) mise(s) à jour depuis le CSV.`)
+    }
+    reader.readAsText(file)
+    e.target.value = ""
+  }
 
   const handleApprove = (id: string) => {
     store.updateCommande(id, {
@@ -159,6 +256,25 @@ export default function BOCommercial({ user }: Props) {
 
   return (
     <div className="flex flex-col gap-5">
+
+      {/* Import/Export CSV toolbar */}
+      {canManageCommande && (
+        <div className="flex items-center gap-2 justify-end flex-wrap">
+          <button
+            onClick={exportCSV}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-border bg-card text-sm font-medium hover:bg-muted transition-colors">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+            Exporter CSV
+          </button>
+          <button
+            onClick={() => importInputRef.current?.click()}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-border bg-card text-sm font-medium hover:bg-muted transition-colors">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l4-4m0 0l4 4m-4-4v12" /></svg>
+            Importer CSV
+          </button>
+          <input ref={importInputRef} type="file" accept=".csv" className="hidden" onChange={handleImportCSV} />
+        </div>
+      )}
 
       {/* BO Creation info banner — only for authorized roles */}
       {canCreateBO && (
@@ -277,6 +393,12 @@ export default function BOCommercial({ user }: Props) {
               Approuver tout
             </button>
           )}
+          {canManageCommande && (
+            <button onClick={handleBulkDeleteCommandes} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-red-600 hover:bg-red-700 transition-colors">
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+              Supprimer
+            </button>
+          )}
           <button onClick={() => setSelectedIds(new Set())} className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-blue-300 hover:bg-blue-100 transition-colors">
             Deselectionner tout
           </button>
@@ -299,7 +421,7 @@ export default function BOCommercial({ user }: Props) {
                   title="Tout selectionner / deselectionner"
                 />
               </th>
-              {["Date", "Client", "Prevendeur", "Zone", "Articles", "Total", "Livraison", "GPS", "Statut"].map(h => (
+              {["Date", "Client", "Prevendeur", "Zone", "Articles", "Total", "Livraison", "GPS", "Statut", ...(canManageCommande ? ["Actions"] : [])].map(h => (
                 <th key={h} className="text-left px-4 py-3 text-muted-foreground font-medium whitespace-nowrap">{h}</th>
               ))}
             </tr>
@@ -345,11 +467,83 @@ export default function BOCommercial({ user }: Props) {
                 <td className="px-4 py-3">
                   <span className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${statutColor[c.statut] || "bg-gray-100 text-gray-700"}`}>{statutLabel[c.statut] || c.statut}</span>
                 </td>
+                {canManageCommande && (
+                  <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
+                    <div className="flex items-center gap-1">
+                      <button onClick={() => openEditCommande(c)} title="Modifier"
+                        className="p-1.5 rounded-lg text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition-colors">
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                      </button>
+                      <button onClick={() => handleDeleteCommande(c.id)} title="Supprimer"
+                        className="p-1.5 rounded-lg text-slate-500 hover:text-red-600 hover:bg-red-50 transition-colors">
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                      </button>
+                    </div>
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+
+      {/* Edit commande modal */}
+      {editingCommande && editForm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={e => { if (e.target === e.currentTarget) { setEditingCommande(null); setEditForm(null) } }}>
+          <div className="bg-card rounded-2xl p-6 w-full max-w-lg flex flex-col gap-4 shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold text-foreground font-sans">Modifier la commande</h3>
+              <button onClick={() => { setEditingCommande(null); setEditForm(null) }} className="p-2 hover:bg-muted rounded-lg">
+                <svg className="w-5 h-5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Client</label>
+                <input value={editForm.clientNom} onChange={e => setEditForm(f => f ? { ...f, clientNom: e.target.value } : f)}
+                  className="px-3 py-2 rounded-lg border border-border bg-background text-sm font-sans focus:outline-none focus:ring-2 focus:ring-primary" />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Heure livraison</label>
+                <input value={editForm.heurelivraison} onChange={e => setEditForm(f => f ? { ...f, heurelivraison: e.target.value } : f)}
+                  className="px-3 py-2 rounded-lg border border-border bg-background text-sm font-sans focus:outline-none focus:ring-2 focus:ring-primary" />
+              </div>
+              <div className="col-span-2 flex flex-col gap-1">
+                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Statut</label>
+                <select value={editForm.statut} onChange={e => setEditForm(f => f ? { ...f, statut: e.target.value as Commande["statut"] } : f)}
+                  className="px-3 py-2 rounded-lg border border-border bg-background text-sm font-sans focus:outline-none focus:ring-2 focus:ring-primary">
+                  {["en_attente", "en_attente_approbation", "valide", "refuse", "en_transit", "livre", "retour"].map(s => (
+                    <option key={s} value={s}>{statutLabel[s] || s}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div className="border-t border-border pt-3 flex flex-col gap-2">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Lignes</p>
+              {editForm.lignes.map((l, i) => (
+                <div key={i} className="grid grid-cols-3 gap-2 items-center">
+                  <input value={l.articleNom} onChange={e => setEditForm(f => { if (!f) return f; const lignes = [...f.lignes]; lignes[i] = { ...lignes[i], articleNom: e.target.value }; return { ...f, lignes } })}
+                    className="col-span-1 px-2 py-1.5 rounded-lg border border-border bg-background text-xs font-sans focus:outline-none focus:ring-1 focus:ring-primary" placeholder="Article" />
+                  <input type="number" min={0} step={0.1} value={l.quantite} onChange={e => setEditForm(f => { if (!f) return f; const lignes = [...f.lignes]; lignes[i] = { ...lignes[i], quantite: parseFloat(e.target.value) || 0 }; return { ...f, lignes } })}
+                    className="px-2 py-1.5 rounded-lg border border-border bg-background text-xs font-sans focus:outline-none focus:ring-1 focus:ring-primary text-right" placeholder="Qté" />
+                  <input type="number" min={0} step={0.01} value={l.prixVente} onChange={e => setEditForm(f => { if (!f) return f; const lignes = [...f.lignes]; lignes[i] = { ...lignes[i], prixVente: parseFloat(e.target.value) || 0 }; return { ...f, lignes } })}
+                    className="px-2 py-1.5 rounded-lg border border-border bg-background text-xs font-sans focus:outline-none focus:ring-1 focus:ring-primary text-right" placeholder="PV" />
+                </div>
+              ))}
+            </div>
+            <div className="flex gap-3 pt-2">
+              <button onClick={() => { setEditingCommande(null); setEditForm(null) }}
+                className="flex-1 py-2.5 rounded-xl border border-border text-sm font-semibold text-muted-foreground hover:bg-muted transition-colors">
+                Annuler
+              </button>
+              <button onClick={handleSaveEdit}
+                className="flex-1 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity">
+                Enregistrer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Detail modal */}
       {selected && (

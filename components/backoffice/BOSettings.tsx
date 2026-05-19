@@ -82,6 +82,10 @@ export default function BOSettings({ user }: { user: { id: string; name: string;
   })
   const [alertSaved, setAlertSaved] = useState("")
   const [alertInactivityDays, setAlertInactivityDays] = useState(() => store.getAlertConfig?.()?.inactivityDays ?? 30)
+  const [alertClientInactivityDays, setAlertClientInactivityDays] = useState(() => store.getAlertConfig?.()?.alertClientInactivityDays ?? 30)
+  const [alertBasketDropPct, setAlertBasketDropPct] = useState(() => store.getAlertConfig?.()?.alertBasketDropPct ?? 20)
+  const [alertLowDemandRotation, setAlertLowDemandRotation] = useState(() => store.getAlertConfig?.()?.alertLowDemandRotation ?? 2)
+  const [alertQFREnabled, setAlertQFREnabled] = useState(() => store.getAlertConfig?.()?.alertQFREnabled ?? true)
   const [savedAlert, setSavedAlert] = useState(false)
   const [seedMsg, setSeedMsg] = useState<{ ok: boolean; text: string } | null>(null)
   const [seeding, setSeeding] = useState(false)
@@ -2185,11 +2189,54 @@ To: {{to_email}}
                 />
                 <span className="text-sm text-muted-foreground">jours</span>
                 <button
-                  onClick={() => { store.saveAlertConfig({ inactivityDays: alertInactivityDays }); setSavedAlert(true); setTimeout(() => setSavedAlert(false), 2000) }}
+                  onClick={() => { store.saveAlertConfig({ inactivityDays: alertInactivityDays, alertClientInactivityDays, alertBasketDropPct, alertLowDemandRotation, alertQFREnabled }); setSavedAlert(true); setTimeout(() => setSavedAlert(false), 2000) }}
                   className="px-4 py-2 rounded-xl text-xs font-bold text-white"
                   style={{ background: "oklch(0.38 0.2 260)" }}>
                   {savedAlert ? "✓ Sauvegardé" : "Enregistrer"}
                 </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Alert Prévendeur */}
+          <div className="bg-card rounded-2xl border border-border p-6 flex flex-col gap-4">
+            <h3 className="font-bold text-sm text-foreground">Alertes Prévendeur (Mobile)</h3>
+            <div className="grid grid-cols-1 gap-4">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-bold text-foreground">Inactivité client — seuil (jours)</label>
+                <p className="text-[11px] text-muted-foreground">Alerte si le client n&apos;a pas commandé depuis X jours</p>
+                <div className="flex items-center gap-3">
+                  <input type="number" min={1} max={365} value={alertClientInactivityDays}
+                    onChange={e => setAlertClientInactivityDays(Number(e.target.value))}
+                    className="w-24 px-3 py-2 rounded-xl border border-border bg-background text-sm font-bold text-center focus:outline-none focus:ring-2 focus:ring-primary" />
+                  <span className="text-sm text-muted-foreground">jours</span>
+                </div>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-bold text-foreground">Baisse de panier — seuil (%)</label>
+                <p className="text-[11px] text-muted-foreground">Alerte si le panier actuel est inférieur à la moyenne historique de X%</p>
+                <div className="flex items-center gap-3">
+                  <input type="range" min={5} max={80} step={5} value={alertBasketDropPct}
+                    onChange={e => setAlertBasketDropPct(Number(e.target.value))}
+                    className="flex-1 accent-orange-500" />
+                  <span className="font-bold text-orange-700 text-base w-12 text-center">{alertBasketDropPct}%</span>
+                </div>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-bold text-foreground">Faible demande article — rotation min (commandes/mois)</label>
+                <p className="text-[11px] text-muted-foreground">Badge &quot;Faible&quot; si l&apos;article est commandé moins de X fois par mois</p>
+                <div className="flex items-center gap-3">
+                  <input type="number" min={1} max={30} value={alertLowDemandRotation}
+                    onChange={e => setAlertLowDemandRotation(Number(e.target.value))}
+                    className="w-24 px-3 py-2 rounded-xl border border-border bg-background text-sm font-bold text-center focus:outline-none focus:ring-2 focus:ring-primary" />
+                  <span className="text-sm text-muted-foreground">fois/mois</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <input type="checkbox" id="qfr-enabled" checked={alertQFREnabled}
+                  onChange={e => setAlertQFREnabled(e.target.checked)}
+                  className="w-4 h-4 accent-primary" />
+                <label htmlFor="qfr-enabled" className="text-xs font-bold text-foreground">Activer le tableau QFR (Qté commandée vs livrée) dans le mobile prévendeur</label>
               </div>
             </div>
           </div>

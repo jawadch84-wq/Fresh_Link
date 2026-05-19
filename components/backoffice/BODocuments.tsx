@@ -552,6 +552,7 @@ export default function BODocuments({ user }: { user: { id: string; name: string
   const [docs, setDocs]       = useState<Document[]>([])
   const [clients, setClients] = useState<ClientRecord[]>([])
   const [loading, setLoading] = useState(true)
+  const [tablesMissing, setTablesMissing] = useState(false)
   const [view, setView]       = useState<"list" | "form" | "detail">("list")
   const [editing, setEditing] = useState<Partial<Document> | undefined>()
   const [detail, setDetail]   = useState<Document | null>(null)
@@ -567,8 +568,12 @@ export default function BODocuments({ user }: { user: { id: string; name: string
   const load = useCallback(async () => {
     setLoading(true)
     try {
-      const { data } = await sb.from("fl_documents").select("*").order("created_at", { ascending: false })
-      setDocs((data ?? []) as Document[])
+      const { data, error } = await sb.from("fl_documents").select("*").order("created_at", { ascending: false })
+      if (error && (error.message?.includes("schema cache") || error.message?.includes("does not exist") || error.code === "42P01" || error.code === "PGRST204")) {
+        setTablesMissing(true)
+      } else {
+        setDocs((data ?? []) as Document[])
+      }
     } catch { /* offline */ }
     try {
       const { data } = await sb.from("fl_clients").select("id,nom,type,telephone,email,adresse,ville").eq("actif", true).order("nom")
@@ -633,6 +638,45 @@ export default function BODocuments({ user }: { user: { id: string; name: string
   // ── LIST VIEW ──────────────────────────────────────────────
   if (view === "list") return (
     <div className="flex flex-col gap-5">
+
+      {/* fl_documents table missing banner */}
+      {tablesMissing && (
+        <div className="bg-amber-50 border border-amber-300 rounded-2xl p-4 flex flex-col gap-3">
+          <div className="flex items-start gap-3">
+            <svg className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            <div>
+              <p className="font-bold text-amber-800 text-sm">Table fl_documents manquante dans Supabase</p>
+              <p className="text-xs text-amber-700 mt-1">Exécutez ce script SQL dans votre dashboard Supabase → SQL Editor, puis rechargez la page :</p>
+            </div>
+          </div>
+          <pre className="bg-white rounded-xl border border-amber-200 p-3 text-xs overflow-x-auto whitespace-pre font-mono text-slate-800 leading-relaxed">{`CREATE TABLE IF NOT EXISTS public.fl_documents (
+  id TEXT PRIMARY KEY,
+  type_doc TEXT NOT NULL CHECK (type_doc IN ('devis','contrat','bl_archive','facture')),
+  numero TEXT NOT NULL DEFAULT '',
+  statut TEXT NOT NULL DEFAULT 'brouillon',
+  client_id TEXT, client_nom TEXT, client_adresse TEXT,
+  client_telephone TEXT, client_email TEXT,
+  date TEXT NOT NULL DEFAULT '',
+  date_echeance TEXT,
+  lignes JSONB DEFAULT '[]',
+  total_ht NUMERIC(12,2) DEFAULT 0,
+  tva NUMERIC(5,2) DEFAULT 20,
+  total_ttc NUMERIC(12,2) DEFAULT 0,
+  notes TEXT,
+  created_by TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  transforme_en TEXT
+);
+ALTER TABLE public.fl_documents ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "fl_documents_public" ON public.fl_documents
+  FOR ALL USING (true) WITH CHECK (true);`}</pre>
+          <button onClick={() => { setTablesMissing(false); load() }} className="self-start px-4 py-2 rounded-xl bg-amber-600 text-white text-xs font-semibold hover:bg-amber-700 transition-colors">
+            Réessayer après exécution
+          </button>
+        </div>
+      )}
+
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h2 className="text-xl font-bold text-foreground">Documents Commerciaux</h2>
