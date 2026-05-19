@@ -81,19 +81,16 @@ export async function sendEmail(payload: EmailPayload): Promise<SendResult> {
   }
 
   try {
-    // EmailJS REST API — publicKey goes in the Authorization header
+    // EmailJS REST API v1 — user_id = publicKey (no accessToken, no custom origin)
     const res = await fetch("https://api.emailjs.com/api/v1.0/email/send", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        // Some templates also need this — include both approaches
-        "origin": typeof window !== "undefined" ? window.location.origin : "https://localhost",
       },
       body: JSON.stringify({
         service_id:  cfg.serviceId,
         template_id: cfg.templateId,
-        user_id:     cfg.publicKey,       // publicKey = user_id in v3 API
-        accessToken: cfg.publicKey,       // required in v4+
+        user_id:     cfg.publicKey,
         template_params: {
           to_email: payload.to_email,
           subject:  payload.subject,

@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react"
 import { store, type User, type UserRole, type UserAccessType, type GranularPermissions, type Civilite, ROLE_LABELS, ROLE_COLORS, JAWAD_ID } from "@/lib/store"
 import { sendEmail } from "@/lib/email"
+import { deleteUser } from "@/lib/supabase/db"
 
 // ──────────────────────────────────────────────────────────────────────────────
 // GRANULAR RBAC — Ultra-detailed permissions (each action = independent toggle)
@@ -123,6 +124,31 @@ const ROLE_TEMPLATES: RoleTemplate[] = [
     perms: {
       perm_view_achat: true, perm_create_bon_achat: true, perm_edit_bon_achat: true, perm_validate_achat: true,
       perm_view_stock: true,
+    },
+  },
+  {
+    id: "livreur_interne",
+    label: "Livreur Interne",
+    labelAr: "السائق الداخلي",
+    color: "bg-yellow-100 border-yellow-400 text-yellow-900",
+    icon: "M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0",
+    description: "Employé Empire Fresh — BL, tournée, encaissement, retours clients",
+    perms: {
+      perm_view_logistique: true, perm_view_livraison: true,
+      perm_validate_bl: true, perm_manage_retour: true,
+      perm_view_cash: true, perm_validate_cash: true,
+    },
+  },
+  {
+    id: "livreur_externe",
+    label: "Livreur Externe",
+    labelAr: "السائق الخارجي",
+    color: "bg-orange-100 border-orange-400 text-orange-900",
+    icon: "M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1",
+    description: "Prestataire / sous-traitant — BL et signature uniquement, pas d'accès aux prix ni au cash",
+    perms: {
+      perm_view_logistique: true, perm_view_livraison: true,
+      perm_validate_bl: true, perm_manage_retour: true,
     },
   },
   {
@@ -400,7 +426,7 @@ const ALL_ROLES: UserRole[] = [
   "super_super_admin","super_admin","admin","resp_commercial","team_leader",
   "cash_man","financier","comptable",
   "rh_manager",
-  "prevendeur","resp_logistique","magasinier","dispatcheur","livreur",
+  "prevendeur","resp_logistique","magasinier","dispatcheur","livreur","livreur_interne","livreur_externe",
   "acheteur","ctrl_achat","ctrl_prep",
   "client","fournisseur",
   "investisseur","qualite","it_admin","auditeur",
@@ -414,7 +440,7 @@ const USER_GRADE_CATEGORIES = [
   { id: "finance", label: "💰 Finance & Comptabilité", labelAr: "المالية", roles: ["financier", "cash_man", "comptable", "charge_recouvrement"] },
   { id: "rh", label: "👥 RH & Administration", labelAr: "الموارد البشرية", roles: ["rh_manager", "auditeur", "it_admin"] },
   { id: "qualite", label: "✅ Qualité", labelAr: "الجودة", roles: ["qualite", "chef_depot"] },
-  { id: "terrain", label: "🚛 Terrain & Opérations", labelAr: "الميدان", roles: ["prevendeur", "magasinier", "dispatcheur", "livreur", "acheteur", "ctrl_achat", "ctrl_prep", "suivi_commande"] },
+  { id: "terrain", label: "🚛 Terrain & Opérations", labelAr: "الميدان", roles: ["prevendeur", "magasinier", "dispatcheur", "livreur", "livreur_interne", "livreur_externe", "acheteur", "ctrl_achat", "ctrl_prep", "suivi_commande"] },
   { id: "investisseurs", label: "📈 Investisseurs", labelAr: "المستثمرون", roles: ["investisseur"] },
   { id: "clients_marche", label: "🏪 Clients — Marchands / CHR", labelAr: "الزبائن التجاريون", roles: ["client"] },
   { id: "fournisseurs_marche", label: "🌿 Fournisseurs — Marché / Ferme", labelAr: "موردو السوق والمزرعة", roles: ["fournisseur"] },
@@ -440,7 +466,7 @@ const ROLE_GROUPS: { label: string; labelAr: string; roles: UserRole[] }[] = [
   {
     label: "Mobile — Terrain",
     labelAr: "الميدان",
-    roles: ["prevendeur", "resp_logistique", "magasinier", "dispatcheur", "livreur"],
+    roles: ["prevendeur", "resp_logistique", "magasinier", "dispatcheur", "livreur", "livreur_interne", "livreur_externe"],
   },
   {
     label: "Direction & Accès spéciaux",
@@ -1160,6 +1186,7 @@ export default function BOUsers({ currentUser }: { currentUser: User }) {
   const [showPurge, setShowPurge] = useState(false)
   const [purging, setPurging] = useState(false)
   const [purgeCount, setPurgeCount] = useState(0)
+  const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(new Set())
 
   // Access check — computed AFTER hooks
   const canAccess = currentUser.role === "super_super_admin" || currentUser.role === "admin" || currentUser.role === "super_admin" || currentUser.role === "rh_manager"
@@ -1200,7 +1227,7 @@ export default function BOUsers({ currentUser }: { currentUser: User }) {
 
   const TEAM_LEADER_ALLOWED: Record<string, UserRole[]> = {
     resp_commercial: ["prevendeur", "team_leader"],
-    resp_logistique: ["magasinier", "dispatcheur", "livreur"],
+    resp_logistique: ["magasinier", "dispatcheur", "livreur", "livreur_interne", "livreur_externe"],
   }
   const isTeamLeader = currentUser.role === "resp_commercial" || currentUser.role === "resp_logistique"
   const teamAllowedRoles: UserRole[] = TEAM_LEADER_ALLOWED[currentUser.role] ?? []
@@ -1333,12 +1360,41 @@ export default function BOUsers({ currentUser }: { currentUser: User }) {
     if (idx >= 0) { all[idx].actif = !all[idx].actif; store.saveUsers(all); reload() }
   }
 
-  const handleDelete = (u: User) => {
+  const handleDelete = async (u: User) => {
     if (!canDeleteUser(u)) return
     if (!confirm(`Supprimer l'utilisateur "${u.name}" ?`)) return
+    await deleteUser(u.id)
     const all = store.getUsers().filter(x => x.id !== u.id)
     store.saveUsers(all)
     reload()
+  }
+
+  const handleBulkDelete = async () => {
+    const ids = [...selectedUserIds]
+    if (ids.length === 0) return
+    if (!confirm(`Supprimer ${ids.length} utilisateur(s) sélectionné(s) ?`)) return
+    for (const id of ids) await deleteUser(id)
+    const all = store.getUsers().filter(u => !ids.includes(u.id))
+    store.saveUsers(all)
+    setSelectedUserIds(new Set())
+    reload()
+  }
+
+  const toggleSelectUser = (id: string) => {
+    setSelectedUserIds(prev => {
+      const next = new Set(prev)
+      next.has(id) ? next.delete(id) : next.add(id)
+      return next
+    })
+  }
+
+  const toggleSelectAll = () => {
+    const deletable = filtered.filter(u => canDeleteUser(u) && u.id !== currentUser.id)
+    if (deletable.every(u => selectedUserIds.has(u.id))) {
+      setSelectedUserIds(new Set())
+    } else {
+      setSelectedUserIds(new Set(deletable.map(u => u.id)))
+    }
   }
 
   const handleGeneratePassword = async (u: User) => {
@@ -1428,6 +1484,26 @@ export default function BOUsers({ currentUser }: { currentUser: User }) {
   }
 
   // Role reference data shown in the roles legend card
+  const ROLE_DETAILS: { role: UserRole; label: string; acces: string; droits: string; reception: boolean }[] = [
+    { role: "super_super_admin", label: "Administrateur",      acces: "Back-office complet", droits: "Controle total — tous les droits, aucune restriction",                                          reception: true  },
+    { role: "super_admin",      label: "Super Admin",          acces: "Back-office complet", droits: "Tous les droits, parametres systeme, base de donnees, utilisateurs",                           reception: true  },
+    { role: "admin",            label: "Administrateur",       acces: "Back-office complet", droits: "Memes droits que super_admin sauf certains parametres critiques",                               reception: true  },
+    { role: "resp_commercial",  label: "Resp. Commercial",     acces: "Back-office",         droits: "Commandes, clients, affectation commerciale, recap, caisse",                                    reception: false },
+    { role: "team_leader",      label: "Team Leader",          acces: "Back-office",         droits: "Commandes, caisse, recap — supervise les prevendeurs",                                          reception: false },
+    { role: "prevendeur",       label: "Pre-vendeur",          acces: "Mobile",              droits: "Prise de commandes clients, visite terrain, objectifs journaliers",                             reception: false },
+    { role: "resp_logistique",  label: "Resp. Logistique",     acces: "Back-office + Mobile",droits: "Stock, dispatch, livraison, bons de preparation, RECEPTION MARCHANDISE",                       reception: true  },
+    { role: "magasinier",       label: "Magasinier",           acces: "Mobile",              droits: "RECEPTION marchandise, VALIDATION BL, preparation commandes, controle prep",                  reception: true  },
+    { role: "dispatcheur",      label: "Dispatcheur",          acces: "Mobile",              droits: "Affectation livreurs, planning tournees, RECEPTION MARCHANDISE",                                reception: true  },
+    { role: "livreur",          label: "Livreur",              acces: "Mobile",              droits: "Bons de livraison, rapport tournee, retours clients",                                           reception: false },
+    { role: "livreur_interne",  label: "Livreur Interne",      acces: "Mobile",              droits: "Employe Empire Fresh — BL, tournee, encaissement, retours clients",                              reception: false },
+    { role: "livreur_externe",  label: "Livreur Externe",      acces: "Mobile",              droits: "Prestataire / sous-traitant — BL et signature uniquement, pas d'acces aux prix ni au cash",      reception: false },
+    { role: "acheteur",         label: "Acheteur",             acces: "Mobile",              droits: "Bons d'achat, besoin par SKU, historique prix fournisseurs — PAS de reception",                reception: false },
+    { role: "ctrl_achat",       label: "Controleur Achat",     acces: "Mobile",              droits: "Verification qualite et prix des achats effectues",                                             reception: false },
+    { role: "ctrl_prep",        label: "Controleur Preparation",acces:"Mobile",              droits: "Verification des bons de preparation avant depart livreur",                                    reception: false },
+    { role: "cash_man",         label: "Cash Manager",         acces: "Back-office",         droits: "Encaissements, BL, suivi caisse journaliere",                                                   reception: false },
+    { role: "financier",        label: "Financier",            acces: "Back-office",         droits: "Bilan, tresorerie, tableaux de bord financiers",                                               reception: false },
+    { role: "client",           label: "Client",               acces: "Portail client",      droits: "Consultation commandes et historique via portail dedie",                                        reception: false },
+    { role: "fournisseur",      label: "Fournisseur",          acces: "Portail fournisseur", droits: "Consultation des PO, statuts livraisons via portail dedie",                                    reception: false },
   const ROLE_DETAILS: { role: UserRole; label: string; acces: string; droits: string; processus: string; reception: boolean }[] = [
     { role: "super_super_admin", label: "Super Admin",             acces: "Back-office complet", droits: "Contrôle total — tous les droits, purge, accès JAWAD, paramètres critiques",                          processus: "Peut intervenir sur toutes les étapes du processus. Accès aux logs systeme et à la purge des données.",                                            reception: true  },
     { role: "super_admin",       label: "Admin Principal",         acces: "Back-office complet", droits: "Tous les droits : utilisateurs, DB, workflow, finance, RH, commandes, stock",                         processus: "Supervision complète — peut valider, annuler ou modifier toute étape : commande → achat → réception → préparation → livraison → encaissement.",   reception: true  },
@@ -1481,6 +1557,15 @@ export default function BOUsers({ currentUser }: { currentUser: User }) {
               Importer JSON
               <input type="file" accept=".json" className="hidden" onChange={importJSON} />
             </label>
+          )}
+          {isFullAdmin && selectedUserIds.size > 0 && (
+            <button onClick={handleBulkDelete}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white bg-red-600 hover:bg-red-700 transition-colors">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+              Supprimer la sélection ({selectedUserIds.size})
+            </button>
           )}
           {canOpenNewForm && (
             <button onClick={openNew}
@@ -1726,6 +1811,14 @@ export default function BOUsers({ currentUser }: { currentUser: User }) {
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-sidebar text-sidebar-foreground">
+                {isFullAdmin && (
+                  <th className="px-3 py-3 w-10">
+                    <input type="checkbox"
+                      checked={filtered.filter(u => canDeleteUser(u) && u.id !== currentUser.id).length > 0 && filtered.filter(u => canDeleteUser(u) && u.id !== currentUser.id).every(u => selectedUserIds.has(u.id))}
+                      onChange={toggleSelectAll}
+                      className="w-4 h-4 rounded cursor-pointer accent-red-600" />
+                  </th>
+                )}
                 <th className="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wide">Nom / الاسم</th>
                 <th className="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wide">Contact</th>
                 <th className="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wide">Role</th>
@@ -1738,9 +1831,19 @@ export default function BOUsers({ currentUser }: { currentUser: User }) {
             </thead>
             <tbody>
               {filtered.length === 0 ? (
-                <tr><td colSpan={7} className="px-4 py-10 text-center text-muted-foreground">Aucun utilisateur trouve</td></tr>
+                <tr><td colSpan={8} className="px-4 py-10 text-center text-muted-foreground">Aucun utilisateur trouve</td></tr>
               ) : filtered.map((u, i) => (
-                <tr key={u.id} className={i % 2 === 0 ? "bg-card" : "bg-muted/30"} style={{ borderTop: "1px solid var(--border)" }}>
+                <tr key={u.id} className={`${i % 2 === 0 ? "bg-card" : "bg-muted/30"} ${selectedUserIds.has(u.id) ? "bg-red-50/60" : ""}`} style={{ borderTop: "1px solid var(--border)" }}>
+                  {isFullAdmin && (
+                    <td className="px-3 py-3">
+                      {canDeleteUser(u) && u.id !== currentUser.id && (
+                        <input type="checkbox"
+                          checked={selectedUserIds.has(u.id)}
+                          onChange={() => toggleSelectUser(u.id)}
+                          className="w-4 h-4 rounded cursor-pointer accent-red-600" />
+                      )}
+                    </td>
+                  )}
                   {/* Name — always visible */}
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2.5">
@@ -2001,7 +2104,7 @@ export default function BOUsers({ currentUser }: { currentUser: User }) {
                   </div>
 
                   {/* Depot assignment — visible for roles that need depot access */}
-                  {(form.role === "magasinier" || form.role === "acheteur" || form.role === "livreur" || form.role === "admin" || form.role === "super_admin") && (
+                  {(form.role === "magasinier" || form.role === "acheteur" || form.role === "livreur" || form.role === "livreur_interne" || form.role === "livreur_externe" || form.role === "admin" || form.role === "super_admin") && (
                     <div className="flex flex-col gap-1 sm:col-span-2">
                       <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
                         <svg className="w-3.5 h-3.5 text-primary shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">

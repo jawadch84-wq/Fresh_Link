@@ -750,6 +750,7 @@ export default function BOBonLivraison({ user }: { user: User }) {
   const [bls, setBLs] = useState<BonLivraison[]>(getBLs)
   const [editing, setEditing] = useState<Partial<BonLivraison> | null>(null)
   const [mainTab, setMainTab] = useState<BLMainTab>("en_cours")
+  const [selectedBLIds, setSelectedBLIds] = useState<Set<string>>(new Set())
   const [search, setSearch] = useState("")
   const [filterStatut, setFilterStatut] = useState<BLStatut | "">("")
   const [filterTrip, setFilterTrip] = useState("")
@@ -954,6 +955,59 @@ export default function BOBonLivraison({ user }: { user: User }) {
     setBLs(updated)
   }
 
+  const startDelivery = (bl: BonLivraison) => {
+    const updated = bls.map(b => b.id === bl.id
+      ? { ...b, statut: "en_livraison" as BLStatut, updatedAt: new Date().toISOString() }
+      : b)
+    saveBLs(updated)
+    store.saveBonsLivraison(updated as unknown as import("@/lib/store").BonLivraison[])
+    setBLs(updated)
+    // Auto-download BL PDF
+    const c = store.getClients().find(c => c.id === bl.clientId || c.nom === bl.clientNom)
+    downloadBLFromBO({
+      ...bl,
+      statut: "en_livraison",
+      clientIce: bl.clientIce ?? c?.ice,
+      clientModalitePaiement: bl.clientModalitePaiement ?? (c?.modalitePaiement ?? ""),
+      clientCreditSolde: bl.clientCreditSolde ?? c?.creditSolde,
+      clientCreditAutorise: bl.clientCreditAutorise ?? c?.creditAutorise,
+    }, printOpts)
+    // WhatsApp client if phone available
+    if (c?.telephone) {
+      const txt = buildBLWhatsAppText(bl.numero, bl.clientNom, new Date(bl.date).toLocaleDateString("fr-FR"),
+        bl.lignes.map(l => ({ nom: l.articleNom, quantite: l.qteLivree, unite: l.unite, total: l.totalLigne })),
+        bl.totalTTC, bl.clientModalitePaiement)
+      sendWhatsApp(c.telephone, `[DEPART LIVRAISON] ${txt}`)
+    }
+  }
+
+  const bulkDeleteBLs = () => {
+    const ids = [...selectedBLIds]
+    if (ids.length === 0) return
+    if (!confirm(`Supprimer ${ids.length} bon(s) de livraison sélectionné(s) ?`)) return
+    const updated = bls.filter(b => !ids.includes(b.id))
+    saveBLs(updated)
+    store.saveBonsLivraison(updated as unknown as import("@/lib/store").BonLivraison[])
+    setBLs(updated)
+    setSelectedBLIds(new Set())
+  }
+
+  const toggleSelectBL = (id: string) => {
+    setSelectedBLIds(prev => {
+      const next = new Set(prev)
+      next.has(id) ? next.delete(id) : next.add(id)
+      return next
+    })
+  }
+
+  const toggleSelectAllBLs = () => {
+    if (displayed.every(b => selectedBLIds.has(b.id))) {
+      setSelectedBLIds(new Set())
+    } else {
+      setSelectedBLIds(new Set(displayed.map(b => b.id)))
+    }
+  }
+
   // ── Transfert BL -> Facture (cash_man / finance only, statut = livre) ──────
   const transferToFacture = (bl: BonLivraison) => {
     if (!canFacture || bl.statut !== "livre") return
@@ -1038,6 +1092,15 @@ export default function BOBonLivraison({ user }: { user: User }) {
                 {bonsPrep.length > 0 && (
                   <span className="w-5 h-5 bg-violet-600 text-white rounded-full text-[10px] font-black flex items-center justify-center">{bonsPrep.length}</span>
                 )}
+              </button>
+            )}
+            {canEdit && selectedBLIds.size > 0 && (
+              <button onClick={bulkDeleteBLs}
+                className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white text-sm font-semibold rounded-xl hover:bg-red-700 transition-colors shadow-sm">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                Supprimer sélection ({selectedBLIds.size})
               </button>
             )}
             {canEdit && (
@@ -1299,6 +1362,14 @@ export default function BOBonLivraison({ user }: { user: User }) {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="bg-slate-50 border-b border-slate-200">
+                    {canEdit && (
+                      <th className="px-3 py-3 w-10">
+                        <input type="checkbox"
+                          checked={displayed.length > 0 && displayed.every(b => selectedBLIds.has(b.id))}
+                          onChange={toggleSelectAllBLs}
+                          className="w-4 h-4 rounded cursor-pointer accent-red-600" />
+                      </th>
+                    )}
                     {["Numero", "Client", "Date", "Livreur", "Articles", "Total TTC", "Statut", "QC",
                       ...(mainTab === "historique" ? ["Facture"] : []),
                       "Actions"].map(h => (
@@ -1310,7 +1381,15 @@ export default function BOBonLivraison({ user }: { user: User }) {
                   {displayed.map(bl => {
                     const isFacture = (bl as unknown as { factureCreee?: boolean }).factureCreee
                     return (
-                    <tr key={bl.id} className={`hover:bg-slate-50 transition-colors ${isFacture ? "bg-emerald-50/30" : ""}`}>
+                    <tr key={bl.id} className={`hover:bg-slate-50 transition-colors ${isFacture ? "bg-emerald-50/30" : ""} ${selectedBLIds.has(bl.id) ? "bg-red-50/50" : ""}`}>
+                      {canEdit && (
+                        <td className="px-3 py-3">
+                          <input type="checkbox"
+                            checked={selectedBLIds.has(bl.id)}
+                            onChange={() => toggleSelectBL(bl.id)}
+                            className="w-4 h-4 rounded cursor-pointer accent-red-600" />
+                        </td>
+                      )}
                       <td className="px-4 py-3">
                         <span className="font-mono text-xs font-bold text-slate-700">
                           {/* Affichage: "Bon de livraison N° 26042" au lieu de "BL-BL-26042" */}
@@ -1429,6 +1508,14 @@ export default function BOBonLivraison({ user }: { user: User }) {
                               className="p-1.5 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors">
                               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                              </svg>
+                            </button>
+                          )}
+                          {canEdit && bl.statut === "valide" && (
+                            <button onClick={() => startDelivery(bl)} title="Depart livraison — télécharge BL + notifie client"
+                              className="p-1.5 text-amber-600 hover:text-amber-700 hover:bg-amber-50 rounded-lg transition-colors border border-amber-200">
+                              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0" />
                               </svg>
                             </button>
                           )}
