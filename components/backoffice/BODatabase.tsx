@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react"
 import { store, type Client } from "@/lib/store"
 import { fetchClients, upsertClient, importClients } from "@/lib/supabase/db"
+import { createClient } from "@/lib/supabase/client"
 
 const DH = (n: number) => `${n.toLocaleString("fr-MA", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} DH`
 
@@ -86,8 +87,35 @@ export default function BODatabase({ user }: { user: { id: string; role?: string
   const [sbMsg, setSbMsg] = useState("")
   const [importing, setImporting] = useState(false)
   const [importResult, setImportResult] = useState<{ inserted: number; updated: number; errors: number } | null>(null)
+  const [syncErrorAlert, setSyncErrorAlert] = useState<{ table: string; error: string; code?: string } | null>(null)
+  const [writeTestResult, setWriteTestResult] = useState<{ ok: boolean; message: string } | null>(null)
+  const [writeTestLoading, setWriteTestLoading] = useState(false)
+  const [forceSyncLoading, setForceSyncLoading] = useState(false)
+  const [forceSyncResult, setForceSyncResult] = useState<{ table: string; count: number; error?: string }[] | null>(null)
   const csvRef = useRef<HTMLInputElement>(null)
   const canAccess = user.role === "super_super_admin" || user.role === "admin" || user.role === "super_admin"
+
+  const ERP_SYNC_KEYS: Record<string, string> = {
+    fl_users:            "fl_users",
+    fl_clients:          "fl_clients",
+    fl_articles:         "fl_articles",
+    fl_fournisseurs:     "fl_fournisseurs",
+    fl_commandes:        "fl_commandes",
+    fl_bons_livraison:   "fl_bons_livraison",
+    fl_trips:            "fl_trips",
+    fl_retours:          "fl_retours",
+    fl_bons_achat:       "fl_bons_achat",
+    fl_bons_preparation: "fl_bons_preparation",
+    fl_receptions:       "fl_receptions",
+    fl_transferts:       "fl_transferts_stock",
+    fl_messages:         "fl_messages",
+    fl_depots:           "fl_depots",
+    fl_livreurs:         "fl_livreurs",
+    fl_visites:          "fl_visites",
+    fl_demandes_achat:   "fl_demandes_achat",
+    fl_notices:          "fl_notices",
+    fl_non_achats:       "fl_non_achats",
+  }
 
   // ALL useEffects MUST be before any conditional return
   useEffect(() => {
@@ -107,42 +135,150 @@ export default function BODatabase({ user }: { user: { id: string; role?: string
     })
   }, [canAccess])
 
+  // Détecter si l'utilisateur courant est un compte démo
+  const isCurrentUserDemo = (() => {
+    try {
+      const session = store.getSession()
+      if (!session) return false
+      const demoEmails = new Set(["livreur@freshlink.ma","client.demo@freshlink.ma","fournisseur.demo@freshlink.ma"])
+      return demoEmails.has(session.email?.toLowerCase() ?? "") || (session.name?.toLowerCase().startsWith("demo") ?? false)
+    } catch { return false }
+  })()
+
   useEffect(() => {
     if (!canAccess) return
     setSbStatus("syncing")
     fetchClients().then(({ clients, source }) => {
-      setSbStatus(source === "supabase" ? "ok" : "local")
-      setSbMsg(source === "supabase"
-        ? `${clients.length} clients synchronisés depuis Supabase`
-        : `Mode local — ${clients.length} clients (Supabase non connecté)`)
+      if (source === "supabase") {
+        setSbStatus("ok")
+        setSbMsg(`${clients.length} clients — Supabase actif`)
+      } else {
+        setSbStatus("local")
+        if (isCurrentUserDemo) {
+          setSbMsg(`${clients.length} entrées — compte démo`)
+        } else {
+          setSbMsg(`${clients.length} entrées locales — Supabase non joignable`)
+        }
+      }
     }).catch(() => {
       setSbStatus("local")
-      setSbMsg("Mode local (Supabase inaccessible)")
+      setSbMsg("Supabase inaccessible — données locales affichées")
     })
+  }, [canAccess, isCurrentUserDemo])
+
+  // fl_sync_error listener — must be before guard
+  useEffect(() => {
+    if (!canAccess) return
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail as { table: string; error: string; code?: string }
+      setSyncErrorAlert(detail)
+    }
+    window.addEventListener("fl_sync_error", handler)
+    return () => window.removeEventListener("fl_sync_error", handler)
   }, [canAccess])
 
   // 3rd useEffect: reload table data when section changes — must also be before guard
   useEffect(() => {
     if (!canAccess) return
+    // Pour les comptes non-démo : filtrer les entrées de seed/démo
+    // Une entrée est "démo" si createdBy est un compte démo ou si le nom commence par "Demo_"
+    const demoCreators = new Set(["u_com_demo","u_liv_demo","demo_admin","demo_seed"])
+    const filterDemo = <T extends Record<string,unknown>>(arr: T[]): T[] => {
+      if (isCurrentUserDemo) return arr // démo voit tout
+      return arr.filter(item => {
+        const cb = String(item.createdBy ?? item.created_by ?? "")
+        const nom = String(item.nom ?? item.name ?? item.libelle ?? "").toLowerCase()
+        return !demoCreators.has(cb) && !nom.startsWith("demo_") && !nom.startsWith("__test")
+      })
+    }
     const loaders: Record<Section, () => unknown[]> = {
-      achats:       () => store.getBonsAchat(),
-      commandes:    () => store.getCommandes(),
-      receptions:   () => store.getReceptions(),
-      stock:        () => store.getArticles(),
-      livraisons:   () => store.getBonsLivraison(),
-      retours:      () => store.getRetours(),
-      trips:        () => store.getTrips(),
-      trip_charges: () => store.getTripCharges(),
-      caisses_mvt:  () => store.getCaissesMovements(),
-      clients:      () => store.getClients(),
-      users:        () => store.getUsers().map(u => ({ ...u, password: "***" })),
+      achats:       () => filterDemo(store.getBonsAchat() as Record<string,unknown>[]),
+      commandes:    () => filterDemo(store.getCommandes() as Record<string,unknown>[]),
+      receptions:   () => filterDemo(store.getReceptions() as Record<string,unknown>[]),
+      stock:        () => filterDemo(store.getArticles() as Record<string,unknown>[]),
+      livraisons:   () => filterDemo(store.getBonsLivraison() as Record<string,unknown>[]),
+      retours:      () => filterDemo(store.getRetours() as Record<string,unknown>[]),
+      trips:        () => filterDemo(store.getTrips() as Record<string,unknown>[]),
+      trip_charges: () => filterDemo(store.getTripCharges() as Record<string,unknown>[]),
+      caisses_mvt:  () => filterDemo(store.getCaissesMovements() as Record<string,unknown>[]),
+      clients:      () => filterDemo(store.getClients() as Record<string,unknown>[]),
+      users:        () => filterDemo(store.getUsers().map(u => ({ ...u, password: "***" })) as Record<string,unknown>[]),
     }
     setData(loaders[section]())
     setSearch("")
-  }, [section, canAccess])
+  }, [section, canAccess, isCurrentUserDemo])
 
   // Guard AFTER all hooks — safe conditional render
   if (!canAccess) return <AccessDenied />
+
+  const handleWriteTest = async () => {
+    setWriteTestLoading(true)
+    setWriteTestResult(null)
+    try {
+      const testId = `__test_${Date.now()}`
+      const res = await fetch("/api/sync-write", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ table: "fl_clients", upserts: [{ id: testId, payload: { id: testId, nom: "__TEST__" }, updated_at: new Date().toISOString() }] }),
+      })
+      const json = await res.json() as { ok: boolean; errors?: string[] }
+      if (!json.ok) {
+        setWriteTestResult({ ok: false, message: `Ecriture echouee via /api/sync-write: ${json.errors?.join(", ")}` })
+        setWriteTestLoading(false)
+        return
+      }
+      // cleanup
+      await fetch("/api/sync-write", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ table: "fl_clients", deletes: [testId] }),
+      })
+      setWriteTestResult({ ok: true, message: "Ecriture et suppression reussies via service role — RLS bypasse correctement." })
+    } catch (e) {
+      setWriteTestResult({ ok: false, message: `Erreur inattendue: ${String(e)}` })
+    }
+    setWriteTestLoading(false)
+  }
+
+  const handleForceSync = async () => {
+    setForceSyncLoading(true)
+    setForceSyncResult(null)
+    const results: { table: string; count: number; error?: string }[] = []
+    for (const [lsKey, sbTable] of Object.entries(ERP_SYNC_KEYS)) {
+      try {
+        const raw = localStorage.getItem(lsKey)
+        if (!raw) { results.push({ table: sbTable, count: 0 }); continue }
+        const items: Array<Record<string, unknown>> = JSON.parse(raw)
+        const validItems = Array.isArray(items) ? items.filter(i => i && i.id) : []
+        if (validItems.length === 0) { results.push({ table: sbTable, count: 0 }); continue }
+        const upserts = validItems.map(item => ({ id: item.id as string, payload: item, updated_at: new Date().toISOString() }))
+        // Send in batches of 50 to avoid oversized payloads
+        const CHUNK = 50
+        let batchOk = true
+        let batchErr = ""
+        for (let ci = 0; ci < upserts.length; ci += CHUNK) {
+          const chunk = upserts.slice(ci, ci + CHUNK)
+          const res = await fetch("/api/sync-write", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ table: sbTable, upserts: chunk }),
+          })
+          if (!res.ok) { batchOk = false; batchErr = `HTTP ${res.status}`; break }
+          const json = await res.json() as { ok: boolean; errors?: string[] }
+          if (!json.ok) { batchOk = false; batchErr = json.errors?.join(", ") ?? "Erreur inconnue"; break }
+        }
+        if (!batchOk) {
+          results.push({ table: sbTable, count: 0, error: batchErr })
+        } else {
+          results.push({ table: sbTable, count: upserts.length })
+        }
+      } catch (e) {
+        results.push({ table: sbTable, count: 0, error: String(e) })
+      }
+    }
+    setForceSyncResult(results)
+    setForceSyncLoading(false)
+  }
 
   const handleClientImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -291,12 +427,85 @@ export default function BODatabase({ user }: { user: { id: string; role?: string
           <p className="text-sm text-muted-foreground">Consultation de toutes les données — synchronisation Supabase</p>
         </div>
         {/* Supabase status pill */}
-        <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold border ${sbStatus === "ok" ? "bg-green-50 border-green-200 text-green-700" : sbStatus === "local" ? "bg-amber-50 border-amber-200 text-amber-700" : sbStatus === "syncing" ? "bg-blue-50 border-blue-200 text-blue-700" : "bg-muted border-border text-muted-foreground"}`}>
-          {sbStatus === "syncing"
-            ? <div className="w-2.5 h-2.5 border border-blue-500 border-t-transparent rounded-full animate-spin" />
-            : <div className={`w-2 h-2 rounded-full ${sbStatus === "ok" ? "bg-green-500" : sbStatus === "local" ? "bg-amber-500" : "bg-gray-400"}`} />}
-          {sbStatus === "syncing" ? "Sync Supabase..." : sbStatus === "ok" ? "Supabase connecte" : sbStatus === "local" ? "Mode local" : "—"}
-          {sbMsg && <span className="hidden sm:inline text-[10px] opacity-70 ml-1">— {sbMsg}</span>}
+        <div className="flex flex-col items-end gap-1">
+          <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold border ${sbStatus === "ok" ? "bg-green-50 border-green-200 text-green-700" : sbStatus === "local" ? "bg-amber-50 border-amber-200 text-amber-700" : sbStatus === "syncing" ? "bg-blue-50 border-blue-200 text-blue-700" : "bg-muted border-border text-muted-foreground"}`}>
+            {sbStatus === "syncing"
+              ? <div className="w-2.5 h-2.5 border border-blue-500 border-t-transparent rounded-full animate-spin" />
+              : <div className={`w-2 h-2 rounded-full ${sbStatus === "ok" ? "bg-green-500" : sbStatus === "local" ? "bg-amber-500" : "bg-gray-400"}`} />}
+            {sbStatus === "syncing" ? "Synchronisation Supabase..." : sbStatus === "ok" ? "✅ Supabase connecté" : sbStatus === "local" ? "🔵 Données locales" : "—"}
+          </div>
+          {sbMsg && (
+            <span className={`text-[11px] font-medium px-2 ${sbStatus === "ok" ? "text-green-600" : sbStatus === "local" ? "text-amber-600" : "text-muted-foreground"}`}>
+              {sbMsg}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Sync error persistent alert */}
+      {syncErrorAlert && (
+        <div className="flex items-start gap-3 px-4 py-3 rounded-2xl bg-red-50 border border-red-300 text-red-800 text-sm">
+          <svg className="w-5 h-5 text-red-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" /></svg>
+          <div className="flex-1">
+            <p className="font-semibold">Erreur Supabase Sync — table: <span className="font-mono">{syncErrorAlert.table}</span></p>
+            <p className="text-xs mt-0.5 opacity-80">{syncErrorAlert.error}{syncErrorAlert.code ? ` (code: ${syncErrorAlert.code})` : ""}</p>
+            <p className="text-xs mt-1 opacity-70">Cause probable: RLS non configure, table absente, ou permissions insuffisantes. Consultez Supabase Dashboard → Authentication → Policies.</p>
+          </div>
+          <button onClick={() => setSyncErrorAlert(null)} className="text-red-400 hover:text-red-700 ml-2 text-lg leading-none">&times;</button>
+        </div>
+      )}
+
+      {/* Diagnostics Supabase — Test Ecriture + Force Sync */}
+      <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex flex-col gap-3">
+        <div className="flex items-center gap-2">
+          <svg className="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+          <h3 className="font-semibold text-amber-900 text-sm">Diagnostics Supabase / تشخيص قاعدة البيانات</h3>
+        </div>
+        <div className="flex flex-wrap gap-3 items-start">
+          {/* Test Ecriture */}
+          <div className="flex flex-col gap-2">
+            <button
+              onClick={handleWriteTest}
+              disabled={writeTestLoading}
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold border transition-colors ${writeTestLoading ? "opacity-60 pointer-events-none" : "hover:bg-amber-100"} bg-white border-amber-300 text-amber-800`}>
+              {writeTestLoading
+                ? <><div className="w-3.5 h-3.5 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" /> Test en cours...</>
+                : <><svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg> Test Ecriture (fl_clients)</>}
+            </button>
+            {writeTestResult && (
+              <div className={`px-3 py-2 rounded-xl text-xs font-medium border ${writeTestResult.ok ? "bg-green-50 border-green-200 text-green-800" : "bg-red-50 border-red-200 text-red-800"}`}>
+                {writeTestResult.ok ? "✓ " : "✗ "}{writeTestResult.message}
+              </div>
+            )}
+          </div>
+
+          {/* Force Sync Complet */}
+          <div className="flex flex-col gap-2 flex-1 min-w-48">
+            <button
+              onClick={handleForceSync}
+              disabled={forceSyncLoading}
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold text-white transition-opacity ${forceSyncLoading ? "opacity-60 pointer-events-none" : "hover:opacity-90"}`}
+              style={{ background: "oklch(0.55 0.18 40)" }}>
+              {forceSyncLoading
+                ? <><div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" /> Sync en cours...</>
+                : <><svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg> Force Sync Complet</>}
+            </button>
+            {forceSyncResult && (
+              <div className="flex flex-col gap-1 max-h-48 overflow-y-auto">
+                {forceSyncResult.map(r => (
+                  <div key={r.table} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs border ${r.error ? "bg-red-50 border-red-200 text-red-800" : r.count === 0 ? "bg-gray-50 border-gray-200 text-gray-500" : "bg-green-50 border-green-200 text-green-800"}`}>
+                    <span className="font-mono font-semibold w-44 shrink-0">{r.table}</span>
+                    {r.error
+                      ? <span className="text-red-700 truncate" title={r.error}>Erreur: {r.error}</span>
+                      : <span>{r.count} item(s) poussé(s)</span>}
+                  </div>
+                ))}
+                <div className="px-3 py-1.5 rounded-lg text-xs bg-blue-50 border border-blue-200 text-blue-800 font-semibold">
+                  Total: {forceSyncResult.reduce((s, r) => s + r.count, 0)} items — {forceSyncResult.filter(r => r.error).length} erreur(s)
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

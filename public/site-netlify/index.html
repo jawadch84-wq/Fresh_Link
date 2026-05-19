@@ -1,0 +1,1400 @@
+<!DOCTYPE html>
+<html lang="fr" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Empire Fresh — Distribution Alimentaire Professionnelle</title>
+  <meta name="description" content="Empire Fresh — Fruits, légumes et produits frais livrés à Casablanca. CHR, marchands et particuliers." />
+
+  <!-- FONTS -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+Arabic:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --green:       #16a34a;
+      --green-dark:  #15803d;
+      --green-light: #dcfce7;
+      --orange:      #ea580c;
+      --orange-light:#fff7ed;
+      --gray-50:     #f9fafb;
+      --gray-100:    #f3f4f6;
+      --gray-200:    #e5e7eb;
+      --gray-300:    #d1d5db;
+      --gray-500:    #6b7280;
+      --gray-700:    #374151;
+      --gray-900:    #111827;
+      --white:       #ffffff;
+      --radius:      12px;
+      --shadow:      0 4px 24px rgba(0,0,0,.08);
+      --shadow-lg:   0 8px 40px rgba(0,0,0,.14);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', 'Noto Sans Arabic', sans-serif;
+      color: var(--gray-900); background: var(--white);
+      line-height: 1.6; overflow-x: hidden;
+    }
+    /* RTL */
+    html[dir="rtl"] body        { font-family: 'Noto Sans Arabic', 'Inter', sans-serif; }
+    html[dir="rtl"]             { text-align: right; }
+    html[dir="rtl"] .nav-links  { flex-direction: row-reverse; }
+    html[dir="rtl"] .hero-content { text-align: right; }
+    html[dir="rtl"] .section-header { text-align: right; }
+    html[dir="rtl"] .form-group input,
+    html[dir="rtl"] .form-group select,
+    html[dir="rtl"] .form-group textarea { text-align: right; direction: rtl; }
+    html[dir="rtl"] .footer-cols { flex-direction: row-reverse; }
+    html[dir="rtl"] .phone-flag { left: auto; right: 12px; }
+    html[dir="rtl"] .phone-input-wrap input { padding-left: 14px !important; padding-right: 42px !important; }
+    html[dir="rtl"] .hero-ctas  { flex-direction: row-reverse; }
+    html[dir="rtl"] .pro-perk   { flex-direction: row-reverse; text-align: right; }
+    html[dir="rtl"] .order-item { flex-direction: row-reverse; }
+
+    /* Layout */
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+
+    /* ── NAVBAR ── */
+    .navbar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+      background: rgba(255,255,255,.97); backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--gray-200); height: 68px;
+      display: flex; align-items: center;
+    }
+    .nav-inner {
+      display: flex; align-items: center; justify-content: space-between;
+      width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 20px;
+    }
+    .nav-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; flex-shrink: 0; }
+    .nav-logo-icon {
+      width: 40px; height: 40px; border-radius: 10px;
+      background: linear-gradient(135deg, var(--green) 0%, var(--green-dark) 100%);
+      display: flex; align-items: center; justify-content: center; font-size: 20px;
+    }
+    .nav-brand-text { line-height: 1.1; }
+    .nav-brand-name { font-size: 17px; font-weight: 800; color: var(--green-dark); display: block; }
+    .nav-brand-sub  { font-size: 10px; color: var(--gray-500); text-transform: uppercase; letter-spacing: .8px; display: block; }
+    .nav-links { display: flex; align-items: center; gap: 4px; list-style: none; }
+    .nav-links a {
+      padding: 7px 12px; border-radius: 8px; font-size: 14px; font-weight: 500;
+      color: var(--gray-700); text-decoration: none; transition: all .2s;
+    }
+    .nav-links a:hover { background: var(--gray-100); color: var(--green); }
+    .nav-right { display: flex; align-items: center; gap: 8px; }
+
+    /* Language switcher */
+    .lang-switcher {
+      display: flex; align-items: center; gap: 2px;
+      background: var(--gray-100); border-radius: 8px; padding: 3px;
+    }
+    .lang-btn {
+      background: none; border: none; cursor: pointer;
+      padding: 5px 8px; border-radius: 6px; font-size: 12px; font-weight: 600;
+      color: var(--gray-500); transition: all .2s; line-height: 1; white-space: nowrap;
+    }
+    .lang-btn:hover { background: var(--white); color: var(--gray-700); }
+    .lang-btn.active { background: var(--white); color: var(--green); box-shadow: 0 1px 4px rgba(0,0,0,.1); }
+
+    .btn-login {
+      background: var(--green); color: var(--white); border: none;
+      padding: 9px 16px; border-radius: 8px; font-size: 14px; font-weight: 600;
+      cursor: pointer; transition: background .2s; white-space: nowrap;
+    }
+    .btn-login:hover { background: var(--green-dark); }
+    .hamburger {
+      display: none; flex-direction: column; gap: 5px;
+      background: none; border: none; cursor: pointer; padding: 4px;
+    }
+    .hamburger span { display: block; width: 22px; height: 2px; background: var(--gray-700); border-radius: 2px; }
+    .mobile-menu {
+      display: none; position: fixed; top: 68px; left: 0; right: 0;
+      background: var(--white); border-bottom: 1px solid var(--gray-200);
+      padding: 12px 20px; z-index: 999; flex-direction: column; gap: 6px;
+    }
+    .mobile-menu.open { display: flex; }
+    .mobile-menu a {
+      padding: 10px 14px; border-radius: 8px; font-size: 15px;
+      color: var(--gray-700); text-decoration: none; display: block;
+    }
+    .mobile-menu a:hover { background: var(--gray-100); }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #052e16 0%, #14532d 40%, #166534 70%, #15803d 100%);
+      display: flex; align-items: center; padding-top: 68px; position: relative; overflow: hidden;
+    }
+    .hero-inner {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center;
+      width: 100%; max-width: 1200px; margin: 0 auto; padding: 60px 20px; position: relative; z-index: 1;
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.2);
+      border-radius: 30px; padding: 6px 16px; margin-bottom: 24px;
+      font-size: 13px; color: rgba(255,255,255,.9); font-weight: 500;
+    }
+    .hero-badge .dot { width: 7px; height: 7px; background: #4ade80; border-radius: 50%; flex-shrink: 0; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1}50%{opacity:.4} }
+    .hero h1 {
+      font-size: clamp(30px, 4.5vw, 54px); font-weight: 800;
+      color: var(--white); line-height: 1.1; margin-bottom: 20px;
+    }
+    .hero-sub { font-size: 17px; color: rgba(255,255,255,.8); margin-bottom: 36px; max-width: 480px; }
+    .hero-ctas { display: flex; gap: 12px; flex-wrap: wrap; }
+    .btn-hero-primary {
+      background: var(--white); color: var(--green-dark);
+      padding: 14px 26px; border-radius: 10px; font-size: 15px; font-weight: 700;
+      border: none; cursor: pointer; text-decoration: none; transition: all .2s;
+      display: inline-flex; align-items: center; gap: 8px;
+    }
+    .btn-hero-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,.2); }
+    .btn-hero-whatsapp {
+      background: #25d366; color: var(--white);
+      padding: 14px 26px; border-radius: 10px; font-size: 15px; font-weight: 700;
+      border: none; cursor: pointer; text-decoration: none; transition: all .2s;
+      display: inline-flex; align-items: center; gap: 8px;
+    }
+    .btn-hero-whatsapp:hover { background: #128c7e; transform: translateY(-2px); }
+    .hero-card {
+      background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.15);
+      border-radius: 20px; padding: 28px; backdrop-filter: blur(10px);
+    }
+    .hero-card-title { font-size: 13px; font-weight: 600; color: rgba(255,255,255,.7); margin-bottom: 14px; text-transform: uppercase; letter-spacing: .5px; }
+    .hero-card-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px; background: rgba(255,255,255,.08); border-radius: 10px; margin-bottom: 10px;
+    }
+    .hero-card-icon { font-size: 22px; flex-shrink: 0; }
+    .hero-card-label { font-size: 12px; color: rgba(255,255,255,.6); }
+    .hero-card-value { font-size: 14px; font-weight: 700; color: var(--white); }
+    .hero-card-badge {
+      margin-top: 14px; text-align: center;
+      background: rgba(74,222,128,.15); border: 1px solid rgba(74,222,128,.3);
+      border-radius: 8px; padding: 10px; font-size: 13px; color: #4ade80; font-weight: 600;
+    }
+
+    /* ── SECTIONS ── */
+    section { padding: 80px 0; }
+    .section-header { text-align: center; margin-bottom: 52px; }
+    html[dir="rtl"] .section-header { text-align: right; }
+    .section-tag {
+      display: inline-block; background: var(--green-light); color: var(--green-dark);
+      padding: 5px 14px; border-radius: 20px; font-size: 13px; font-weight: 600;
+      margin-bottom: 12px; text-transform: uppercase; letter-spacing: .5px;
+    }
+    .section-title { font-size: clamp(22px, 3vw, 36px); font-weight: 800; color: var(--gray-900); margin-bottom: 12px; }
+    .section-sub   { font-size: 16px; color: var(--gray-500); max-width: 540px; margin: 0 auto; }
+    html[dir="rtl"] .section-sub { margin: 0; }
+
+    /* ── STATS BAR ── */
+    .stats-bar { background: var(--gray-50); border-top: 1px solid var(--gray-200); border-bottom: 1px solid var(--gray-200); padding: 28px 0; }
+    .stats-inner { display: flex; justify-content: space-around; flex-wrap: wrap; gap: 24px; }
+    .stat-item { text-align: center; }
+    .stat-num  { font-size: 32px; font-weight: 800; color: var(--green); display: block; }
+    .stat-lbl  { font-size: 13px; color: var(--gray-500); font-weight: 500; }
+
+    /* ── SERVICES ── */
+    .services-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; }
+    .service-card {
+      background: var(--white); border: 1.5px solid var(--gray-200);
+      border-radius: var(--radius); padding: 28px 24px; transition: all .25s;
+    }
+    .service-card:hover { border-color: var(--green); box-shadow: var(--shadow); transform: translateY(-3px); }
+    .service-icon {
+      width: 52px; height: 52px; border-radius: 12px;
+      background: var(--green-light); display: flex; align-items: center;
+      justify-content: center; font-size: 26px; margin-bottom: 16px;
+    }
+    .service-title { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+    .service-desc  { font-size: 14px; color: var(--gray-500); line-height: 1.6; }
+
+    /* ── LIVRAISON ── */
+    #livraison { background: var(--gray-50); }
+    .zone-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 32px; }
+    .zone-card {
+      background: var(--white); border: 1.5px solid var(--gray-200);
+      border-radius: var(--radius); padding: 16px; display: flex; align-items: center; gap: 12px;
+    }
+    .zone-icon  { font-size: 22px; flex-shrink: 0; }
+    .zone-name  { font-size: 14px; font-weight: 600; }
+    .zone-delay { font-size: 12px; color: var(--gray-500); }
+    .delivery-modes { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; max-width: 680px; margin: 0 auto; }
+    .delivery-mode-card { border-radius: var(--radius); padding: 22px; display: flex; align-items: flex-start; gap: 14px; }
+    .delivery-mode-card.standard { background: var(--green-light); border: 1.5px solid #bbf7d0; }
+    .delivery-mode-card.express  { background: var(--orange-light); border: 1.5px solid #fed7aa; }
+    .dm-icon  { font-size: 28px; flex-shrink: 0; }
+    .dm-title { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+    .delivery-mode-card.standard .dm-title { color: var(--green-dark); }
+    .delivery-mode-card.express  .dm-title { color: var(--orange); }
+    .dm-desc  { font-size: 13px; color: var(--gray-600, #4b5563); }
+
+    /* ── CATALOGUE ── */
+    .catalogue-info {
+      background: linear-gradient(135deg, var(--green) 0%, var(--green-dark) 100%);
+      border-radius: 16px; padding: 32px 36px; color: var(--white);
+      display: flex; align-items: center; gap: 24px; margin-bottom: 40px; flex-wrap: wrap;
+    }
+    .catalogue-info-icon { font-size: 48px; flex-shrink: 0; }
+    .catalogue-info h3 { font-size: 20px; font-weight: 800; margin-bottom: 6px; }
+    .catalogue-info p  { font-size: 14px; opacity: .85; }
+    .catalogue-info .btn-wa {
+      margin-left: auto; background: #25d366; color: var(--white);
+      padding: 12px 22px; border-radius: 10px; font-size: 14px; font-weight: 700;
+      border: none; cursor: pointer; text-decoration: none; white-space: nowrap;
+      display: inline-flex; align-items: center; gap: 8px; transition: background .2s;
+    }
+    html[dir="rtl"] .catalogue-info .btn-wa { margin-left: 0; margin-right: auto; }
+    .catalogue-info .btn-wa:hover { background: #128c7e; }
+    .price-tiers { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+    .tier-card { border-radius: var(--radius); padding: 22px 20px; border: 1.5px solid var(--gray-200); text-align: center; }
+    .tier-card.chr        { border-color: #bfdbfe; background: #eff6ff; }
+    .tier-card.marchand   { border-color: #fde68a; background: #fffbeb; }
+    .tier-card.particulier{ border-color: var(--gray-200); background: var(--gray-50); }
+    .tier-icon  { font-size: 28px; margin-bottom: 10px; }
+    .tier-label { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px; }
+    .tier-card.chr      .tier-label { color: #1d4ed8; }
+    .tier-card.marchand .tier-label { color: #92400e; }
+    .tier-card.particulier .tier-label { color: var(--gray-700); }
+    .tier-desc { font-size: 13px; color: var(--gray-500); }
+
+    /* ── ESPACE PRO ── */
+    #espace-pro { background: linear-gradient(180deg, #f0fdf4 0%, #fff 100%); }
+    .pro-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: start; }
+    .pro-left p  { font-size: 15px; color: var(--gray-500); margin-bottom: 24px; }
+    .pro-perks { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+    .pro-perk {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 14px 16px; background: var(--white);
+      border: 1.5px solid var(--gray-200); border-radius: 10px;
+    }
+    .pro-perk-icon  { font-size: 20px; flex-shrink: 0; }
+    .pro-perk-title { font-size: 14px; font-weight: 700; }
+    .pro-perk-desc  { font-size: 13px; color: var(--gray-500); }
+    .pro-form-box {
+      background: var(--white); border: 1.5px solid var(--gray-200);
+      border-radius: 20px; padding: 36px 32px; box-shadow: var(--shadow);
+    }
+    .pro-form-box h3 { font-size: 20px; font-weight: 800; margin-bottom: 6px; }
+    .pro-form-box .form-sub { font-size: 14px; color: var(--gray-500); margin-bottom: 24px; }
+    .form-row   { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+    .form-group label { font-size: 13px; font-weight: 600; color: var(--gray-700); }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      padding: 11px 14px; border: 1.5px solid var(--gray-200); border-radius: 8px;
+      font-size: 14px; font-family: inherit; color: var(--gray-900);
+      transition: border-color .2s; outline: none; background: var(--white);
+    }
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(22,163,74,.1); }
+    .form-group textarea { resize: vertical; min-height: 90px; }
+    .form-group select  { appearance: none; cursor: pointer; }
+    .btn-submit {
+      width: 100%; background: var(--green); color: var(--white);
+      border: none; border-radius: 10px; padding: 14px;
+      font-size: 15px; font-weight: 700; cursor: pointer;
+      transition: background .2s; font-family: inherit; margin-top: 4px;
+    }
+    .btn-submit:hover    { background: var(--green-dark); }
+    .btn-submit:disabled { background: var(--gray-300); cursor: not-allowed; }
+    .form-msg {
+      margin-top: 12px; padding: 12px 14px; border-radius: 8px;
+      font-size: 14px; font-weight: 500; display: none; text-align: center;
+    }
+    .form-msg.success { background: var(--green-light); color: var(--green-dark); display: block; }
+    .form-msg.error   { background: #fef2f2; color: #dc2626; display: block; }
+
+    /* Contact direct */
+    .contact-box {
+      margin-top: 28px; padding: 20px; background: var(--white);
+      border: 1.5px solid var(--gray-200); border-radius: 12px;
+    }
+    .contact-box-title { font-size: 12px; font-weight: 700; color: var(--gray-500); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 12px; }
+    .contact-box a {
+      display: flex; align-items: center; gap: 10px;
+      color: var(--gray-700); text-decoration: none; font-size: 14px; margin-bottom: 8px;
+    }
+    html[dir="rtl"] .contact-box a { flex-direction: row-reverse; }
+
+    /* ── MON ESPACE ── */
+    #mon-espace { background: var(--gray-50); display: none; }
+    #mon-espace.visible { display: block; }
+    .portal-header {
+      background: linear-gradient(135deg, var(--green-dark) 0%, var(--green) 100%);
+      border-radius: 16px; padding: 28px 32px; margin-bottom: 28px;
+      display: flex; align-items: center; gap: 20px; color: var(--white); flex-wrap: wrap;
+    }
+    .portal-avatar {
+      width: 56px; height: 56px; border-radius: 50%;
+      background: rgba(255,255,255,.2); display: flex; align-items: center;
+      justify-content: center; font-size: 24px; flex-shrink: 0;
+    }
+    .portal-name { font-size: 20px; font-weight: 800; }
+    .portal-meta { font-size: 14px; opacity: .8; }
+    .portal-logout {
+      margin-left: auto; background: rgba(255,255,255,.15);
+      border: 1px solid rgba(255,255,255,.3); color: var(--white);
+      padding: 8px 16px; border-radius: 8px; font-size: 13px;
+      font-weight: 600; cursor: pointer; transition: background .2s;
+    }
+    html[dir="rtl"] .portal-logout { margin-left: 0; margin-right: auto; }
+    .portal-logout:hover { background: rgba(255,255,255,.25); }
+    .portal-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 28px; }
+    .portal-stat-card { background: var(--white); border: 1.5px solid var(--gray-200); border-radius: var(--radius); padding: 20px; }
+    .portal-stat-label { font-size: 12px; color: var(--gray-500); font-weight: 500; text-transform: uppercase; letter-spacing: .4px; margin-bottom: 8px; }
+    .portal-stat-value { font-size: 24px; font-weight: 800; }
+    .portal-stat-value.green { color: var(--green); }
+    .portal-section-title { font-size: 16px; font-weight: 700; margin-bottom: 14px; }
+    .order-list { display: flex; flex-direction: column; gap: 10px; }
+    .order-item {
+      background: var(--white); border: 1.5px solid var(--gray-200);
+      border-radius: 10px; padding: 14px 16px;
+      display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+    }
+    .order-ref  { font-size: 14px; font-weight: 600; }
+    .order-date { font-size: 12px; color: var(--gray-500); }
+    .order-amt  { font-size: 15px; font-weight: 700; color: var(--green); white-space: nowrap; }
+    .order-status { font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 20px; }
+    .order-status.livree    { background: var(--green-light); color: var(--green-dark); }
+    .order-status.en_cours  { background: #fef9c3; color: #854d0e; }
+    .order-status.annulee   { background: #fef2f2; color: #dc2626; }
+
+    /* ── VIDEOS ── */
+    .video-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+    .video-wrap { border-radius: 14px; overflow: hidden; box-shadow: var(--shadow); aspect-ratio: 16/9; background: var(--gray-900); }
+    .video-wrap iframe { width: 100%; height: 100%; border: none; display: block; }
+
+    /* ── FOOTER ── */
+    footer { background: var(--gray-900); color: rgba(255,255,255,.7); padding: 56px 0 28px; }
+    .footer-cols { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 40px; margin-bottom: 48px; }
+    .footer-brand { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+    .footer-brand-icon { width: 38px; height: 38px; background: var(--green); border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+    .footer-brand-name { font-size: 16px; font-weight: 800; color: var(--white); }
+    .footer-desc { font-size: 13px; line-height: 1.7; max-width: 240px; }
+    .footer-heading { font-size: 13px; font-weight: 700; color: var(--white); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 14px; }
+    .footer-links { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+    .footer-links a { font-size: 13px; color: rgba(255,255,255,.6); text-decoration: none; transition: color .2s; }
+    .footer-links a:hover { color: var(--white); }
+    .footer-divider { border: none; border-top: 1px solid rgba(255,255,255,.1); margin-bottom: 24px; }
+    .footer-bottom { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; font-size: 13px; }
+
+    /* ── MODAL LOGIN ── */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0; z-index: 2000;
+      background: rgba(0,0,0,.55); backdrop-filter: blur(4px);
+      align-items: center; justify-content: center; padding: 20px;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-box {
+      background: var(--white); border-radius: 20px; padding: 36px 32px;
+      width: 100%; max-width: 420px; box-shadow: var(--shadow-lg); position: relative;
+    }
+    .modal-close {
+      position: absolute; top: 16px; right: 16px;
+      background: var(--gray-100); border: none; border-radius: 8px;
+      width: 32px; height: 32px; cursor: pointer; font-size: 16px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    html[dir="rtl"] .modal-close { right: auto; left: 16px; }
+    .modal-logo {
+      width: 52px; height: 52px; background: linear-gradient(135deg, var(--green) 0%, var(--green-dark) 100%);
+      border-radius: 14px; display: flex; align-items: center; justify-content: center;
+      font-size: 24px; margin: 0 auto 20px;
+    }
+    .modal-box h2 { font-size: 22px; font-weight: 800; text-align: center; margin-bottom: 6px; }
+    .modal-box .modal-sub { font-size: 14px; color: var(--gray-500); text-align: center; margin-bottom: 24px; }
+    .login-error { background: #fef2f2; color: #dc2626; border-radius: 8px; padding: 10px 14px; font-size: 13px; margin-bottom: 14px; display: none; }
+    .login-error.show { display: block; }
+
+    /* ── PHONE INPUT ── */
+    .phone-input-wrap { position: relative; }
+    .phone-flag { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 18px; pointer-events: none; }
+    .phone-input-wrap input { padding-left: 42px !important; }
+
+    /* ── TOAST ── */
+    .toast {
+      position: fixed; bottom: 24px; right: 24px; z-index: 9999;
+      background: var(--gray-900); color: var(--white);
+      padding: 14px 20px; border-radius: 10px; font-size: 14px; font-weight: 500;
+      box-shadow: var(--shadow-lg); transform: translateY(100px); opacity: 0;
+      transition: all .3s; pointer-events: none; max-width: 340px;
+    }
+    html[dir="rtl"] .toast { right: auto; left: 24px; }
+    .toast.show  { transform: translateY(0); opacity: 1; }
+    .toast.green { background: var(--green); }
+    .toast.red   { background: #dc2626; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 960px) {
+      .nav-links  { display: none; }
+      .hamburger  { display: flex; }
+      .hero-inner { grid-template-columns: 1fr; }
+      .hero-card  { display: none; }
+      .pro-grid   { grid-template-columns: 1fr; }
+      .footer-cols { grid-template-columns: 1fr 1fr; }
+      .delivery-modes { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 600px) {
+      section { padding: 52px 0; }
+      .footer-cols { grid-template-columns: 1fr; }
+      .form-row    { grid-template-columns: 1fr; }
+      .pro-form-box { padding: 24px 16px; }
+      .hero-ctas  { flex-direction: column; }
+      .btn-hero-primary, .btn-hero-whatsapp { justify-content: center; }
+      .catalogue-info { flex-direction: column; text-align: center; }
+      .catalogue-info .btn-wa { margin: 0 auto; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════
+     CONFIG — MODIFIEZ ICI TOUTES LES INFOS DU SITE
+════════════════════════════════════════════════════════ -->
+<script>
+const CONFIG = {
+  /* Identité */
+  COMPANY_NAME:    "Empire Fresh",
+  COMPANY_TAGLINE: "Distribution Alimentaire Professionnelle",
+  COMPANY_EMAIL:   "contact@empire-fresh.ma",
+  COMPANY_ADDRESS: "Zone Industrielle, Casablanca, Maroc",
+
+  /* Contacts */
+  PHONE:           "+212 6 00 00 00 00",
+  WHATSAPP:        "212600000000",          // sans + ni espaces
+  WHATSAPP_GROUP:  "https://chat.whatsapp.com/D11jvGbbWd5Kc2pyXl79SK",
+
+  /* API Vercel (votre application Next.js) */
+  API_URL: "https://fresh-link-ef.vercel.app",
+
+  /* Horaires */
+  HOURS: "Lun–Sam : 06h00 – 18h00",
+
+  /* IDs YouTube — remplacez par vos vrais IDs */
+  VIDEO_IDS: [
+    /* "votre_id_yt_1", "votre_id_yt_2" */
+  ],
+
+  /* Zones de livraison Casablanca */
+  ZONES: [
+    { icon:"🏙️", fr:"Casablanca Centre",       ar:"الدار البيضاء الوسط",  en:"Casablanca Centre",       del_fr:"Express 2–4h", del_ar:"سريع 2–4 ساعات", del_en:"Express 2–4h" },
+    { icon:"🏘️", fr:"Hay Hassani",              ar:"حي الحسني",            en:"Hay Hassani",              del_fr:"Standard 24h", del_ar:"عادي 24 ساعة",   del_en:"Standard 24h" },
+    { icon:"🏭", fr:"Sidi Moumen",               ar:"سيدي مومن",            en:"Sidi Moumen",              del_fr:"Standard 24h", del_ar:"عادي 24 ساعة",   del_en:"Standard 24h" },
+    { icon:"🌆", fr:"Ain Sebaa",                 ar:"عين السبع",            en:"Ain Sebaa",                del_fr:"Standard 24h", del_ar:"عادي 24 ساعة",   del_en:"Standard 24h" },
+    { icon:"🏗️", fr:"Bernoussi",                 ar:"برنوصي",              en:"Bernoussi",                del_fr:"Express 2–4h", del_ar:"سريع 2–4 ساعات", del_en:"Express 2–4h" },
+    { icon:"🛣️", fr:"Bouskoura / Route Azemmour",ar:"بوسكورة",            en:"Bouskoura",                del_fr:"Standard 24h", del_ar:"عادي 24 ساعة",   del_en:"Standard 24h" },
+  ],
+
+  /* Stats hero */
+  STATS: [
+    { num:"500+", fr:"Clients actifs",        ar:"عميل نشيط",        en:"Active clients" },
+    { num:"98%",  fr:"Taux de satisfaction",  ar:"نسبة الرضا",        en:"Satisfaction rate" },
+    { num:"24h",  fr:"Délai de livraison",    ar:"مدة التوصيل",       en:"Delivery time" },
+    { num:"6",    fr:"Zones couvertes",        ar:"مناطق مغطاة",       en:"Zones covered" },
+  ],
+}
+</script>
+
+<!-- ═══════════════════════════════════════════════════════
+     TEXTES TRILINGUES — FR / AR-DARIJA / EN
+════════════════════════════════════════════════════════ -->
+<script>
+const TEXTS = {
+  /* ─────── FRANÇAIS ─────── */
+  fr: {
+    nav_services:"Services", nav_delivery:"Livraison", nav_catalogue:"Catalogue",
+    nav_pro:"Espace Pro", nav_contact:"Contact", btn_login:"Mon Espace",
+    hero_badge:"En ligne — Commandes ouvertes",
+    hero_h1a:"Fruits &amp; Légumes", hero_h1b:"Frais", hero_h1c:"livrés chez vous",
+    hero_sub:"Distribution professionnelle à Casablanca. Tarifs personnalisés pour CHR, marchands et particuliers.",
+    btn_catalogue:"Voir le catalogue", btn_wa_order:"Commander sur WhatsApp",
+    card_title:"Pourquoi Empire Fresh ?",
+    card_qual:"Qualité garantie", card_qual_v:"Produits sélectionnés chaque matin",
+    card_deliv:"Livraison rapide",  card_deliv_v:"Standard 24h / Express 2–4h",
+    card_price:"Tarifs pros",       card_price_v:"CHR, marchands, particuliers",
+    card_online:"🟢 En ligne — Commandes ouvertes",
+    svc_tag:"Nos services", svc_title:"Tout ce dont vous avez besoin", svc_sub:"Des solutions adaptées à chaque profil client",
+    svc1_title:"Livraison Standard 24h",   svc1_desc:"Commandez avant 18h, livré le lendemain matin pour tous les professionnels.",
+    svc2_title:"Livraison Express 2–4h",   svc2_desc:"Besoin urgent ? Livraison en 2 à 4 heures dans les zones prioritaires.",
+    svc3_title:"Commande en ligne",         svc3_desc:"Gérez vos commandes via l'application ou WhatsApp, 24h/24.",
+    svc4_title:"Tarifs CHR & Pro",          svc4_desc:"Prix négociés pour restaurants, hôtels, cafés et marchands professionnels.",
+    svc5_title:"Espace Client",             svc5_desc:"Suivez vos commandes, points fidélité et remises depuis votre compte.",
+    svc6_title:"Conseil & Qualité",         svc6_desc:"Notre équipe qualité sélectionne les meilleurs produits chaque matin.",
+    del_tag:"Zones", del_title:"Livraison à Casablanca", del_sub:"Nous livrons dans toute la métropole casablancaise",
+    dm_std_title:"Standard 24h", dm_std_desc:"Commandez avant 18h00 — livré le lendemain dès 7h00.",
+    dm_exp_title:"Express 2–4h", dm_exp_desc:"Disponible dans les zones prioritaires — livraison en 2 à 4 heures.",
+    cat_tag:"Catalogue", cat_title:"Nos produits", cat_sub:"Des prix adaptés à chaque profil client",
+    cat_info_h:"Prix personnalisés selon votre profil",
+    cat_info_p:"Connectez-vous pour voir vos tarifs. Demandez l'accès pro pour bénéficier des prix CHR et marchands.",
+    cat_wa:"📦 Commander par WhatsApp",
+    tier_chr_l:"CHR",       tier_chr_d:"Hôtels, restaurants, cafés — meilleurs tarifs",
+    tier_mar_l:"Marchand",  tier_mar_d:"Épiceries, supérettes — tarifs grossiste",
+    tier_par_l:"Particulier",tier_par_d:"Particuliers et familles — prix public",
+    pro_tag:"Espace Pro", pro_title:"Rejoignez notre réseau", pro_sub:"Créez votre compte professionnel et accédez aux tarifs exclusifs.",
+    pro_p1_title:"Tarifs négociés",   pro_p1_desc:"Prix CHR et marchands selon votre profil et volume.",
+    pro_p2_title:"Livraison dédiée",  pro_p2_desc:"Tournée fixe selon votre zone, créneau garanti.",
+    pro_p3_title:"Suivi commandes",   pro_p3_desc:"Application mobile + espace web pour gérer vos achats.",
+    pro_p4_title:"Programme fidélité",pro_p4_desc:"Points cumulés, remises et promotions personnalisées.",
+    form_title:"Demande d'accès professionnel", form_sub:"Notre équipe commerciale vous contactera sous 24h.",
+    lbl_nom:"Nom complet", lbl_societe:"Nom de la société", lbl_tel:"Téléphone (WhatsApp)",
+    lbl_email:"Email (optionnel)", lbl_type:"Type d'activité", lbl_ville:"Ville / Zone",
+    lbl_msg:"Message (optionnel)", lbl_volume:"Volume mensuel estimé",
+    opt_type_0:"Choisir...", opt_type_1:"Restaurant / Hôtel / Café (CHR)",
+    opt_type_2:"Épicerie / Supérette", opt_type_3:"Marché / Grossiste",
+    opt_type_4:"Traiteur / Restauration collective", opt_type_5:"Particulier",
+    opt_vol_0:"Choisir...", opt_vol_1:"< 500 DH / mois", opt_vol_2:"500 – 2 000 DH",
+    opt_vol_3:"2 000 – 10 000 DH", opt_vol_4:"> 10 000 DH",
+    btn_submit:"Envoyer ma demande",
+    form_ok:"✅ Demande envoyée ! Nous vous contacterons sous 24h.",
+    form_err:"❌ Erreur lors de l'envoi. Merci de réessayer.",
+    login_title:"Connexion", login_sub:"Accédez à votre espace client",
+    lbl_phone:"Numéro de téléphone", ph_phone:"06 XX XX XX XX",
+    lbl_pass:"Mot de passe", ph_pass:"Votre mot de passe",
+    btn_login_ok:"Se connecter",
+    login_no_acc:"Pas encore de compte ?", login_signup:"Faire une demande d'accès",
+    login_err_fields:"Téléphone et mot de passe requis.", login_err_api:"Numéro ou mot de passe incorrect.",
+    portal_welcome:"Bonjour", portal_logout:"Se déconnecter",
+    portal_pts:"Points fidélité", portal_remise:"Remise", portal_credit:"Crédit disponible",
+    portal_orders:"Mes commandes récentes", portal_no_orders:"Aucune commande pour le moment.",
+    portal_wa:"📦 Passer une commande",
+    vid_tag:"Vidéos", vid_title:"Découvrez Empire Fresh", vid_sub:"Nos produits, nos équipes, notre savoir-faire",
+    ft_links:"Liens rapides", ft_contact:"Contact", ft_legal:"Légal",
+    ft_copy:"© 2026 Empire Fresh. Tous droits réservés.", ft_made:"Fait avec ❤️ à Casablanca",
+    contact_direct:"Contact direct",
+  },
+
+  /* ─────── ARABE DARIJA ─────── */
+  ar: {
+    nav_services:"خدماتنا", nav_delivery:"التوصيل", nav_catalogue:"الكتالوج",
+    nav_pro:"الفضاء المهني", nav_contact:"اتصل بنا", btn_login:"حسابي",
+    hero_badge:"خدمة مفتوحة — قبّل طلبياتك",
+    hero_h1a:"فواكه وخضر", hero_h1b:"طازجة", hero_h1c:"كتوصل لعندك",
+    hero_sub:"توزيع مهني بالدار البيضاء. أثمنة خاصة للمطاعم، التجار والأفراد.",
+    btn_catalogue:"شوف الكتالوج", btn_wa_order:"اطلب عبر واتساب",
+    card_title:"علاش Empire Fresh؟",
+    card_qual:"جودة مضمونة", card_qual_v:"منتجات مختارة كل صباح",
+    card_deliv:"توصيل سريع",  card_deliv_v:"عادي 24 ساعة / سريع 2–4 ساعات",
+    card_price:"أثمنة مهنية", card_price_v:"CHR، التجار، الأفراد",
+    card_online:"🟢 خدمة مفتوحة",
+    svc_tag:"خدماتنا", svc_title:"كل ما تحتاجه", svc_sub:"حلول مناسبة لكل نوع من الزبناء",
+    svc1_title:"توصيل عادي 24 ساعة",    svc1_desc:"اطلب قبل 18h، يوصلك الصباح الجاي.",
+    svc2_title:"توصيل سريع 2–4 ساعات",  svc2_desc:"محتاج بزربة؟ التوصيل في 2 لـ4 ساعات في المناطق الأولوية.",
+    svc3_title:"الطلبية أونلاين",         svc3_desc:"دير طلبيتك من التطبيق أو واتساب، 24/24.",
+    svc4_title:"أثمنة CHR والمهنيين",    svc4_desc:"أثمنة مفاوضة للمطاعم، الفنادق، المقاهي والتجار.",
+    svc5_title:"الفضاء الشخصي",          svc5_desc:"تابع طلبياتك، نقاط الولاء والتخفيضات من حسابك.",
+    svc6_title:"الجودة والنصيحة",         svc6_desc:"فريق الجودة ديالنا كيختار أحسن المنتجات كل صباح.",
+    del_tag:"المناطق", del_title:"التوصيل بالدار البيضاء", del_sub:"كنوصلو فجميع أرجاء الدار البيضاء الكبرى",
+    dm_std_title:"عادي 24 ساعة", dm_std_desc:"اطلب قبل 18h00 — التوصيل من 7h00 صباح اليوم الجاي.",
+    dm_exp_title:"سريع 2–4 ساعات", dm_exp_desc:"متاح في المناطق الأولوية — التوصيل في 2 لـ4 ساعات.",
+    cat_tag:"الكتالوج", cat_title:"منتجاتنا", cat_sub:"أثمنة مناسبة لكل نوع من الزبناء",
+    cat_info_h:"أثمنة شخصية حسب ملفك",
+    cat_info_p:"دخل لحسابك باش تشوف أثمنتك. اطلب الوصول المهني باش تستفيد من أثمنة CHR والتجار.",
+    cat_wa:"📦 اطلب عبر واتساب",
+    tier_chr_l:"CHR",      tier_chr_d:"الفنادق، المطاعم، المقاهي — أحسن الأثمنة",
+    tier_mar_l:"التاجر",   tier_mar_d:"الحانوتيين والدكاكين — أثمنة الجملة",
+    tier_par_l:"الفرد",    tier_par_d:"الأفراد والعائلات — الثمن العادي",
+    pro_tag:"الفضاء المهني", pro_title:"انضم لشبكتنا", pro_sub:"دير حسابك المهني وستفيد من الأثمنة الخاصة.",
+    pro_p1_title:"أثمنة مفاوضة",  pro_p1_desc:"أثمنة CHR والتجار حسب ملفك وحجم الشراء.",
+    pro_p2_title:"توصيل مخصص",    pro_p2_desc:"دوارة ثابتة حسب منطقتك، موعد مضمون.",
+    pro_p3_title:"تتبع الطلبيات", pro_p3_desc:"تطبيق موبايل + فضاء ويب لتسيير مشترياتك.",
+    pro_p4_title:"برنامج الولاء", pro_p4_desc:"نقاط مجمعة، تخفيضات وعروض شخصية.",
+    form_title:"طلب الوصول المهني", form_sub:"فريق المبيعات ديالنا غيتواصل معاك في أقل من 24 ساعة.",
+    lbl_nom:"الاسم الكامل", lbl_societe:"اسم الشركة", lbl_tel:"الهاتف (واتساب)",
+    lbl_email:"الإيميل (اختياري)", lbl_type:"نوع النشاط", lbl_ville:"المدينة / المنطقة",
+    lbl_msg:"رسالة (اختياري)", lbl_volume:"الحجم الشهري المقدر",
+    opt_type_0:"اختار...", opt_type_1:"مطعم / فندق / مقهى (CHR)",
+    opt_type_2:"حانوت / دكان", opt_type_3:"جملية / تاجر",
+    opt_type_4:"تقديم طعام جماعي", opt_type_5:"فرد",
+    opt_vol_0:"اختار...", opt_vol_1:"أقل من 500 درهم / شهر",
+    opt_vol_2:"500 – 2,000 درهم", opt_vol_3:"2,000 – 10,000 درهم", opt_vol_4:"أكثر من 10,000 درهم",
+    btn_submit:"إرسال الطلب",
+    form_ok:"✅ تم إرسال الطلب! غنتواصلو معاك في أقل من 24 ساعة.",
+    form_err:"❌ مشكل فالإرسال. عاود المحاولة.",
+    login_title:"الدخول", login_sub:"دخل لحسابك الشخصي",
+    lbl_phone:"رقم الهاتف", ph_phone:"06 XX XX XX XX",
+    lbl_pass:"كلمة السر", ph_pass:"كلمة السر ديالك",
+    btn_login_ok:"دخل",
+    login_no_acc:"ماعندكش حساب؟", login_signup:"اطلب الوصول",
+    login_err_fields:"الهاتف وكلمة السر مطلوبين.", login_err_api:"الرقم أو كلمة السر غلط.",
+    portal_welcome:"مرحبا", portal_logout:"خرج",
+    portal_pts:"نقاط الولاء", portal_remise:"التخفيض", portal_credit:"الرصيد المتاح",
+    portal_orders:"طلبياتي الأخيرة", portal_no_orders:"ماكاين طلبيات للحين.",
+    portal_wa:"📦 اطلب دبا",
+    vid_tag:"الفيديوهات", vid_title:"اكتشف Empire Fresh", vid_sub:"منتجاتنا، فريقنا، خبرتنا",
+    ft_links:"روابط سريعة", ft_contact:"التواصل", ft_legal:"قانوني",
+    ft_copy:"© 2026 Empire Fresh. جميع الحقوق محفوظة.", ft_made:"صُنع بـ❤️ في الدار البيضاء",
+    contact_direct:"التواصل المباشر",
+  },
+
+  /* ─────── ENGLISH ─────── */
+  en: {
+    nav_services:"Services", nav_delivery:"Delivery", nav_catalogue:"Catalogue",
+    nav_pro:"Pro Space", nav_contact:"Contact", btn_login:"My Account",
+    hero_badge:"Online — Orders open",
+    hero_h1a:"Fresh Fruits", hero_h1b:"& Vegetables", hero_h1c:"delivered to you",
+    hero_sub:"Professional distribution in Casablanca. Personalised pricing for CHR, merchants and individuals.",
+    btn_catalogue:"View catalogue", btn_wa_order:"Order on WhatsApp",
+    card_title:"Why Empire Fresh?",
+    card_qual:"Guaranteed quality", card_qual_v:"Products selected every morning",
+    card_deliv:"Fast delivery",      card_deliv_v:"Standard 24h / Express 2–4h",
+    card_price:"Pro pricing",        card_price_v:"CHR, merchants, individuals",
+    card_online:"🟢 Online — Orders open",
+    svc_tag:"Our services", svc_title:"Everything you need", svc_sub:"Solutions tailored to every client profile",
+    svc1_title:"Standard 24h delivery",  svc1_desc:"Order before 6pm, delivered next morning for all professionals.",
+    svc2_title:"Express 2–4h delivery",  svc2_desc:"Urgent need? Delivery in 2 to 4 hours in priority zones.",
+    svc3_title:"Online ordering",         svc3_desc:"Manage your orders via the app or WhatsApp, 24/7.",
+    svc4_title:"CHR & Pro pricing",       svc4_desc:"Negotiated prices for restaurants, hotels, cafés and professional merchants.",
+    svc5_title:"Client portal",           svc5_desc:"Track orders, loyalty points and discounts from your account.",
+    svc6_title:"Quality & advice",        svc6_desc:"Our quality team selects the best products every morning.",
+    del_tag:"Zones", del_title:"Delivery in Casablanca", del_sub:"We deliver across the entire Casablanca metropolitan area",
+    dm_std_title:"Standard 24h", dm_std_desc:"Order before 6pm — delivered next morning from 7am.",
+    dm_exp_title:"Express 2–4h", dm_exp_desc:"Available in priority zones — delivery in 2 to 4 hours.",
+    cat_tag:"Catalogue", cat_title:"Our products", cat_sub:"Prices adapted to each client profile",
+    cat_info_h:"Personalised prices by profile",
+    cat_info_p:"Log in to see your prices. Request pro access for CHR and merchant rates.",
+    cat_wa:"📦 Order via WhatsApp",
+    tier_chr_l:"CHR",       tier_chr_d:"Hotels, restaurants, cafés — best rates",
+    tier_mar_l:"Merchant",  tier_mar_d:"Grocers, shops — wholesale rates",
+    tier_par_l:"Individual",tier_par_d:"Individuals and families — public price",
+    pro_tag:"Pro Space", pro_title:"Join our network", pro_sub:"Create your professional account and access exclusive pricing.",
+    pro_p1_title:"Negotiated pricing",   pro_p1_desc:"CHR and merchant rates based on your profile and volume.",
+    pro_p2_title:"Dedicated delivery",   pro_p2_desc:"Fixed route for your zone, guaranteed time slot.",
+    pro_p3_title:"Order tracking",       pro_p3_desc:"Mobile app + web portal to manage your purchases.",
+    pro_p4_title:"Loyalty programme",    pro_p4_desc:"Accumulated points, discounts and personalised promotions.",
+    form_title:"Professional access request", form_sub:"Our sales team will contact you within 24 hours.",
+    lbl_nom:"Full name", lbl_societe:"Company name", lbl_tel:"Phone (WhatsApp)",
+    lbl_email:"Email (optional)", lbl_type:"Activity type", lbl_ville:"City / Zone",
+    lbl_msg:"Message (optional)", lbl_volume:"Estimated monthly volume",
+    opt_type_0:"Choose...", opt_type_1:"Restaurant / Hotel / Café (CHR)",
+    opt_type_2:"Grocery / Mini-market", opt_type_3:"Market / Wholesaler",
+    opt_type_4:"Catering / Group catering", opt_type_5:"Individual",
+    opt_vol_0:"Choose...", opt_vol_1:"< 500 MAD / month", opt_vol_2:"500 – 2,000 MAD",
+    opt_vol_3:"2,000 – 10,000 MAD", opt_vol_4:"> 10,000 MAD",
+    btn_submit:"Send my request",
+    form_ok:"✅ Request sent! We will contact you within 24 hours.",
+    form_err:"❌ Sending error. Please try again.",
+    login_title:"Sign in", login_sub:"Access your client portal",
+    lbl_phone:"Phone number", ph_phone:"06 XX XX XX XX",
+    lbl_pass:"Password", ph_pass:"Your password",
+    btn_login_ok:"Sign in",
+    login_no_acc:"No account yet?", login_signup:"Request access",
+    login_err_fields:"Phone and password are required.", login_err_api:"Incorrect phone or password.",
+    portal_welcome:"Hello", portal_logout:"Sign out",
+    portal_pts:"Loyalty points", portal_remise:"Discount", portal_credit:"Available credit",
+    portal_orders:"My recent orders", portal_no_orders:"No orders yet.",
+    portal_wa:"📦 Place an order",
+    vid_tag:"Videos", vid_title:"Discover Empire Fresh", vid_sub:"Our products, our team, our know-how",
+    ft_links:"Quick links", ft_contact:"Contact", ft_legal:"Legal",
+    ft_copy:"© 2026 Empire Fresh. All rights reserved.", ft_made:"Made with ❤️ in Casablanca",
+    contact_direct:"Direct contact",
+  },
+}
+
+/* ── Langue active ── */
+let currentLang = localStorage.getItem("fl_lang") || "fr"
+
+function t(key) { return TEXTS[currentLang]?.[key] ?? TEXTS.fr[key] ?? key }
+
+function setLang(lang) {
+  if (!TEXTS[lang]) return
+  currentLang = lang
+  localStorage.setItem("fl_lang", lang)
+
+  const dir = lang === "ar" ? "rtl" : "ltr"
+  document.documentElement.setAttribute("dir", dir)
+  document.documentElement.setAttribute("lang", lang === "ar" ? "ar" : lang)
+
+  /* boutons actifs */
+  document.querySelectorAll(".lang-btn").forEach(b => b.classList.toggle("active", b.dataset.lang === lang))
+
+  /* tous les data-i18n */
+  document.querySelectorAll("[data-i18n]").forEach(el => {
+    const v = t(el.dataset.i18n)
+    if (el.tagName === "INPUT" || el.tagName === "TEXTAREA") el.placeholder = v
+    else el.innerHTML = v
+  })
+
+  /* placeholders séparés */
+  document.querySelectorAll("[data-i18n-ph]").forEach(el => { el.placeholder = t(el.dataset.i18nPh) })
+
+  /* options select */
+  document.querySelectorAll("option[data-i18n]").forEach(opt => { opt.textContent = t(opt.dataset.i18n) })
+
+  /* rendus dynamiques */
+  renderZones()
+  renderStats()
+}
+</script>
+
+<!-- ═══════════════════════════════════════════
+     NAVBAR
+════════════════════════════════════════════ -->
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="#" class="nav-brand">
+      <div class="nav-logo-icon">🌿</div>
+      <div class="nav-brand-text">
+        <span class="nav-brand-name">Empire Fresh</span>
+        <span class="nav-brand-sub">Distribution Alimentaire</span>
+      </div>
+    </a>
+
+    <ul class="nav-links">
+      <li><a href="#services"   data-i18n="nav_services">Services</a></li>
+      <li><a href="#livraison"  data-i18n="nav_delivery">Livraison</a></li>
+      <li><a href="#catalogue"  data-i18n="nav_catalogue">Catalogue</a></li>
+      <li><a href="#espace-pro" data-i18n="nav_pro">Espace Pro</a></li>
+      <li><a href="#contact"    data-i18n="nav_contact">Contact</a></li>
+    </ul>
+
+    <div class="nav-right">
+      <div class="lang-switcher">
+        <button class="lang-btn" data-lang="fr" onclick="setLang('fr')">🇫🇷&nbsp;FR</button>
+        <button class="lang-btn" data-lang="ar" onclick="setLang('ar')">🇲🇦&nbsp;عر</button>
+        <button class="lang-btn" data-lang="en" onclick="setLang('en')">🇬🇧&nbsp;EN</button>
+      </div>
+      <button class="btn-login" id="btnLogin" onclick="openLogin()">
+        <span data-i18n="btn_login">Mon Espace</span>
+      </button>
+      <button class="hamburger" id="hamburger" onclick="toggleMenu()">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<div class="mobile-menu" id="mobileMenu">
+  <a href="#services"   onclick="closeMobileMenu()" data-i18n="nav_services">Services</a>
+  <a href="#livraison"  onclick="closeMobileMenu()" data-i18n="nav_delivery">Livraison</a>
+  <a href="#catalogue"  onclick="closeMobileMenu()" data-i18n="nav_catalogue">Catalogue</a>
+  <a href="#espace-pro" onclick="closeMobileMenu()" data-i18n="nav_pro">Espace Pro</a>
+  <a href="#contact"    onclick="closeMobileMenu()" data-i18n="nav_contact">Contact</a>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     HERO
+════════════════════════════════════════════ -->
+<section class="hero" id="accueil">
+  <div class="hero-inner">
+    <div class="hero-content">
+      <div class="hero-badge">
+        <span class="dot"></span>
+        <span data-i18n="hero_badge">En ligne — Commandes ouvertes</span>
+      </div>
+      <h1>
+        <span data-i18n="hero_h1a">Fruits &amp; Légumes</span><br>
+        <span data-i18n="hero_h1b" style="color:#4ade80">Frais</span><br>
+        <span data-i18n="hero_h1c">livrés chez vous</span>
+      </h1>
+      <p class="hero-sub" data-i18n="hero_sub">Distribution professionnelle à Casablanca.</p>
+      <div class="hero-ctas">
+        <a href="#catalogue" class="btn-hero-primary">
+          🥦 <span data-i18n="btn_catalogue">Voir le catalogue</span>
+        </a>
+        <a href="#" class="btn-hero-whatsapp" onclick="orderWhatsApp(event)">
+          📲 <span data-i18n="btn_wa_order">Commander sur WhatsApp</span>
+        </a>
+      </div>
+    </div>
+
+    <div class="hero-card">
+      <div class="hero-card-title" data-i18n="card_title">Pourquoi Empire Fresh ?</div>
+      <div class="hero-card-row">
+        <span class="hero-card-icon">🥦</span>
+        <div>
+          <div class="hero-card-label" data-i18n="card_qual">Qualité garantie</div>
+          <div class="hero-card-value" data-i18n="card_qual_v">Produits sélectionnés chaque matin</div>
+        </div>
+      </div>
+      <div class="hero-card-row">
+        <span class="hero-card-icon">🚚</span>
+        <div>
+          <div class="hero-card-label" data-i18n="card_deliv">Livraison rapide</div>
+          <div class="hero-card-value" data-i18n="card_deliv_v">Standard 24h / Express 2–4h</div>
+        </div>
+      </div>
+      <div class="hero-card-row">
+        <span class="hero-card-icon">💰</span>
+        <div>
+          <div class="hero-card-label" data-i18n="card_price">Tarifs pros</div>
+          <div class="hero-card-value" data-i18n="card_price_v">CHR, marchands, particuliers</div>
+        </div>
+      </div>
+      <div class="hero-card-badge" data-i18n="card_online">🟢 En ligne — Commandes ouvertes</div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS BAR -->
+<div class="stats-bar">
+  <div class="container">
+    <div class="stats-inner" id="statsInner"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     SERVICES
+════════════════════════════════════════════ -->
+<section id="services">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-tag" data-i18n="svc_tag">Nos services</span>
+      <h2 class="section-title" data-i18n="svc_title">Tout ce dont vous avez besoin</h2>
+      <p class="section-sub"   data-i18n="svc_sub">Des solutions adaptées à chaque profil client</p>
+    </div>
+    <div class="services-grid">
+      <div class="service-card"><div class="service-icon">🚚</div><div class="service-title" data-i18n="svc1_title">Livraison Standard 24h</div><div class="service-desc" data-i18n="svc1_desc">Commandez avant 18h, livré le lendemain matin.</div></div>
+      <div class="service-card"><div class="service-icon">⚡</div><div class="service-title" data-i18n="svc2_title">Livraison Express 2–4h</div><div class="service-desc" data-i18n="svc2_desc">Besoin urgent ? Livraison en 2 à 4 heures.</div></div>
+      <div class="service-card"><div class="service-icon">📱</div><div class="service-title" data-i18n="svc3_title">Commande en ligne</div><div class="service-desc" data-i18n="svc3_desc">Via l'application ou WhatsApp, 24h/24.</div></div>
+      <div class="service-card"><div class="service-icon">🏨</div><div class="service-title" data-i18n="svc4_title">Tarifs CHR &amp; Pro</div><div class="service-desc" data-i18n="svc4_desc">Prix négociés pour restaurants, hôtels et marchands.</div></div>
+      <div class="service-card"><div class="service-icon">👤</div><div class="service-title" data-i18n="svc5_title">Espace Client</div><div class="service-desc" data-i18n="svc5_desc">Suivez commandes, points fidélité et remises.</div></div>
+      <div class="service-card"><div class="service-icon">🌿</div><div class="service-title" data-i18n="svc6_title">Conseil &amp; Qualité</div><div class="service-desc" data-i18n="svc6_desc">Sélection quotidienne par notre équipe qualité.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     LIVRAISON
+════════════════════════════════════════════ -->
+<section id="livraison">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-tag" data-i18n="del_tag">Zones</span>
+      <h2 class="section-title" data-i18n="del_title">Livraison à Casablanca</h2>
+      <p class="section-sub"   data-i18n="del_sub">Nous livrons dans toute la métropole casablancaise</p>
+    </div>
+    <div class="zone-grid" id="zonesGrid"></div>
+    <div class="delivery-modes">
+      <div class="delivery-mode-card standard">
+        <span class="dm-icon">🚚</span>
+        <div><div class="dm-title" data-i18n="dm_std_title">Standard 24h</div><div class="dm-desc" data-i18n="dm_std_desc">Commandez avant 18h00 — livré le lendemain dès 7h00.</div></div>
+      </div>
+      <div class="delivery-mode-card express">
+        <span class="dm-icon">⚡</span>
+        <div><div class="dm-title" data-i18n="dm_exp_title">Express 2–4h</div><div class="dm-desc" data-i18n="dm_exp_desc">Disponible dans les zones prioritaires.</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     CATALOGUE
+════════════════════════════════════════════ -->
+<section id="catalogue">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-tag" data-i18n="cat_tag">Catalogue</span>
+      <h2 class="section-title" data-i18n="cat_title">Nos produits</h2>
+      <p class="section-sub"   data-i18n="cat_sub">Des prix adaptés à chaque profil client</p>
+    </div>
+    <div class="catalogue-info">
+      <span class="catalogue-info-icon">🥦</span>
+      <div>
+        <h3 data-i18n="cat_info_h">Prix personnalisés selon votre profil</h3>
+        <p  data-i18n="cat_info_p">Connectez-vous pour voir vos tarifs.</p>
+      </div>
+      <a href="#" class="btn-wa" onclick="orderWhatsApp(event)">
+        <span data-i18n="cat_wa">📦 Commander par WhatsApp</span>
+      </a>
+    </div>
+    <div class="price-tiers">
+      <div class="tier-card chr">        <div class="tier-icon">🏨</div><div class="tier-label" data-i18n="tier_chr_l">CHR</div>       <div class="tier-desc" data-i18n="tier_chr_d">Hôtels, restaurants, cafés — meilleurs tarifs</div></div>
+      <div class="tier-card marchand">   <div class="tier-icon">🛒</div><div class="tier-label" data-i18n="tier_mar_l">Marchand</div>  <div class="tier-desc" data-i18n="tier_mar_d">Épiceries, supérettes — tarifs grossiste</div></div>
+      <div class="tier-card particulier"><div class="tier-icon">👤</div><div class="tier-label" data-i18n="tier_par_l">Particulier</div><div class="tier-desc" data-i18n="tier_par_d">Particuliers et familles — prix public</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     MON ESPACE — portail client
+════════════════════════════════════════════ -->
+<section id="mon-espace">
+  <div class="container">
+    <div class="portal-header">
+      <div class="portal-avatar">👤</div>
+      <div>
+        <div class="portal-name" id="portalName">—</div>
+        <div class="portal-meta" id="portalMeta">—</div>
+      </div>
+      <button class="portal-logout" onclick="logout()" data-i18n="portal_logout">Se déconnecter</button>
+    </div>
+    <div class="portal-grid">
+      <div class="portal-stat-card"><div class="portal-stat-label" data-i18n="portal_pts">Points fidélité</div><div class="portal-stat-value green" id="portalPts">—</div></div>
+      <div class="portal-stat-card"><div class="portal-stat-label" data-i18n="portal_remise">Remise</div><div class="portal-stat-value" id="portalRemise">—</div></div>
+      <div class="portal-stat-card"><div class="portal-stat-label" data-i18n="portal_credit">Crédit disponible</div><div class="portal-stat-value" id="portalCredit">—</div></div>
+    </div>
+    <div class="portal-section-title" data-i18n="portal_orders">Mes commandes récentes</div>
+    <div class="order-list" id="orderList">
+      <p style="color:var(--gray-500);font-size:14px" data-i18n="portal_no_orders">Aucune commande pour le moment.</p>
+    </div>
+    <div style="margin-top:24px;text-align:center">
+      <a href="#" class="btn-hero-whatsapp" onclick="orderWhatsApp(event)" style="display:inline-flex">
+        <span data-i18n="portal_wa">📦 Passer une commande</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     ESPACE PRO — section dédiée (pas de modal)
+════════════════════════════════════════════ -->
+<section id="espace-pro">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-tag" data-i18n="pro_tag">Espace Pro</span>
+      <h2 class="section-title" data-i18n="pro_title">Rejoignez notre réseau</h2>
+      <p class="section-sub"   data-i18n="pro_sub">Créez votre compte professionnel et accédez aux tarifs exclusifs.</p>
+    </div>
+
+    <div class="pro-grid">
+      <!-- Avantages -->
+      <div class="pro-left">
+        <ul class="pro-perks">
+          <li class="pro-perk"><span class="pro-perk-icon">💰</span><div><div class="pro-perk-title" data-i18n="pro_p1_title">Tarifs négociés</div><div class="pro-perk-desc" data-i18n="pro_p1_desc">Prix CHR et marchands selon votre profil et volume.</div></div></li>
+          <li class="pro-perk"><span class="pro-perk-icon">🚚</span><div><div class="pro-perk-title" data-i18n="pro_p2_title">Livraison dédiée</div><div class="pro-perk-desc" data-i18n="pro_p2_desc">Tournée fixe selon votre zone, créneau garanti.</div></div></li>
+          <li class="pro-perk"><span class="pro-perk-icon">📱</span><div><div class="pro-perk-title" data-i18n="pro_p3_title">Suivi commandes</div><div class="pro-perk-desc" data-i18n="pro_p3_desc">Application mobile + espace web pour gérer vos achats.</div></div></li>
+          <li class="pro-perk"><span class="pro-perk-icon">🎁</span><div><div class="pro-perk-title" data-i18n="pro_p4_title">Programme fidélité</div><div class="pro-perk-desc" data-i18n="pro_p4_desc">Points cumulés, remises et promotions personnalisées.</div></div></li>
+        </ul>
+
+        <div class="contact-box">
+          <div class="contact-box-title" data-i18n="contact_direct">Contact direct</div>
+          <a href="#" id="contactWaLink"><span style="font-size:20px">📲</span><span id="contactPhone">+212 6 00 00 00 00</span></a>
+          <a href="#" id="contactEmailLink"><span style="font-size:20px">📧</span><span id="contactEmail">contact@empire-fresh.ma</span></a>
+        </div>
+      </div>
+
+      <!-- Formulaire d'inscription -->
+      <div class="pro-form-box">
+        <h3 data-i18n="form_title">Demande d'accès professionnel</h3>
+        <p class="form-sub" data-i18n="form_sub">Notre équipe commerciale vous contactera sous 24h.</p>
+
+        <form id="proForm" onsubmit="submitProForm(event)" novalidate>
+          <div class="form-row">
+            <div class="form-group">
+              <label data-i18n="lbl_nom">Nom complet</label>
+              <input type="text" id="fNom" data-i18n-ph="lbl_nom" placeholder="Nom complet" required />
+            </div>
+            <div class="form-group">
+              <label data-i18n="lbl_societe">Nom de la société</label>
+              <input type="text" id="fSociete" data-i18n-ph="lbl_societe" placeholder="Société" />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label data-i18n="lbl_tel">Téléphone (WhatsApp)</label>
+            <div class="phone-input-wrap">
+              <span class="phone-flag">🇲🇦</span>
+              <input type="tel" id="fTel" data-i18n-ph="ph_phone" placeholder="06 XX XX XX XX" required />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label data-i18n="lbl_email">Email (optionnel)</label>
+            <input type="email" id="fEmail" data-i18n-ph="lbl_email" placeholder="email@exemple.com" />
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label data-i18n="lbl_type">Type d'activité</label>
+              <select id="fType" required>
+                <option value="" data-i18n="opt_type_0">Choisir...</option>
+                <option value="chr"         data-i18n="opt_type_1">Restaurant / Hôtel / Café (CHR)</option>
+                <option value="epicerie"    data-i18n="opt_type_2">Épicerie / Supérette</option>
+                <option value="marche"      data-i18n="opt_type_3">Marché / Grossiste</option>
+                <option value="traiteur"    data-i18n="opt_type_4">Traiteur / Restauration collective</option>
+                <option value="particulier" data-i18n="opt_type_5">Particulier</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label data-i18n="lbl_ville">Ville / Zone</label>
+              <input type="text" id="fVille" data-i18n-ph="lbl_ville" placeholder="Casablanca" />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label data-i18n="lbl_volume">Volume mensuel estimé</label>
+            <select id="fVolume">
+              <option value="" data-i18n="opt_vol_0">Choisir...</option>
+              <option value="lt500"  data-i18n="opt_vol_1">&lt; 500 DH / mois</option>
+              <option value="500_2k" data-i18n="opt_vol_2">500 – 2 000 DH</option>
+              <option value="2k_10k" data-i18n="opt_vol_3">2 000 – 10 000 DH</option>
+              <option value="gt10k"  data-i18n="opt_vol_4">&gt; 10 000 DH</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label data-i18n="lbl_msg">Message (optionnel)</label>
+            <textarea id="fMsg" data-i18n-ph="lbl_msg" placeholder="Votre message..."></textarea>
+          </div>
+
+          <button type="submit" class="btn-submit" id="btnSubmit" data-i18n="btn_submit">Envoyer ma demande</button>
+          <div class="form-msg" id="formMsg"></div>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     VIDEOS
+════════════════════════════════════════════ -->
+<section id="videos" style="background:var(--gray-50)">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-tag" data-i18n="vid_tag">Vidéos</span>
+      <h2 class="section-title" data-i18n="vid_title">Découvrez Empire Fresh</h2>
+      <p class="section-sub"   data-i18n="vid_sub">Nos produits, nos équipes, notre savoir-faire</p>
+    </div>
+    <div class="video-grid" id="videoGrid">
+      <p style="color:var(--gray-500);font-size:14px;text-align:center">Ajoutez vos IDs YouTube dans CONFIG.VIDEO_IDS</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     FOOTER
+════════════════════════════════════════════ -->
+<footer id="contact">
+  <div class="container">
+    <div class="footer-cols">
+      <div>
+        <div class="footer-brand">
+          <div class="footer-brand-icon">🌿</div>
+          <span class="footer-brand-name">Empire Fresh</span>
+        </div>
+        <p class="footer-desc">Distribution alimentaire professionnelle à Casablanca. Fruits, légumes et produits frais.</p>
+      </div>
+      <div>
+        <div class="footer-heading" data-i18n="ft_links">Liens rapides</div>
+        <ul class="footer-links">
+          <li><a href="#services"   data-i18n="nav_services">Services</a></li>
+          <li><a href="#livraison"  data-i18n="nav_delivery">Livraison</a></li>
+          <li><a href="#catalogue"  data-i18n="nav_catalogue">Catalogue</a></li>
+          <li><a href="#espace-pro" data-i18n="nav_pro">Espace Pro</a></li>
+        </ul>
+      </div>
+      <div>
+        <div class="footer-heading" data-i18n="ft_contact">Contact</div>
+        <ul class="footer-links">
+          <li><a id="ftPhone"   href="#">+212 6 00 00 00 00</a></li>
+          <li><a id="ftEmail"   href="#">contact@empire-fresh.ma</a></li>
+          <li><a id="ftAddress" href="#">Zone Industrielle, Casablanca</a></li>
+          <li><a id="ftHours"   href="#">Lun–Sam : 06h00 – 18h00</a></li>
+        </ul>
+      </div>
+      <div>
+        <div class="footer-heading" data-i18n="ft_legal">Légal</div>
+        <ul class="footer-links">
+          <li><a href="#">Mentions légales</a></li>
+          <li><a href="#">Confidentialité</a></li>
+          <li><a href="#">CGV</a></li>
+        </ul>
+      </div>
+    </div>
+    <hr class="footer-divider" />
+    <div class="footer-bottom">
+      <span data-i18n="ft_copy">© 2026 Empire Fresh. Tous droits réservés.</span>
+      <span data-i18n="ft_made">Fait avec ❤️ à Casablanca</span>
+    </div>
+  </div>
+</footer>
+
+<!-- ═══════════════════════════════════════════
+     MODAL LOGIN — connexion par téléphone
+════════════════════════════════════════════ -->
+<div class="modal-overlay" id="loginModal" onclick="closeLoginOutside(event)">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeLogin()">✕</button>
+    <div class="modal-logo">🌿</div>
+    <h2 data-i18n="login_title">Connexion</h2>
+    <p class="modal-sub" data-i18n="login_sub">Accédez à votre espace client</p>
+    <div class="login-error" id="loginError"></div>
+    <form onsubmit="doLogin(event)" novalidate>
+      <div class="form-group">
+        <label data-i18n="lbl_phone">Numéro de téléphone</label>
+        <div class="phone-input-wrap">
+          <span class="phone-flag">🇲🇦</span>
+          <input type="tel" id="loginPhone" data-i18n-ph="ph_phone" placeholder="06 XX XX XX XX" autocomplete="tel" required />
+        </div>
+      </div>
+      <div class="form-group">
+        <label data-i18n="lbl_pass">Mot de passe</label>
+        <input type="password" id="loginPass" data-i18n-ph="ph_pass" placeholder="Votre mot de passe" autocomplete="current-password" required />
+      </div>
+      <button type="submit" class="btn-submit" id="btnLoginSubmit" data-i18n="btn_login_ok">Se connecter</button>
+    </form>
+    <p style="margin-top:16px;text-align:center;font-size:13px;color:var(--gray-500)">
+      <span data-i18n="login_no_acc">Pas encore de compte ?</span>
+      <a href="#espace-pro" onclick="closeLogin()" style="color:var(--green);font-weight:600;margin-left:6px" data-i18n="login_signup">Faire une demande d'accès</a>
+    </p>
+  </div>
+</div>
+
+<!-- Toast notification -->
+<div class="toast" id="toast"></div>
+
+<!-- ═══════════════════════════════════════════
+     JAVASCRIPT
+════════════════════════════════════════════ -->
+<script>
+/* ── applyConfig ── */
+function applyConfig() {
+  document.title = CONFIG.COMPANY_NAME + " — " + CONFIG.COMPANY_TAGLINE
+
+  const p = (id, val) => { const e = document.getElementById(id); if (e) e.textContent = val }
+  const h = (id, attr, val) => { const e = document.getElementById(id); if (e) e[attr] = val }
+
+  p("contactPhone", CONFIG.PHONE)
+  p("contactEmail", CONFIG.COMPANY_EMAIL)
+  p("ftPhone",      CONFIG.PHONE)
+  p("ftEmail",      CONFIG.COMPANY_EMAIL)
+  p("ftAddress",    CONFIG.COMPANY_ADDRESS)
+  p("ftHours",      CONFIG.HOURS)
+
+  h("contactWaLink",    "href", "https://wa.me/" + CONFIG.WHATSAPP)
+  h("contactEmailLink", "href", "mailto:" + CONFIG.COMPANY_EMAIL)
+  h("ftPhone",    "href", "tel:" + CONFIG.PHONE.replace(/\s/g,""))
+  h("ftEmail",    "href", "mailto:" + CONFIG.COMPANY_EMAIL)
+
+  renderVideos()
+}
+
+/* ── Stats ── */
+function renderStats() {
+  const el = document.getElementById("statsInner")
+  if (!el) return
+  const lk = currentLang === "ar" ? "ar" : currentLang === "en" ? "en" : "fr"
+  el.innerHTML = CONFIG.STATS.map(s => `
+    <div class="stat-item">
+      <span class="stat-num">${s.num}</span>
+      <span class="stat-lbl">${s[lk]}</span>
+    </div>`).join("")
+}
+
+/* ── Zones ── */
+function renderZones() {
+  const el = document.getElementById("zonesGrid")
+  if (!el) return
+  const lk = currentLang === "ar" ? "ar" : currentLang === "en" ? "en" : "fr"
+  el.innerHTML = CONFIG.ZONES.map(z => `
+    <div class="zone-card">
+      <span class="zone-icon">${z.icon}</span>
+      <div>
+        <div class="zone-name">${z[lk]}</div>
+        <div class="zone-delay">${z["del_"+lk]}</div>
+      </div>
+    </div>`).join("")
+}
+
+/* ── Videos ── */
+function renderVideos() {
+  const el = document.getElementById("videoGrid")
+  if (!el || !CONFIG.VIDEO_IDS.length) return
+  el.innerHTML = CONFIG.VIDEO_IDS.map(id => `
+    <div class="video-wrap">
+      <iframe src="https://www.youtube.com/embed/${id}" title="Empire Fresh" allowfullscreen loading="lazy"></iframe>
+    </div>`).join("")
+}
+
+/* ── Nav hamburger ── */
+function toggleMenu()      { document.getElementById("mobileMenu").classList.toggle("open") }
+function closeMobileMenu() { document.getElementById("mobileMenu").classList.remove("open") }
+
+/* ── WhatsApp ── */
+function orderWhatsApp(e) { e.preventDefault(); window.open(CONFIG.WHATSAPP_GROUP, "_blank") }
+
+/* ── Modal Login ── */
+function openLogin() {
+  const sess = getSession()
+  if (sess) {
+    showPortal(sess)
+    setTimeout(() => document.getElementById("mon-espace").scrollIntoView({ behavior:"smooth" }), 100)
+    return
+  }
+  document.getElementById("loginModal").classList.add("open")
+  setTimeout(() => document.getElementById("loginPhone")?.focus(), 120)
+}
+function closeLogin() {
+  document.getElementById("loginModal").classList.remove("open")
+  document.getElementById("loginError").classList.remove("show")
+  document.getElementById("loginPhone").value = ""
+  document.getElementById("loginPass").value  = ""
+}
+function closeLoginOutside(e) { if (e.target.id === "loginModal") closeLogin() }
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeLogin() })
+
+/* ── Authentification par téléphone ── */
+async function doLogin(e) {
+  e.preventDefault()
+  const phone = document.getElementById("loginPhone").value.trim()
+  const pass  = document.getElementById("loginPass").value.trim()
+  const errEl = document.getElementById("loginError")
+  const btnEl = document.getElementById("btnLoginSubmit")
+  errEl.classList.remove("show")
+
+  if (!phone || !pass) { errEl.textContent = t("login_err_fields"); errEl.classList.add("show"); return }
+
+  btnEl.disabled = true; btnEl.textContent = "⏳"
+
+  try {
+    const res  = await fetch(CONFIG.API_URL + "/api/ext/auth", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ phone, password: pass }),
+    })
+    const data = await res.json()
+
+    if (!res.ok) {
+      errEl.textContent = data.error || t("login_err_api")
+      errEl.classList.add("show")
+    } else {
+      saveSession(data)
+      closeLogin()
+      showPortal(data)
+      showToast("✅ " + (data.user?.name || t("portal_welcome") + " !"), "green")
+      setTimeout(() => document.getElementById("mon-espace").scrollIntoView({ behavior:"smooth" }), 200)
+    }
+  } catch {
+    errEl.textContent = t("login_err_api"); errEl.classList.add("show")
+  }
+
+  btnEl.disabled = false; btnEl.textContent = t("btn_login_ok")
+}
+
+/* ── Portail Client ── */
+function showPortal(data) {
+  document.getElementById("mon-espace").classList.add("visible")
+  const user   = data.user   || {}
+  const client = data.client || {}
+
+  document.getElementById("portalName").textContent   = t("portal_welcome") + " " + (user.name || "")
+  document.getElementById("portalMeta").textContent   = [user.role, client.segment].filter(Boolean).join(" · ")
+  document.getElementById("portalPts").textContent    = (client.loyaltyPoints ?? user.loyaltyPoints ?? 0) + " pts"
+  document.getElementById("portalRemise").textContent = (client.remisePct ?? user.remisePct ?? 0) + "%"
+  document.getElementById("portalCredit").textContent = (client.creditSolde ?? 0) + " DH"
+
+  const orders = data.commandes || []
+  const listEl = document.getElementById("orderList")
+  if (!orders.length) {
+    listEl.innerHTML = `<p style="color:var(--gray-500);font-size:14px">${t("portal_no_orders")}</p>`
+  } else {
+    listEl.innerHTML = orders.map(o => {
+      const sc  = o.statut === "livree" ? "livree" : o.statut === "annulee" ? "annulee" : "en_cours"
+      const loc = currentLang === "ar" ? "ar-MA" : currentLang === "en" ? "en-GB" : "fr-FR"
+      const dt  = o.date ? new Date(o.date).toLocaleDateString(loc) : "—"
+      return `<div class="order-item">
+        <div><div class="order-ref">#${o.numero || (o.id||"").slice(0,8) || "—"}</div><div class="order-date">${dt}</div></div>
+        <span class="order-status ${sc}">${o.statut || "—"}</span>
+        <div class="order-amt">${(o.montant||0).toLocaleString()} DH</div>
+      </div>`
+    }).join("")
+  }
+
+  /* nom dans navbar */
+  const nb = document.getElementById("btnLogin")
+  if (nb) nb.querySelector("[data-i18n]").textContent = (user.name||"").split(" ")[0] || t("btn_login")
+}
+
+function logout() {
+  clearSession()
+  document.getElementById("mon-espace").classList.remove("visible")
+  const nb = document.getElementById("btnLogin")
+  if (nb) nb.querySelector("[data-i18n]").textContent = t("btn_login")
+  showToast("👋 " + (currentLang==="ar"?"خرجتي بسلامة":"Déconnecté"), "")
+}
+
+/* ── Session localStorage ── */
+function saveSession(d) { localStorage.setItem("fl_session", JSON.stringify({ ...d, _savedAt: Date.now() })) }
+function getSession() {
+  try {
+    const raw = localStorage.getItem("fl_session"); if (!raw) return null
+    const s = JSON.parse(raw)
+    const exp = (s.user?.exp) || (s._savedAt + 86_400_000)
+    if (Date.now() > exp) { clearSession(); return null }
+    return s
+  } catch { return null }
+}
+function clearSession() { localStorage.removeItem("fl_session") }
+
+/* ── Formulaire Espace Pro ── */
+async function submitProForm(e) {
+  e.preventDefault()
+  const nom  = document.getElementById("fNom").value.trim()
+  const tel  = document.getElementById("fTel").value.trim()
+  const type = document.getElementById("fType").value
+  const msg  = document.getElementById("formMsg")
+  const btn  = document.getElementById("btnSubmit")
+  msg.className = "form-msg"
+
+  if (!nom || !tel || !type) { msg.textContent = t("form_err"); msg.classList.add("error"); return }
+
+  btn.disabled = true; btn.textContent = "⏳"
+
+  const payload = {
+    nom, telephone: tel, type,
+    societe: document.getElementById("fSociete").value.trim(),
+    email:   document.getElementById("fEmail").value.trim(),
+    ville:   document.getElementById("fVille").value.trim(),
+    volume:  document.getElementById("fVolume").value,
+    message: document.getElementById("fMsg").value.trim(),
+    source: "site-web", lang: currentLang,
+  }
+
+  let ok = false
+  try {
+    const r = await fetch(CONFIG.API_URL + "/api/ext/demande-acces", {
+      method: "POST", headers: { "Content-Type":"application/json" }, body: JSON.stringify(payload)
+    })
+    ok = r.ok
+  } catch { ok = false }
+
+  if (!ok) {
+    /* Fallback WhatsApp */
+    const wa = encodeURIComponent(
+      `📋 *Demande Accès Pro — Empire Fresh*\n\n` +
+      `👤 ${payload.nom}\n🏢 ${payload.societe||"—"}\n📱 ${payload.telephone}\n` +
+      `📧 ${payload.email||"—"}\n🏷️ ${payload.type}\n📍 ${payload.ville||"—"}\n` +
+      `💰 ${payload.volume||"—"}\n💬 ${payload.message||"—"}`
+    )
+    window.open(`https://wa.me/${CONFIG.WHATSAPP}?text=${wa}`, "_blank")
+  }
+
+  msg.textContent = t("form_ok"); msg.classList.add("success")
+  document.getElementById("proForm").reset()
+  btn.disabled = false; btn.textContent = t("btn_submit")
+}
+
+/* ── Toast ── */
+function showToast(msg, type) {
+  const el = document.getElementById("toast")
+  el.textContent = msg
+  el.className   = "toast" + (type ? " " + type : "")
+  el.classList.add("show")
+  setTimeout(() => el.classList.remove("show"), 3500)
+}
+
+/* ── INIT ── */
+document.addEventListener("DOMContentLoaded", () => {
+  applyConfig()
+  setLang(currentLang)
+
+  /* Restaurer session existante */
+  const sess = getSession()
+  if (sess) showPortal(sess)
+
+  /* Rafraîchir le profil depuis l'API */
+  if (sess?.token) {
+    fetch(CONFIG.API_URL + "/api/ext/mon-compte", {
+      headers: { Authorization: "Bearer " + sess.token }
+    }).then(r => r.ok ? r.json() : null)
+      .then(d => { if (d) { saveSession({ ...sess, ...d }); showPortal({ ...sess, ...d }) } })
+      .catch(() => {})
+  }
+})
+</script>
+</body>
+</html>
