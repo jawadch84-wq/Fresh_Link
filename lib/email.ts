@@ -1,58 +1,72 @@
 // ============================================================
-// EmailJS Integration — FreshLink Pro
-// Uses EmailJS browser SDK loaded dynamically (no npm install needed)
-// Configure via Paramètres → EmailJS dans le back-office.
-//
-// Template EmailJS requis avec les variables :
-//   {{to_email}}  {{subject}}  {{message}}
+// Email Integration — FreshLink Pro
+// Multi-provider: Resend | Brevo | EmailJS
+// Configure via Paramètres → Email dans le back-office.
+// Sends via /api/send-email (server-side, no CORS issues).
+// Falls back to EmailJS browser API if server route unavailable.
 // ============================================================
 
-// --------------- Config storage ---------------
+export type EmailProvider = "resend" | "brevo" | "emailjs"
 
-interface EmailJSConfig {
-  serviceId:  string
-  templateId: string
-  publicKey:  string
+// --------------- Config ---------------
+
+export interface EmailProviderConfig {
+  provider:  EmailProvider
+  apiKey:    string
+  from?:     string      // sender email (required for Resend/Brevo verified domains)
+  fromName?: string      // sender display name
+  // EmailJS only
+  serviceId?:  string
+  templateId?: string
 }
 
-const LS_KEY = "fl_emailjs_config"
+const LS_KEY = "fl_email_provider_config"
 
-function getEmailJSConfig(): EmailJSConfig {
+export function getEmailProviderConfig(): EmailProviderConfig {
   if (typeof window === "undefined") {
-    return { serviceId: "", templateId: "", publicKey: "" }
+    return { provider: "emailjs", apiKey: "" }
   }
   try {
     const raw = localStorage.getItem(LS_KEY)
-    if (raw) {
-      const p = JSON.parse(raw) as Partial<EmailJSConfig>
-      return {
-        serviceId:  p.serviceId  ?? "",
-        templateId: p.templateId ?? "",
-        publicKey:  p.publicKey  ?? "",
-      }
+    if (raw) return JSON.parse(raw) as EmailProviderConfig
+  } catch { /* ignore */ }
+
+  // Backward compat: migrate old EmailJS config
+  try {
+    const old = localStorage.getItem("fl_emailjs_config")
+    if (old) {
+      const p = JSON.parse(old) as { serviceId?: string; templateId?: string; publicKey?: string }
+      return { provider: "emailjs", apiKey: p.publicKey ?? "", serviceId: p.serviceId, templateId: p.templateId }
     }
   } catch { /* ignore */ }
-  return { serviceId: "", templateId: "", publicKey: "" }
+
+  return { provider: "emailjs", apiKey: "" }
 }
 
-export function saveEmailJSConfig(cfg: EmailJSConfig): void {
+export function saveEmailProviderConfig(cfg: EmailProviderConfig): void {
   if (typeof window !== "undefined") {
     localStorage.setItem(LS_KEY, JSON.stringify(cfg))
   }
 }
 
-export function getEmailJSConfigPublic(): EmailJSConfig {
-  return getEmailJSConfig()
+export function isEmailConfigured(): boolean {
+  const cfg = getEmailProviderConfig()
+  if (!cfg.apiKey) return false
+  if (cfg.provider === "emailjs") return !!(cfg.serviceId && cfg.templateId)
+  return true  // resend / brevo only need apiKey
 }
 
-export function isEmailJSConfigured(): boolean {
-  const cfg = getEmailJSConfig()
-  return !!(cfg.serviceId && cfg.templateId && cfg.publicKey)
+// Backward compat exports used by BOSettings
+export function saveEmailJSConfig(cfg: { serviceId: string; templateId: string; publicKey: string }): void {
+  saveEmailProviderConfig({ provider: "emailjs", apiKey: cfg.publicKey, serviceId: cfg.serviceId, templateId: cfg.templateId })
 }
+export function getEmailJSConfigPublic() {
+  const cfg = getEmailProviderConfig()
+  return { serviceId: cfg.serviceId ?? "", templateId: cfg.templateId ?? "", publicKey: cfg.apiKey }
+}
+export function isEmailJSConfigured(): boolean { return isEmailConfigured() }
 
-// --------------- Core sender ---------------
-// Uses EmailJS REST API v1 with the publicKey as Bearer token.
-// Template must have variables: {{to_email}}, {{subject}}, {{message}}
+// --------------- Core types ---------------
 
 export interface EmailPayload {
   to_email: string
@@ -61,70 +75,84 @@ export interface EmailPayload {
 }
 
 export interface SendResult {
-  ok:     boolean
-  error?: string
+  ok:      boolean
+  error?:  string
   status?: number
 }
 
+// --------------- Core sender ---------------
+
 export async function sendEmail(payload: EmailPayload): Promise<SendResult> {
-  const cfg = getEmailJSConfig()
+  const cfg = getEmailProviderConfig()
 
-  if (!cfg.publicKey || !cfg.serviceId || !cfg.templateId) {
-    return {
-      ok: false,
-      error: "EmailJS non configuré. Allez dans Paramètres → EmailJS (SMTP) pour saisir Service ID, Template ID et Public Key.",
-    }
-  }
-
-  if (!payload.to_email || !payload.to_email.includes("@")) {
+  if (!payload.to_email?.includes("@")) {
     return { ok: false, error: "Adresse email destinataire invalide." }
   }
 
+  if (!isEmailConfigured()) {
+    return {
+      ok: false,
+      error: "Email non configuré. Allez dans Paramètres → Email pour configurer Resend, Brevo ou EmailJS.",
+    }
+  }
+
+  // Try server-side API route first (no CORS issues, works for all providers)
   try {
-    // EmailJS REST API v1 — user_id = publicKey (no accessToken, no custom origin)
+    const res = await fetch("/api/send-email", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        provider:    cfg.provider,
+        apiKey:      cfg.apiKey,
+        from:        cfg.from,
+        fromName:    cfg.fromName,
+        to:          payload.to_email,
+        subject:     payload.subject,
+        body:        payload.body,
+        serviceId:   cfg.serviceId,
+        templateId:  cfg.templateId,
+      }),
+    })
+    const json = await res.json() as { ok: boolean; error?: string }
+    if (json.ok) return { ok: true }
+    // If server route is available but provider returned an error — surface it
+    if (res.status !== 404) return { ok: false, error: json.error ?? `Erreur ${res.status}` }
+    // 404 means the route doesn't exist yet → fall through to direct call
+  } catch { /* network error or route not deployed — fall through */ }
+
+  // Direct fallback for EmailJS (can be called from browser)
+  if (cfg.provider === "emailjs") {
+    return callEmailJSDirect(cfg, payload)
+  }
+
+  return { ok: false, error: "La route /api/send-email n'est pas disponible. Vérifiez le déploiement Next.js." }
+}
+
+async function callEmailJSDirect(cfg: EmailProviderConfig, payload: EmailPayload): Promise<SendResult> {
+  try {
     const res = await fetch("https://api.emailjs.com/api/v1.0/email/send", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         service_id:  cfg.serviceId,
         template_id: cfg.templateId,
-        user_id:     cfg.publicKey,
+        user_id:     cfg.apiKey,
         template_params: {
-          to_email: payload.to_email,
-          subject:  payload.subject,
-          message:  payload.body,
-          // aliases for different template variable naming conventions
-          to:       payload.to_email,
-          email:    payload.to_email,
-          titre:    payload.subject,
-          contenu:  payload.body,
-          corps:    payload.body,
+          to_email: payload.to_email, subject: payload.subject, message: payload.body,
+          to: payload.to_email, email: payload.to_email, titre: payload.subject, contenu: payload.body, corps: payload.body,
         },
       }),
     })
-
-    if (res.ok) {
-      return { ok: true }
-    }
-
-    // EmailJS returns plain text on error
+    if (res.ok) return { ok: true }
     const text = await res.text().catch(() => "")
-    return {
-      ok: false,
-      status: res.status,
-      error: `EmailJS erreur ${res.status}: ${text || res.statusText}`,
-    }
+    return { ok: false, status: res.status, error: `EmailJS ${res.status}: ${text || res.statusText}` }
   } catch (err) {
-    return {
-      ok: false,
-      error: `Erreur réseau: ${err instanceof Error ? err.message : String(err)}`,
-    }
+    return { ok: false, error: `Erreur réseau: ${err instanceof Error ? err.message : String(err)}` }
   }
 }
 
-// Send to multiple recipients one by one, collecting results
+// --------------- Multi-send ---------------
+
 export async function sendEmailMulti(
   to_emails: string[],
   subject: string,
@@ -132,34 +160,30 @@ export async function sendEmailMulti(
 ): Promise<{ sent: string[]; failed: Array<{ email: string; error: string }> }> {
   const sent: string[] = []
   const failed: Array<{ email: string; error: string }> = []
-
   for (const email of to_emails) {
     const result = await sendEmail({ to_email: email, subject, body })
-    if (result.ok) {
-      sent.push(email)
-    } else {
-      failed.push({ email, error: result.error ?? "Erreur inconnue" })
-    }
-    // Small delay between sends to respect EmailJS rate limits
-    await new Promise(r => setTimeout(r, 400))
+    if (result.ok) { sent.push(email) }
+    else { failed.push({ email, error: result.error ?? "Erreur inconnue" }) }
+    await new Promise(r => setTimeout(r, 300))
   }
-
   return { sent, failed }
 }
 
-// --------------- Test de connexion ---------------
+// --------------- Connection test ---------------
 
-export async function testEmailJSConnection(): Promise<SendResult> {
-  const cfg = getEmailJSConfig()
-  if (!cfg.publicKey || !cfg.serviceId || !cfg.templateId) {
-    return { ok: false, error: "Identifiants manquants." }
-  }
+export async function testEmailConnection(to?: string): Promise<SendResult> {
+  const cfg = getEmailProviderConfig()
+  if (!isEmailConfigured()) return { ok: false, error: "Email non configuré." }
+  const providerLabel = cfg.provider === "resend" ? "Resend" : cfg.provider === "brevo" ? "Brevo" : "EmailJS"
   return sendEmail({
-    to_email: "test@freshlink.test",
-    subject:  "Test connexion EmailJS — FreshLink Pro",
-    body:     "Ce message est un test automatique pour vérifier la configuration EmailJS.",
+    to_email: to ?? "test@freshlink.test",
+    subject:  `Test connexion ${providerLabel} — FreshLink Pro`,
+    body:     `Ce message confirme que votre configuration ${providerLabel} fonctionne correctement.\n\nFreshLink Pro — ${new Date().toLocaleString("fr-MA")}`,
   })
 }
+
+/** @deprecated Use testEmailConnection() */
+export async function testEmailJSConnection(): Promise<SendResult> { return testEmailConnection() }
 
 // --------------- Email body builders ---------------
 
@@ -256,8 +280,6 @@ export function buildCommandeEmail(cmd: {
 }
 
 // ---- Besoin d'achat net ----
-// Calcul : commandes prévendeurs – stock disponible – retours validés
-// Peut être regroupé par fournisseur
 
 export interface BesoinLigneEmail {
   articleNom:    string
@@ -307,7 +329,7 @@ export function buildBesoinAchatEmail(
   return [...header, ...rows, ...footer].join("\n")
 }
 
-// ---- Besoin d'achat consolide par fournisseur ----
+// ---- Besoin d'achat consolidé par fournisseur ----
 
 export interface BesoinParFournisseur {
   fournisseurNom: string

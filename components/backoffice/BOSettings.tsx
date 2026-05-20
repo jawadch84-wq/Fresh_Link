@@ -4,8 +4,226 @@ import { useState, useEffect, useRef } from "react"
 import { store, type EmailConfig, type MotifRetour, type CompanyConfig, type CompanyContacts, type WorkflowConfig, type WorkflowStep, type ContenantTare, DEFAULT_WORKFLOW_STEPS, type ProcessConfig, DEFAULT_PROCESS_CONFIG, type TransportCompany } from "@/lib/store"
 import { useRealtimeSync } from "@/lib/supabase/useRealtimeSync"
 import { seedDemoData } from "@/lib/seedData"
-import { saveEmailJSConfig, getEmailJSConfigPublic, testEmailJSConnection } from "@/lib/email"
+import { saveEmailJSConfig, getEmailJSConfigPublic, testEmailJSConnection, getEmailProviderConfig, saveEmailProviderConfig, testEmailConnection, isEmailConfigured, type EmailProvider, type EmailProviderConfig } from "@/lib/email"
 import { createClient } from "@/lib/supabase/client"
+
+// ─── Multi-provider Email Settings component ─────────────────────────────────
+function EmailProviderSettings() {
+  const [cfg, setCfg] = useState<EmailProviderConfig>(() => getEmailProviderConfig())
+  const [saved, setSaved] = useState(false)
+  const [testing, setTesting] = useState(false)
+  const [testResult, setTestResult] = useState<{ ok: boolean; msg: string } | null>(null)
+  const [testTo, setTestTo] = useState("")
+
+  const PROVIDERS: { id: EmailProvider; label: string; color: string; logo: string; free: string; url: string; desc: string }[] = [
+    { id: "resend",   label: "Resend",   color: "#000", logo: "✉️", free: "3 000/mois", url: "https://resend.com", desc: "API moderne, setup en 2 min. Recommandé pour Vercel / Next.js." },
+    { id: "brevo",    label: "Brevo",    color: "#0b6cff", logo: "📧", free: "300/jour", url: "https://brevo.com", desc: "Ex-Sendinblue. SMTP + API REST. Bon delivrability." },
+    { id: "emailjs",  label: "EmailJS",  color: "#6366f1", logo: "⚡", free: "200/mois", url: "https://emailjs.com", desc: "Envoie depuis le navigateur, pas de backend requis." },
+  ]
+
+  const handleSave = () => {
+    saveEmailProviderConfig(cfg)
+    // Also keep old EmailJS compat key if needed
+    if (cfg.provider === "emailjs" && cfg.serviceId && cfg.templateId) {
+      saveEmailJSConfig({ serviceId: cfg.serviceId, templateId: cfg.templateId, publicKey: cfg.apiKey })
+    }
+    setSaved(true); setTimeout(() => setSaved(false), 2500)
+    setTestResult(null)
+  }
+
+  const handleTest = async () => {
+    saveEmailProviderConfig(cfg)
+    setTesting(true); setTestResult(null)
+    const result = await testEmailConnection(testTo || undefined)
+    setTesting(false)
+    setTestResult({ ok: result.ok, msg: result.ok ? `✓ Email envoyé avec succès via ${PROVIDERS.find(p => p.id === cfg.provider)?.label} !` : `✗ ${result.error ?? "Erreur inconnue"}` })
+  }
+
+  return (
+    <div className="flex flex-col gap-4">
+
+      {/* Provider selector */}
+      <div className="bg-card rounded-2xl border border-border p-6 flex flex-col gap-4">
+        <div>
+          <h3 className="font-bold text-sm text-foreground">Fournisseur d&apos;email</h3>
+          <p className="text-xs text-muted-foreground mt-0.5">Choisissez votre service. La configuration se met à jour automatiquement.</p>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {PROVIDERS.map(p => (
+            <button key={p.id} type="button"
+              onClick={() => setCfg(prev => ({ ...prev, provider: p.id }))}
+              className={`flex flex-col gap-2 p-4 rounded-2xl border-2 text-left transition-all ${cfg.provider === p.id ? "border-primary bg-primary/5 shadow-md" : "border-border hover:border-primary/40 bg-background"}`}>
+              <div className="flex items-center gap-2">
+                <span className="text-xl">{p.logo}</span>
+                <span className="font-black text-sm" style={{ color: cfg.provider === p.id ? p.color : undefined }}>{p.label}</span>
+                {cfg.provider === p.id && <span className="ml-auto text-primary">✓</span>}
+              </div>
+              <p className="text-[11px] text-muted-foreground leading-snug">{p.desc}</p>
+              <div className="flex items-center gap-2 mt-1">
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-green-100 text-green-700">Gratuit : {p.free}</span>
+                <a href={p.url} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()}
+                  className="text-[10px] text-primary underline">Créer un compte →</a>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Fields */}
+      <div className="bg-card rounded-2xl border border-border p-6 flex flex-col gap-4">
+        <h3 className="font-bold text-sm text-foreground">
+          Configuration — {PROVIDERS.find(p => p.id === cfg.provider)?.label}
+        </h3>
+
+        {/* Common: API Key */}
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-semibold text-foreground">
+            {cfg.provider === "emailjs" ? "Public Key" : "API Key"} *
+          </label>
+          <input type="password" value={cfg.apiKey}
+            onChange={e => setCfg(prev => ({ ...prev, apiKey: e.target.value }))}
+            className="px-3 py-2.5 rounded-xl border border-border bg-background text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary"
+            placeholder={cfg.provider === "resend" ? "re_xxxxxxxxxxxxxxxxxxxx" : cfg.provider === "brevo" ? "xkeysib-..." : "XXXXXXXXXXXXXXXXXXXXXXX"} />
+        </div>
+
+        {/* EmailJS specific */}
+        {cfg.provider === "emailjs" && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-foreground">Service ID *</label>
+              <input type="text" value={cfg.serviceId ?? ""}
+                onChange={e => setCfg(prev => ({ ...prev, serviceId: e.target.value }))}
+                className="px-3 py-2.5 rounded-xl border border-border bg-background text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary"
+                placeholder="service_xxxxxxx" />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-foreground">Template ID *</label>
+              <input type="text" value={cfg.templateId ?? ""}
+                onChange={e => setCfg(prev => ({ ...prev, templateId: e.target.value }))}
+                className="px-3 py-2.5 rounded-xl border border-border bg-background text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary"
+                placeholder="template_xxxxxxx" />
+            </div>
+          </div>
+        )}
+
+        {/* Resend / Brevo: from address */}
+        {cfg.provider !== "emailjs" && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-foreground">Email expéditeur</label>
+              <input type="email" value={cfg.from ?? ""}
+                onChange={e => setCfg(prev => ({ ...prev, from: e.target.value }))}
+                className="px-3 py-2.5 rounded-xl border border-border bg-background text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary"
+                placeholder="noreply@votre-domaine.ma" />
+              <p className="text-[10px] text-muted-foreground">Doit être un domaine vérifié dans votre tableau de bord {PROVIDERS.find(p => p.id === cfg.provider)?.label}.</p>
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-foreground">Nom affiché</label>
+              <input type="text" value={cfg.fromName ?? ""}
+                onChange={e => setCfg(prev => ({ ...prev, fromName: e.target.value }))}
+                className="px-3 py-2.5 rounded-xl border border-border bg-background text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary"
+                placeholder="Empire Fresh" />
+            </div>
+          </div>
+        )}
+
+        {/* Guides rapides */}
+        {cfg.provider === "resend" && (
+          <div className="bg-slate-50 rounded-xl border border-slate-200 p-4 text-xs text-slate-700 space-y-1">
+            <p className="font-bold text-slate-800 mb-2">📋 Guide Resend (2 min)</p>
+            <p>1. Créez un compte sur <a href="https://resend.com" target="_blank" rel="noreferrer" className="underline">resend.com</a></p>
+            <p>2. <strong>API Keys</strong> → <em>Create API Key</em> → copiez la clé</p>
+            <p>3. <strong>Domains</strong> → ajoutez et vérifiez votre domaine (ou utilisez <code className="bg-slate-100 px-1 rounded">onboarding@resend.dev</code> pour tester)</p>
+            <p>4. Plan gratuit : <strong>3 000 emails/mois</strong>, pas de carte bancaire requise</p>
+          </div>
+        )}
+        {cfg.provider === "brevo" && (
+          <div className="bg-blue-50 rounded-xl border border-blue-200 p-4 text-xs text-blue-800 space-y-1">
+            <p className="font-bold mb-2">📋 Guide Brevo (3 min)</p>
+            <p>1. Créez un compte sur <a href="https://app.brevo.com" target="_blank" rel="noreferrer" className="underline">app.brevo.com</a></p>
+            <p>2. <strong>SMTP & API</strong> → <em>API Keys</em> → <em>Generate a new API key</em></p>
+            <p>3. Vérifiez votre domaine expéditeur dans <strong>Senders & IP</strong></p>
+            <p>4. Plan gratuit : <strong>300 emails/jour</strong> (9 000/mois)</p>
+          </div>
+        )}
+        {cfg.provider === "emailjs" && (
+          <div className="bg-indigo-50 rounded-xl border border-indigo-200 p-4 text-xs text-indigo-800 space-y-1">
+            <p className="font-bold mb-2">📋 Guide EmailJS</p>
+            <p>1. <a href="https://emailjs.com" target="_blank" rel="noreferrer" className="underline">emailjs.com</a> → <strong>Email Services</strong> → Add New Service (Gmail, Outlook…)</p>
+            <p>2. <strong>Email Templates</strong> → Create → variables : <code className="bg-indigo-100 px-1 rounded">{'{{to_email}} {{subject}} {{message}}'}</code></p>
+            <p>3. <strong>Account → API Keys</strong> → copiez la <em>Public Key</em></p>
+            <p>4. Plan gratuit : <strong>200 emails/mois</strong></p>
+          </div>
+        )}
+
+        {/* Test result */}
+        {testResult && (
+          <div className={`flex items-start gap-2 px-4 py-3 rounded-xl text-sm border ${testResult.ok ? "bg-green-50 border-green-200 text-green-800" : "bg-red-50 border-red-200 text-red-800"}`}>
+            <span className="shrink-0 mt-0.5">{testResult.ok ? "✓" : "✗"}</span>
+            <span className="leading-relaxed">{testResult.msg}</span>
+          </div>
+        )}
+
+        {/* Actions */}
+        <div className="flex items-center gap-3 flex-wrap">
+          <button onClick={handleSave}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white"
+            style={{ background: "oklch(0.38 0.2 260)" }}>
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+            {saved ? "✓ Sauvegardé !" : "Sauvegarder"}
+          </button>
+          <div className="flex items-center gap-2 flex-1 min-w-[180px]">
+            <input type="email" value={testTo} onChange={e => setTestTo(e.target.value)}
+              placeholder="Email de test (optionnel)"
+              className="flex-1 px-3 py-2 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
+            <button onClick={handleTest} disabled={testing || !cfg.apiKey}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold border border-border hover:bg-muted transition-colors disabled:opacity-50 whitespace-nowrap">
+              {testing ? <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : "⚡ Tester"}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Comparatif */}
+      <div className="bg-card rounded-2xl border border-border p-5">
+        <p className="text-sm font-bold text-foreground mb-3">Comparatif des fournisseurs</p>
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs border-collapse">
+            <thead>
+              <tr className="border-b border-border">
+                <th className="py-2 px-3 text-left font-bold text-foreground">Fournisseur</th>
+                <th className="py-2 px-3 text-left font-bold text-foreground">Gratuit</th>
+                <th className="py-2 px-3 text-left font-bold text-foreground">Setup</th>
+                <th className="py-2 px-3 text-left font-bold text-foreground">Avantages</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr className="border-b border-border/50">
+                <td className="py-2 px-3 font-semibold">✉️ Resend</td>
+                <td className="py-2 px-3 text-green-700 font-bold">3 000/mois</td>
+                <td className="py-2 px-3">2 min</td>
+                <td className="py-2 px-3 text-muted-foreground">API REST, HTML email, logs, Next.js natif</td>
+              </tr>
+              <tr className="border-b border-border/50">
+                <td className="py-2 px-3 font-semibold">📧 Brevo</td>
+                <td className="py-2 px-3 text-green-700 font-bold">300/jour</td>
+                <td className="py-2 px-3">3 min</td>
+                <td className="py-2 px-3 text-muted-foreground">SMTP + API, templates, delivrability élevé</td>
+              </tr>
+              <tr>
+                <td className="py-2 px-3 font-semibold">⚡ EmailJS</td>
+                <td className="py-2 px-3 text-amber-700 font-bold">200/mois</td>
+                <td className="py-2 px-3">5 min</td>
+                <td className="py-2 px-3 text-muted-foreground">Pas de backend, fonctionne sans serveur</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p className="text-[11px] text-muted-foreground mt-3">💡 <strong>Recommandé :</strong> Resend pour une nouvelle installation. Brevo si vous avez déjà un compte Sendinblue. EmailJS si vous n&apos;avez pas accès au serveur.</p>
+      </div>
+    </div>
+  )
+}
 
 function AccessDenied() {
   return (
@@ -539,7 +757,7 @@ export default function BOSettings({ user }: { user: { id: string; name: string;
     { id: "process" as const,     label: "Process",                   labelAr: "اختيار العملية" },
     { id: "workflow" as const,    label: "Validation commandes",      labelAr: "الموافقة على الطلبيات" },
     { id: "emails" as const,      label: "Emails & Notifications",    labelAr: "البريد الإلكتروني" },
-    { id: "emailjs" as const,     label: "EmailJS (SMTP)",            labelAr: "إعداد البريد" },
+    { id: "emailjs" as const,     label: "Email (Resend / Brevo)",    labelAr: "إعداد البريد" },
     { id: "motifs" as const,      label: "Motifs retour",             labelAr: "أسباب الإرجاع" },
     { id: "contenants" as const,  label: "Poids contenants",          labelAr: "أوزان الحاويات" },
     { id: "dataguard" as const,   label: "DataGuard",                 labelAr: "حماية البيانات" },
@@ -1681,143 +1899,9 @@ export default function BOSettings({ user }: { user: { id: string; name: string;
         </div>
       )}
 
-      {/* EmailJS config */}
+      {/* Email multi-provider config */}
       {tab === "emailjs" && (
-        <div className="flex flex-col gap-4">
-
-          {/* Guide pas-à-pas */}
-          <div className="bg-blue-50 border border-blue-200 rounded-2xl p-5">
-            <p className="text-sm font-bold text-blue-800 mb-3">Guide de configuration EmailJS (5 minutes)</p>
-            <ol className="text-xs text-blue-800 leading-relaxed list-decimal list-inside space-y-2">
-              <li>
-                Créez un compte gratuit sur{" "}
-                <a href="https://www.emailjs.com" target="_blank" rel="noreferrer" className="underline font-semibold">emailjs.com</a>
-              </li>
-              <li>
-                <strong>Email Services</strong> → Add New Service → choisissez Gmail, Outlook ou autre. Notez le <strong>Service ID</strong>.
-              </li>
-              <li>
-                <strong>Email Templates</strong> → Create New Template. Dans le corps du template, utilisez impérativement ces variables :<br />
-                <code className="bg-blue-100 rounded px-1.5 py-0.5 text-xs font-mono mt-1 inline-block">
-                  {'To: {{to_email}} | Subject: {{subject}} | Body: {{message}}'}
-                </code>
-                <br />Notez le <strong>Template ID</strong>.
-              </li>
-              <li>
-                <strong>Account</strong> → <strong>API Keys</strong> → copiez votre <strong>Public Key</strong>.
-              </li>
-              <li>Collez les 3 identifiants ci-dessous et cliquez Sauvegarder, puis testez la connexion.</li>
-            </ol>
-          </div>
-
-          {/* Identifiants */}
-          <div className="bg-card rounded-2xl border border-border p-6 flex flex-col gap-4">
-            <h3 className="font-semibold text-foreground text-sm">Identifiants EmailJS / بيانات EmailJS</h3>
-            <div className="flex flex-col gap-3">
-              <div className="flex flex-col gap-1">
-                <label className="text-xs font-semibold text-foreground">Service ID</label>
-                <input type="text" value={ejsCfg.serviceId}
-                  onChange={e => setEjsCfg({ ...ejsCfg, serviceId: e.target.value })}
-                  className="px-3 py-2.5 rounded-xl border border-border bg-background text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary"
-                  placeholder="service_xxxxxxx" />
-              </div>
-              <div className="flex flex-col gap-1">
-                <label className="text-xs font-semibold text-foreground">Template ID</label>
-                <input type="text" value={ejsCfg.templateId}
-                  onChange={e => setEjsCfg({ ...ejsCfg, templateId: e.target.value })}
-                  className="px-3 py-2.5 rounded-xl border border-border bg-background text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary"
-                  placeholder="template_xxxxxxx" />
-              </div>
-              <div className="flex flex-col gap-1">
-                <label className="text-xs font-semibold text-foreground">Public Key (Account → API Keys)</label>
-                <input type="text" value={ejsCfg.publicKey}
-                  onChange={e => setEjsCfg({ ...ejsCfg, publicKey: e.target.value })}
-                  className="px-3 py-2.5 rounded-xl border border-border bg-background text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary"
-                  placeholder="XXXXXXXXXXXXXXXXXXXXXXX" />
-              </div>
-            </div>
-
-            {/* Résultat test */}
-            {testResult && (
-              <div className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm border ${
-                testResult.ok
-                  ? "bg-green-50 border-green-200 text-green-800"
-                  : "bg-red-50 border-red-200 text-red-800"
-              }`}>
-                {testResult.ok
-                  ? <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                  : <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                }
-                <span className="leading-relaxed">{testResult.msg}</span>
-              </div>
-            )}
-
-            <div className="flex items-center gap-3 flex-wrap">
-              <button
-                onClick={() => {
-                  saveEmailJSConfig(ejsCfg)
-                  setSaved("Configuration EmailJS sauvegardée.")
-                  setTimeout(() => setSaved(""), 3000)
-                  setTestResult(null)
-                }}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white"
-                style={{ background: "oklch(0.38 0.2 260)" }}>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                Sauvegarder
-              </button>
-              <button
-                disabled={testing || !ejsCfg.publicKey || !ejsCfg.serviceId || !ejsCfg.templateId}
-                onClick={async () => {
-                  // Sauvegarder d'abord pour que le test utilise les nouveaux identifiants
-                  saveEmailJSConfig(ejsCfg)
-                  setTesting(true)
-                  setTestResult(null)
-                  const result = await testEmailJSConnection()
-                  setTesting(false)
-                  setTestResult({
-                    ok: result.ok,
-                    msg: result.ok
-                      ? "Connexion EmailJS réussie ! Les emails peuvent être envoyés."
-                      : `Echec: ${result.error ?? "Vérifiez vos identifiants."}`,
-                  })
-                }}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold border border-border hover:bg-muted transition-colors disabled:opacity-50">
-                {testing
-                  ? <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                  : <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-                }
-                Tester la connexion
-              </button>
-            </div>
-          </div>
-
-          {/* Template requis */}
-          <div className="bg-card rounded-2xl border border-border p-5">
-            <p className="text-sm font-semibold text-foreground mb-3">Template EmailJS requis</p>
-            <p className="text-xs text-muted-foreground mb-3">
-              Votre template doit contenir exactement ces 3 variables (copiez-collez dans votre template EmailJS) :
-            </p>
-            <pre className="text-xs font-mono bg-muted rounded-xl p-4 text-foreground leading-relaxed overflow-x-auto whitespace-pre-wrap">{`Subject: {{subject}}
-
-To: {{to_email}}
-
-{{message}}`}</pre>
-            <p className="text-xs text-muted-foreground mt-3">
-              Dans &quot;To Email&quot; du template, mettez <code className="bg-muted px-1 rounded font-mono">{"{{to_email}}"}</code> pour que chaque email soit envoyé au bon destinataire.
-            </p>
-          </div>
-
-          {/* Sécurité */}
-          <div className="flex items-start gap-3 p-4 rounded-xl border border-border bg-muted/50">
-            <svg className="w-5 h-5 text-muted-foreground shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-            </svg>
-            <div className="text-xs text-muted-foreground leading-relaxed">
-              <p className="font-semibold text-foreground mb-1">Sécurité & limites</p>
-              Identifiants stockés uniquement dans le navigateur (localStorage). Plan gratuit EmailJS : 200 emails/mois. Pour restreindre l&apos;origine dans EmailJS : <strong>Account → API Keys → Allowed Origins</strong>.
-            </div>
-          </div>
-        </div>
+        <EmailProviderSettings />
       )}
 
       {/* Poids Contenants */}
