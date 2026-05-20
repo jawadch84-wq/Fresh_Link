@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { store, type User, type UserRole, ROLE_LABELS, ROLE_COLORS, isDemoUser } from "@/lib/store"
+import { store, type User, type UserRole, ROLE_LABELS, ROLE_COLORS, isDemoUser, getAllRoles, isBackOfficeRole } from "@/lib/store"
 import { useLang } from "@/lib/i18n"
 import MobileAchat from "./MobileAchat"
 import MobileCommercial from "./MobileCommercial"
@@ -84,18 +84,22 @@ export default function MobileLayout({ user, onLogout }: Props) {
     { id: "alertes", label: "Alertes", labelAr: "التنبيهات", labelEn: "Alerts", icon: T("M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9") },
   ]
 
-  // Use activeRole for tab access (dual-role switching)
+  // Use activeRole for tab access (multi-role switching)
   const effectiveRole = user.activeRole ?? user.role
   const allowedTabIds: MobileTab[] = ROLE_TAB_ACCESS[effectiveRole] ?? ROLE_TAB_ACCESS[user.role] ?? ["achat"]
   const allowedTabs = allTabs.filter(t => allowedTabIds.includes(t.id))
   const [activeTab, setActiveTab] = useState<MobileTab>(allowedTabIds[0] ?? "achat")
+  const [showRoleMenu, setShowRoleMenu] = useState(false)
 
-  const handleSwitchRole = (): void => {
-    if (!user.secondRole) return
-    const newRole: UserRole = (user.activeRole ?? user.role) === user.role ? user.secondRole : user.role
+  // All roles this user can switch to
+  const allUserRoles = getAllRoles(user)
+  const hasMultipleRoles = allUserRoles.length > 1
+  const hasBoRole = allUserRoles.some(r => isBackOfficeRole(r))
+
+  const switchToRole = (newRole: UserRole): void => {
+    const updated = { ...user, activeRole: newRole }
     const allUsers = store.getUsers()
     const idx = allUsers.findIndex(u => u.id === user.id)
-    const updated = { ...user, activeRole: newRole }
     if (idx >= 0) { allUsers[idx] = updated; store.saveUsers(allUsers) }
     try { sessionStorage.setItem("fl_current_user", JSON.stringify(updated)) } catch (_) {}
     window.location.reload()
@@ -132,14 +136,37 @@ export default function MobileLayout({ user, onLogout }: Props) {
             <span className={`w-1.5 h-1.5 rounded-full ${isOnline ? "bg-emerald-500 animate-pulse" : "bg-red-500"}`} />
             <span className="hidden sm:inline">{isOnline ? "En ligne" : "Hors ligne"}</span>
           </div>
-          {/* Dual-role switch button */}
-          {user.secondRole && (
-            <button
-              onClick={handleSwitchRole}
-              title={`Basculer vers ${ROLE_LABELS[(user.activeRole ?? user.role) === user.role ? user.secondRole : user.role]}`}
-              className="flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold bg-indigo-50 border border-indigo-200 text-indigo-700 hover:bg-indigo-100 transition-colors">
-              🔄 {ROLE_LABELS[(user.activeRole ?? user.role) === user.role ? user.secondRole : user.role]}
-            </button>
+          {/* Multi-role switch */}
+          {hasMultipleRoles && (
+            <div className="relative">
+              <button
+                onClick={() => setShowRoleMenu(v => !v)}
+                className="flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold bg-indigo-50 border border-indigo-200 text-indigo-700 hover:bg-indigo-100 transition-colors">
+                🔄 <span className="hidden sm:inline">{ROLE_LABELS[effectiveRole]}</span>
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+              </button>
+              {showRoleMenu && (
+                <div className="absolute right-0 top-8 z-50 bg-white border border-slate-200 rounded-2xl shadow-xl p-1.5 min-w-[160px]">
+                  {allUserRoles.map(r => (
+                    <button key={r} onClick={() => { setShowRoleMenu(false); switchToRole(r) }}
+                      className={`w-full text-left flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-colors ${effectiveRole === r ? "bg-indigo-50 text-indigo-700" : "hover:bg-slate-50 text-slate-700"}`}>
+                      {effectiveRole === r && <span className="text-indigo-500">✓</span>}
+                      {effectiveRole !== r && <span className="w-3" />}
+                      {ROLE_LABELS[r]}
+                    </button>
+                  ))}
+                  {hasBoRole && (
+                    <>
+                      <div className="my-1 border-t border-slate-100" />
+                      <button onClick={() => { setShowRoleMenu(false); switchToRole(allUserRoles.find(r => isBackOfficeRole(r))!) }}
+                        className="w-full text-left flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-emerald-700 hover:bg-emerald-50 transition-colors">
+                        🖥️ Passer au Back-Office
+                      </button>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
           )}
           {/* Role badge */}
           <span className="px-2 py-1 rounded-full text-[10px] font-bold bg-blue-50 border border-blue-200 text-blue-700">

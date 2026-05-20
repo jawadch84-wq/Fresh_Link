@@ -85,9 +85,11 @@ export interface User {
   requireCameraAuth?: boolean
   // Multi-depot: which depot this user is assigned to (magasinier, acheteur...)
   depotId?: string
-  // Dual-role: user can optionally hold a second role and switch between them
-  secondRole?: UserRole        // optional second role
+  // Multi-role: user can hold several roles and switch between them
+  extraRoles?: UserRole[]      // additional roles (array — replaces secondRole)
   activeRole?: UserRole        // which role is currently active (defaults to role)
+  // kept for backward compat — if present treated as extraRoles[0]
+  secondRole?: UserRole
 }
 
 export type ModalitePaiement = "cash" | "cheque" | "virement" | "traite_30" | "traite_60" | "traite_90" | "credit_7" | "credit_15" | "credit_30"
@@ -1516,6 +1518,12 @@ export const FAMILLES_ARTICLES = [
   "Agrumes", "Fruits tropicaux", "Fruits rouges",
   "Herbes aromatiques", "Champignons", "Fruits secs", "Autre",
 ]
+
+// Returns all roles available to a user (primary + extraRoles + legacy secondRole, deduplicated)
+export function getAllRoles(user: User): UserRole[] {
+  const extra = user.extraRoles ?? (user.secondRole ? [user.secondRole] : [])
+  return [user.role, ...extra.filter(r => r !== user.role)]
+}
 
 export function isMobileRole(role: UserRole): boolean {
   return ["prevendeur", "resp_logistique", "magasinier", "dispatcheur", "livreur", "livreur_interne", "livreur_externe", "acheteur", "ctrl_achat", "ctrl_prep", "client", "fournisseur", "chef_depot", "suivi_commande"].includes(role)

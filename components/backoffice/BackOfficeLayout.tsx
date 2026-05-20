@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback, Component } from "react"
 import dynamic from "next/dynamic"
 import LangSwitcher from "@/components/ui/LangSwitcher"
 import type { User } from "@/lib/store"
-import { store, ROLE_LABELS, ROLE_COLORS, isDemoUser, isSuperSuperAdmin, JAWAD_ID, type UserRole } from "@/lib/store"
+import { store, ROLE_LABELS, ROLE_COLORS, isDemoUser, isSuperSuperAdmin, JAWAD_ID, type UserRole, getAllRoles, isMobileRole } from "@/lib/store"
 import { useLang, T } from "@/lib/i18n"
 import type { AppLang } from "@/lib/lang"
 
@@ -443,6 +443,21 @@ export default function BackOfficeLayout({ user, onLogout }: Props) {
   const [profilPhoto, setProfilPhoto]   = useState(user.photoUrl ?? "")
   const [navSearch, setNavSearch]       = useState("")
   const [companyBrand, setCompanyBrand] = useState(() => store.getCompanyConfig())
+  const [showRoleMenu, setShowRoleMenu] = useState(false)
+
+  const allUserRoles = getAllRoles(user)
+  const hasMultipleRoles = allUserRoles.length > 1
+  const hasMobileRole = allUserRoles.some(r => isMobileRole(r))
+  const effectiveRole = user.activeRole ?? user.role
+
+  const switchToRole = (newRole: UserRole) => {
+    const updated = { ...user, activeRole: newRole }
+    const users = store.getUsers()
+    const idx = users.findIndex(u => u.id === user.id)
+    if (idx >= 0) { users[idx] = updated; store.saveUsers(users) }
+    try { sessionStorage.setItem("fl_current_user", JSON.stringify(updated)) } catch (_) {}
+    window.location.reload()
+  }
   const isDemo           = isDemoUser(user)
 
   // Re-read company brand whenever settings are saved
@@ -749,21 +764,39 @@ export default function BackOfficeLayout({ user, onLogout }: Props) {
               </div>
             </button>
 
-            {/* Dual-role switch */}
-            {user.secondRole && (
-              <button
-                onClick={() => {
-                  const next: UserRole = (user.activeRole ?? user.role) === user.role ? user.secondRole! : user.role
-                  const users = store.getUsers()
-                  const idx = users.findIndex(u => u.id === user.id)
-                  const updated = { ...user, activeRole: next }
-                  if (idx >= 0) { users[idx] = updated; store.saveUsers(users) }
-                  try { sessionStorage.setItem("fl_current_user", JSON.stringify(updated)) } catch (_) {}
-                  window.location.reload()
-                }}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-indigo-200 bg-indigo-50 text-xs font-bold text-indigo-700 hover:bg-indigo-100 transition-colors">
-                🔄 {ROLE_LABELS[user.secondRole]}
-              </button>
+            {/* Multi-role switch */}
+            {hasMultipleRoles && (
+              <div className="relative">
+                <button
+                  onClick={() => setShowRoleMenu(v => !v)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-indigo-200 bg-indigo-50 text-xs font-bold text-indigo-700 hover:bg-indigo-100 transition-colors">
+                  🔄 {ROLE_LABELS[effectiveRole]}
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                </button>
+                {showRoleMenu && (
+                  <div className="absolute right-0 top-10 z-50 bg-white border border-slate-200 rounded-2xl shadow-xl p-1.5 min-w-[190px]">
+                    {allUserRoles.map(r => (
+                      <button key={r} onClick={() => { setShowRoleMenu(false); switchToRole(r) }}
+                        className={`w-full text-left flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-colors ${effectiveRole === r ? "bg-indigo-50 text-indigo-700" : "hover:bg-slate-50 text-slate-700"}`}>
+                        {effectiveRole === r ? <span className="text-indigo-500">✓</span> : <span className="w-3" />}
+                        {ROLE_LABELS[r]}
+                        <span className={`ml-auto text-[9px] px-1.5 py-0.5 rounded-full font-bold ${isMobileRole(r) ? "bg-green-100 text-green-700" : "bg-blue-100 text-blue-700"}`}>
+                          {isMobileRole(r) ? "Mobile" : "BO"}
+                        </span>
+                      </button>
+                    ))}
+                    {hasMobileRole && (
+                      <>
+                        <div className="my-1 border-t border-slate-100" />
+                        <button onClick={() => { setShowRoleMenu(false); switchToRole(allUserRoles.find(r => isMobileRole(r))!) }}
+                          className="w-full text-left flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-green-700 hover:bg-green-50 transition-colors">
+                          📱 Passer au Mobile
+                        </button>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
             )}
             {/* Logout */}
             <button

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { store, type User, type UserRole, type UserAccessType, type GranularPermissions, type Civilite, ROLE_LABELS, ROLE_COLORS, JAWAD_ID } from "@/lib/store"
+import { store, type User, type UserRole, type UserAccessType, type GranularPermissions, type Civilite, ROLE_LABELS, ROLE_COLORS, JAWAD_ID, isMobileRole } from "@/lib/store"
 import { sendEmail } from "@/lib/email"
 import { deleteUser } from "@/lib/supabase/db"
 
@@ -718,7 +718,7 @@ const DEFAULT_PERMS_BY_ROLE: Partial<Record<UserRole, PermFlags>> = {
 
 const EMPTY_USER: Omit<User, "id"> = {
   name: "", email: "", password: "1234", role: "prevendeur", accessType: undefined, secteur: "", depotId: undefined,
-  phone: "", actif: true,
+  phone: "", actif: true, extraRoles: [],
   canViewAchat: false, canViewCommercial: false, canViewLogistique: false,
   canViewStock: false, canViewCash: false, canViewFinance: false, canViewRecap: false,
   canViewDatabase: false, canViewRH: false, canViewExternal: false, canCreateCommandeBO: false,
@@ -1336,7 +1336,7 @@ export default function BOUsers({ currentUser }: { currentUser: User }) {
       passwordMobile: u.passwordMobile, passwordBO: u.passwordBO,
       photoUrl: u.photoUrl, telephone: u.telephone,
       requireCameraAuth: u.requireCameraAuth, fournisseurId: u.fournisseurId, clientId: u.clientId,
-      secondRole: u.secondRole,
+      extraRoles: u.extraRoles ?? (u.secondRole ? [u.secondRole] : []),
     })
     setShowForm(true)
   }
@@ -2217,28 +2217,39 @@ export default function BOUsers({ currentUser }: { currentUser: User }) {
                     )}
                   </div>
 
-                  {/* Second Role */}
+                  {/* Extra Roles (multi-select) */}
                   <div className="flex flex-col gap-1 sm:col-span-2">
-                    <label className="text-xs font-semibold text-foreground">Rôle secondaire (optionnel)</label>
-                    <p className="text-[10px] text-muted-foreground">Si défini, l&apos;utilisateur peut basculer entre ses deux rôles via le bouton 🔄 dans l&apos;application, avec les mêmes identifiants.</p>
-                    <div className="flex flex-wrap gap-1.5 mt-1">
-                      <button type="button"
-                        onClick={() => setForm(prev => ({ ...prev, secondRole: undefined }))}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all ${!form.secondRole ? "text-primary-foreground border-transparent shadow-sm bg-primary" : "bg-background border-border text-muted-foreground hover:text-foreground hover:border-primary"}`}>
-                        Aucun
-                      </button>
-                      {ALL_ROLES.filter(r => r !== form.role && creatableRoles.includes(r)).map(r => (
-                        <button key={r} type="button"
-                          onClick={() => setForm(prev => ({ ...prev, secondRole: r }))}
-                          className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all ${form.secondRole === r ? "text-white border-transparent shadow-sm bg-indigo-600" : "bg-background border-border text-muted-foreground hover:text-foreground hover:border-indigo-400"}`}>
-                          {ROLE_LABELS[r]}
-                        </button>
-                      ))}
+                    <label className="text-xs font-semibold text-foreground">Rôles supplémentaires (multi-sélection)</label>
+                    <p className="text-[10px] text-muted-foreground">
+                      Cochez les rôles supplémentaires. L&apos;utilisateur pourra switcher entre eux via le bouton 🔄 dans l&apos;application avec les mêmes identifiants. Le switch BO ↔ Mobile est automatique selon le rôle sélectionné.
+                    </p>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 mt-2">
+                      {ALL_ROLES.filter(r => r !== form.role && creatableRoles.includes(r)).map(r => {
+                        const checked = (form.extraRoles ?? []).includes(r)
+                        const isMob = isMobileRole(r)
+                        return (
+                          <label key={r} className={`flex items-center gap-2 px-3 py-2 rounded-xl border cursor-pointer transition-all select-none text-xs font-semibold ${checked ? "bg-indigo-50 border-indigo-300 text-indigo-700" : "bg-background border-border text-muted-foreground hover:border-indigo-300"}`}>
+                            <input type="checkbox" checked={checked} onChange={() => {
+                              setForm(prev => {
+                                const cur = prev.extraRoles ?? []
+                                return { ...prev, extraRoles: checked ? cur.filter(x => x !== r) : [...cur, r] }
+                              })
+                            }} className="w-3.5 h-3.5 accent-indigo-600" />
+                            <span className="flex-1 truncate">{ROLE_LABELS[r]}</span>
+                            <span className={`text-[9px] px-1 rounded font-bold ${isMob ? "bg-green-100 text-green-700" : "bg-blue-100 text-blue-700"}`}>{isMob ? "Mob" : "BO"}</span>
+                          </label>
+                        )
+                      })}
                     </div>
-                    {form.secondRole && (
-                      <div className="flex items-center gap-2 mt-1.5 px-3 py-2 rounded-xl bg-indigo-50 border border-indigo-200">
-                        <svg className="w-4 h-4 text-indigo-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>
-                        <p className="text-xs text-indigo-700 font-medium">Ce compte peut switcher entre <strong>{ROLE_LABELS[form.role]}</strong> et <strong>{ROLE_LABELS[form.secondRole]}</strong> avec les mêmes identifiants.</p>
+                    {(form.extraRoles ?? []).length > 0 && (
+                      <div className="flex items-start gap-2 mt-2 px-3 py-2.5 rounded-xl bg-indigo-50 border border-indigo-200">
+                        <svg className="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>
+                        <p className="text-xs text-indigo-700 font-medium">
+                          Ce compte peut switcher entre <strong>{ROLE_LABELS[form.role]}</strong> et{" "}
+                          {(form.extraRoles ?? []).map((r, i) => (
+                            <span key={r}>{i > 0 ? ", " : ""}<strong>{ROLE_LABELS[r]}</strong></span>
+                          ))} avec les mêmes identifiants.
+                        </p>
                       </div>
                     )}
                   </div>
