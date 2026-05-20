@@ -133,7 +133,7 @@ function generateDoc(
   salarie?: Salarie,
 ): string {
   const date = new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })
-  const roleUp = employee.role.replace(/_/g, " ").toUpperCase()
+  const roleUp = (employee.role ?? "").replace(/_/g, " ").toUpperCase()
   const civ  = salarie?.civilite ?? employee.civilite ?? "M."
   const nom  = salarie ? `${salarie.nom} ${salarie.prenom}` : employee.name
   const cin  = salarie?.cin ?? "—"
@@ -141,9 +141,19 @@ function generateDoc(
   const ville = extra.ville ?? "Casablanca"
   const dateEmb = extra.dateDebut ?? salarie?.dateEmbauche ?? date
 
+  const header = `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+                        ${company}
+              Distribution Alimentaire Professionnelle
+            Zone Industrielle, Casablanca, Maroc
+            Tél : +212 5XX-XXXXXX  |  contact@empire-fresh.ma
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+`
+
+  let body = ""
   switch (type) {
     case "contrat":
-      return `CONTRAT DE TRAVAIL À DURÉE INDÉTERMINÉE (CDI)
+      body = `CONTRAT DE TRAVAIL À DURÉE INDÉTERMINÉE (CDI)
 Loi 65-99 — Code du Travail Marocain
 
 ENTRE : ${company} (Employeur)
@@ -176,10 +186,12 @@ Loi 65-99 — Juridiction de ${ville}.
 
 Fait à ${ville}, le ${date}
 
-${company} — Signature & Cachet :          ${civ} ${nom} — Signature (Lu et approuvé) :`
+Empire Fresh — Direction des Ressources Humaines
+Signature & Cachet :          ${civ} ${nom} — Signature (Lu et approuvé) :`
+      break
 
     case "contrat_cdd":
-      return `CONTRAT DE TRAVAIL À DURÉE DÉTERMINÉE (CDD)
+      body = `CONTRAT DE TRAVAIL À DURÉE DÉTERMINÉE (CDD)
 Arts. 16-20 — Loi 65-99 — Code du Travail Marocain
 
 ENTRE : ${company} (Employeur)
@@ -195,10 +207,12 @@ Indemnité de fin de CDD: 5% du total du salaire brut perçu (si non renouvellem
 
 Fait à ${ville}, le ${date}
 
-${company} — Signature & Cachet :          ${civ} ${nom} — Signature :`
+${company} — Direction des Ressources Humaines
+Signature & Cachet :          ${civ} ${nom} — Signature :`
+      break
 
     case "attestation_travail":
-      return `ATTESTATION DE TRAVAIL
+      body = `ATTESTATION DE TRAVAIL
 
 Je soussigné(e), Directeur(rice) Général(e) de ${company}, atteste que :
 
@@ -213,11 +227,12 @@ Délivrée à la demande de l'intéressé(e) pour faire valoir ce que de droit.
 
 Fait à ${ville}, le ${date}
 
-Directeur(rice) Général(e) — ${company}
+Empire Fresh — Direction des Ressources Humaines
 Signature & Cachet :`
+      break
 
     case "attestation_salaire":
-      return `ATTESTATION DE SALAIRE ET DE TRAVAIL
+      body = `ATTESTATION DE SALAIRE ET DE TRAVAIL
 
 Je soussigné(e), Directeur(rice) Général(e) de ${company}, atteste que :
 
@@ -233,11 +248,12 @@ Cotisations légales prélevées à la source (CNSS 4,48% + AMO 2,26% + IR barè
 
 Fait à ${ville}, le ${date}
 
-Directeur(rice) Général(e) — ${company}
+Empire Fresh — Direction des Ressources Humaines
 Signature & Cachet :`
+      break
 
     case "avertissement":
-      return `LETTRE D'AVERTISSEMENT
+      body = `LETTRE D'AVERTISSEMENT
 Réf: AV-${new Date().getFullYear()}-${String(Date.now()).slice(-4)}
 
 À : ${civ} ${nom} — Poste: ${roleUp}
@@ -257,10 +273,11 @@ Vous disposez de 48h pour nous faire parvenir vos observations écrites (Art. 62
 
 Fait à ${ville}, le ${date}
 
-Direction RH — ${company} — Signature & Cachet :`
+Empire Fresh — Direction des Ressources Humaines — Signature & Cachet :`
+      break
 
     case "mise_en_demeure":
-      return `MISE EN DEMEURE FORMELLE (RAR)
+      body = `MISE EN DEMEURE FORMELLE (RAR)
 Réf: MED-${new Date().getFullYear()}-${String(Date.now()).slice(-4)}
 
 À : ${civ} ${nom} — CIN: ${cin} — Poste: ${roleUp}
@@ -279,15 +296,17 @@ Délai de réponse: 72 heures à compter de la réception du présent courrier.
 
 Fait à ${ville}, le ${date}
 
-Directeur(rice) Général(e) — ${company} — Signature & Cachet :
+Empire Fresh — Direction des Ressources Humaines — Signature & Cachet :
 
 Accusé de réception (date & signature du salarié) :`
+      break
 
     case "fiche_paie":
-      return "[Généré via le moteur d'impression — utilisez le bouton Imprimer Bulletin]"
+      body = "[Généré via le moteur d'impression — utilisez le bouton Imprimer Bulletin]"
+      break
 
     case "solde_tout_compte":
-      return `REÇU POUR SOLDE DE TOUT COMPTE
+      body = `REÇU POUR SOLDE DE TOUT COMPTE
 Art. 73-75 — Loi 65-99 — Code du Travail Marocain
 
 Je soussigné(e), ${civ} ${nom}
@@ -309,10 +328,12 @@ Le salarié dispose de 60 jours pour dénoncer ce reçu par lettre recommandée 
 
 Fait à ${ville}, le ${date}
 
-${company} — Signature & Cachet :       ${civ} ${nom} — "Reçu pour solde de tout compte" :`
+Empire Fresh — Direction des Ressources Humaines
+Signature & Cachet :       ${civ} ${nom} — "Reçu pour solde de tout compte" :`
+      break
 
     case "rupture_conventionnelle":
-      return `CONVENTION DE RUPTURE DU CONTRAT
+      body = `CONVENTION DE RUPTURE DU CONTRAT
 D'un commun accord — Art. 36 — Loi 65-99
 
 ENTRE : ${company} (Employeur)
@@ -325,10 +346,12 @@ Art. 4 — Renonciation mutuelle à tout recours ultérieur
 
 Fait à ${ville}, le ${date}
 
-${company} — Signature & Cachet :       ${civ} ${nom} — Signature :`
+Empire Fresh — Direction des Ressources Humaines
+Signature & Cachet :       ${civ} ${nom} — Signature :`
+      break
 
     case "conge_sans_solde":
-      return `AUTORISATION DE CONGÉ SANS SOLDE
+      body = `AUTORISATION DE CONGÉ SANS SOLDE
 Réf: CSS-${new Date().getFullYear()}-${String(Date.now()).slice(-4)}
 
 À : ${civ} ${nom} — Poste: ${roleUp}
@@ -344,11 +367,14 @@ Conditions:
 
 Fait à ${ville}, le ${date}
 
-Direction — ${company} — Signature & Cachet :`
+Empire Fresh — Direction des Ressources Humaines — Signature & Cachet :`
+      break
 
     default:
-      return ""
+      body = ""
   }
+
+  return body ? header + body : ""
 }
 
 
@@ -433,7 +459,7 @@ function exportFichePayeExcel(salaries: { s: Salarie | null; emp: string; brut: 
   const url = URL.createObjectURL(blob)
   const a   = document.createElement("a")
   a.href = url
-  a.download = `Fiches_Paie_${periode.replace(/\s/g, "_")}.xls`
+  a.download = `Fiches_Paie_${(periode ?? "").replace(/\s/g, "_")}.xls`
   a.click()
   URL.revokeObjectURL(url)
 }
@@ -594,7 +620,7 @@ export default function BOHRDocuments({ user }: { user: User }) {
       "caissier": "CAS", "rh": "RH", "comptable": "CPT", "qualité": "QUA",
       "chef dépôt": "CDP", "admin": "ADM",
     }
-    const key = poste.toLowerCase().trim()
+    const key = (poste ?? "").toLowerCase().trim()
     const code = Object.entries(codeMap).find(([k]) => key.includes(k))?.[1] ?? "EMP"
     const existing = store.getSalaries?.().filter((s: {cin?: string}) => s.cin?.startsWith(`FLP-${year}-${code}-`)) ?? []
     const seq = (existing.length + 1).toString().padStart(3, "0")
@@ -602,7 +628,7 @@ export default function BOHRDocuments({ user }: { user: User }) {
   }
 
   const handleSaveSal = () => {
-    if (!salForm.nom.trim() || !salForm.prenom.trim() || !salForm.poste.trim()) return
+    if (!(salForm.nom ?? "").trim() || !(salForm.prenom ?? "").trim() || !(salForm.poste ?? "").trim()) return
     const now = new Date().toISOString()
     if (editingSal) {
       store.updateSalarie(editingSal.id, {
@@ -643,7 +669,10 @@ export default function BOHRDocuments({ user }: { user: User }) {
   const filteredSalaries = useMemo(() =>
     salaries.filter(s => {
       const q = salSearch.toLowerCase()
-      return !q || s.nom.toLowerCase().includes(q) || s.prenom.toLowerCase().includes(q) || s.poste.toLowerCase().includes(q)
+      return !q ||
+        (s.nom ?? "").toLowerCase().includes(q) ||
+        (s.prenom ?? "").toLowerCase().includes(q) ||
+        (s.poste ?? "").toLowerCase().includes(q)
     }),
     [salaries, salSearch]
   )
@@ -654,8 +683,8 @@ export default function BOHRDocuments({ user }: { user: User }) {
   const company = useMemo(() => {
     try {
       const cfg = JSON.parse(localStorage.getItem("fl_company_config") ?? "{}")
-      return cfg.nom ?? "FreshLink Pro"
-    } catch { return "FreshLink Pro" }
+      return cfg.nom ?? "Empire Fresh"
+    } catch { return "Empire Fresh" }
   }, [])
 
   const companyConfig = useMemo(() => {
@@ -750,7 +779,7 @@ export default function BOHRDocuments({ user }: { user: User }) {
     const civ  = linkedSal?.civilite ?? emp.civilite ?? "M."
     return {
       employeNom:      `${civ} ${linkedSal ? `${linkedSal.nom} ${linkedSal.prenom}` : emp.name}`,
-      employeRole:     emp.role.replace(/_/g, " ").toUpperCase(),
+      employeRole:     (emp.role ?? "").replace(/_/g, " ").toUpperCase(),
       employeEmail:    linkedSal?.email ?? emp.email,
       employePhone:    linkedSal?.telephone ?? emp.telephone ?? emp.phone,
       employeMatricule:linkedSal?.cin ?? extra?.matricule,
@@ -791,7 +820,7 @@ export default function BOHRDocuments({ user }: { user: User }) {
     const civ  = emp.civilite ?? "M."
     const data: HRDocData = {
       employeNom:      `${civ} ${emp.name}`,
-      employeRole:     emp.role.replace(/_/g, " ").toUpperCase(),
+      employeRole:     (emp.role ?? "").replace(/_/g, " ").toUpperCase(),
       employeEmail:    emp.email,
       employePhone:    emp.telephone ?? emp.phone,
       societeNom:      companyConfig.nom ?? company,
@@ -840,7 +869,7 @@ export default function BOHRDocuments({ user }: { user: User }) {
     const civ  = emp.civilite ?? "M."
     const data: HRDocData = {
       employeNom:      `${civ} ${emp.name}`,
-      employeRole:     emp.role.replace(/_/g, " ").toUpperCase(),
+      employeRole:     (emp.role ?? "").replace(/_/g, " ").toUpperCase(),
       employeEmail:    emp.email,
       employePhone:    emp.telephone ?? emp.phone,
       societeNom:      companyConfig.nom ?? company,
@@ -1161,7 +1190,7 @@ export default function BOHRDocuments({ user }: { user: User }) {
                           </td>
                           <td className="px-4 py-3">
                             <span className="text-xs font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-full">
-                              {s.typeContrat.toUpperCase()}
+                              {(s.typeContrat ?? "").toUpperCase()}
                             </span>
                           </td>
                           <td className="px-4 py-3 text-slate-600 text-xs">
@@ -1230,7 +1259,7 @@ export default function BOHRDocuments({ user }: { user: User }) {
                                       `Bonjour ${s.civilite} ${s.nom} ${s.prenom},`,
                                       `Votre dossier RH a ete mis a jour.`,
                                       `Poste : ${s.poste}`,
-                                      `Contrat : ${s.typeContrat.toUpperCase()}`,
+                                      `Contrat : ${(s.typeContrat ?? "").toUpperCase()}`,
                                       `Statut : ${STATUT_SALARIE_LABELS[s.statut]}`,
                                     ].join("\n")
                                     sendWhatsApp(s.telephone!, msg)
@@ -1283,7 +1312,7 @@ export default function BOHRDocuments({ user }: { user: User }) {
                       <option value="">-- Choisir --</option>
                       {employees.map(e => (
                         <option key={e.id} value={e.id}>
-                          {e.civilite ? `${e.civilite} ` : ""}{e.name} — {e.role.replace(/_/g, " ")}
+                          {e.civilite ? `${e.civilite} ` : ""}{e.name} — {(e.role ?? "").replace(/_/g, " ")}
                         </option>
                       ))}
                     </select>
@@ -1496,7 +1525,7 @@ export default function BOHRDocuments({ user }: { user: User }) {
                           </td>
                           <td className="px-4 py-3">
                             <span className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-bold ${STATUT_DOC_COLORS[doc.statut] ?? "bg-slate-100 text-slate-600"}`}>
-                              {doc.statut.charAt(0).toUpperCase() + doc.statut.slice(1)}
+                              {(doc.statut ?? "").charAt(0).toUpperCase() + (doc.statut ?? "").slice(1)}
                             </span>
                           </td>
                           <td className="px-4 py-3 text-slate-500 text-xs">{doc.generePar}</td>
@@ -2105,7 +2134,7 @@ export default function BOHRDocuments({ user }: { user: User }) {
                 className="px-4 py-2 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-100 transition-colors">
                 Annuler
               </button>
-              <button onClick={handleSaveSal} disabled={!salForm.nom.trim() || !salForm.prenom.trim() || !salForm.poste.trim()}
+              <button onClick={handleSaveSal} disabled={!(salForm.nom ?? "").trim() || !(salForm.prenom ?? "").trim() || !(salForm.poste ?? "").trim()}
                 className="flex items-center gap-2 px-5 py-2 bg-slate-900 text-white text-sm font-semibold rounded-xl hover:bg-slate-700 disabled:opacity-40 transition-colors">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />

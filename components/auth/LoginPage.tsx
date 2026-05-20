@@ -126,7 +126,7 @@ const DEMO_EXTERNAL = [
   },
 ]
 
-type ExternalType = "client" | "fournisseur" | "chr"
+type ExternalType = "particulier" | "marchand" | "chr" | "fournisseur"
 
 function generatePassword(len = 10): string {
   const chars = "ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#"
@@ -162,6 +162,7 @@ export default function LoginPage({ onLogin }: Props) {
   const [loading, setLoading] = useState(false)
   const [showPwd, setShowPwd] = useState(false)
   const [clientMode, setClientMode] = useState(false)
+  const [chrPwd, setChrPwd] = useState("")
   const [pendingUser, setPendingUser] = useState<User | null>(null)
   const [showForgot, setShowForgot] = useState(false)
   const [forgotEmail, setForgotEmail] = useState("")
@@ -169,6 +170,30 @@ export default function LoginPage({ onLogin }: Props) {
   const [showDemo, setShowDemo] = useState(false)
   const [selectedGroup, setSelectedGroup] = useState<DemoGroup>("Direction")
   const [externalType, setExternalType] = useState<ExternalType>("client")
+
+  // ── Must-change-password flow ────────────────────────────────────────────────
+  const [mustChangePwd, setMustChangePwd]     = useState<User | null>(null)
+  const [newPwd1, setNewPwd1]                 = useState("")
+  const [newPwd2, setNewPwd2]                 = useState("")
+  const [changePwdError, setChangePwdError]   = useState("")
+  const [changePwdLoading, setChangePwdLoading] = useState(false)
+
+  const handleChangePassword = async () => {
+    if (!mustChangePwd) return
+    if (newPwd1.length < 6) { setChangePwdError("Minimum 6 caractères requis"); return }
+    if (newPwd1 !== newPwd2) { setChangePwdError("Les mots de passe ne correspondent pas"); return }
+    setChangePwdLoading(true)
+    const users = store.getUsers()
+    const idx = users.findIndex(u => u.id === mustChangePwd.id)
+    if (idx >= 0) {
+      users[idx] = { ...users[idx], password: newPwd1, mustChangePassword: false }
+      store.saveUsers(users)
+    }
+    const updatedUser = { ...mustChangePwd, password: newPwd1, mustChangePassword: false }
+    setChangePwdLoading(false)
+    setMustChangePwd(null)
+    await offerBiometricAfterLogin(updatedUser)
+  }
 
   // ── Entrance animations ──────────────────────────────────────────────────────
   const [companyBrand, setCompanyBrand] = useState(() => store.getCompanyConfig())
@@ -292,38 +317,52 @@ export default function LoginPage({ onLogin }: Props) {
     setLoading(true); setError("")
     await new Promise(r => setTimeout(r, 300))
     if (clientMode) {
-      if (!identifier.trim()) { setError("Veuillez entrer votre identifiant"); setLoading(false); return }
+      if (!identifier.trim()) { setError("Veuillez entrer votre identifiant / دخل اسمك أو رقمك"); setLoading(false); return }
       const raw = identifier.trim()
       const isPhone = /^[\+0]/.test(raw) && raw.replace(/[\s\-\.]/g, "").length >= 8
       const isEmail = raw.includes("@")
+      // Map UI type to store login type
+      const loginSubtype = externalType === "chr" ? "chr" : externalType === "fournisseur" ? "fournisseur" : "client"
       if (externalType === "chr" && !isPhone && !isEmail) {
-        setError("CHR : utilisez votre adresse email ou numéro de téléphone")
+        setError("CHR : utilisez votre email ou téléphone / CHR: دير الإيميل ولا الهاتف")
         setLoading(false); return
       }
-      const extUser = store.loginExternal(raw, externalType)
-      if (extUser) { onLogin(extUser) }
-      else { setError("Identifiant non trouvé. Contactez votre commercial FreshLink."); setLoading(false) }
+      const extUser = store.loginExternal(raw, loginSubtype)
+      if (!extUser) { setError("Identifiant non trouvé — contactez votre commercial / ما لقيناكش — تواصل مع المسؤول"); setLoading(false); return }
+      // CHR clients require a password
+      if (externalType === "chr") {
+        if (!chrPwd.trim()) { setError("Mot de passe requis pour les clients CHR / كلمة السر ضرورية"); setLoading(false); return }
+        if (extUser.password && extUser.password !== chrPwd.trim()) {
+          setError("Mot de passe incorrect / كلمة السر خاطئة"); setLoading(false); return
+        }
+      }
+      onLogin(extUser)
       return
     }
     if (!identifier.trim() || !password.trim()) { setError("Remplissez tous les champs"); setLoading(false); return }
     const user = store.login(identifier.trim(), password)
     if (user) {
+      // First-login: must change password before continuing
+      if (user.mustChangePassword) {
+        setMustChangePwd(user)
+        setLoading(false)
+        return
+      }
+      // Offer biometric enrollment after first successful password login
+      setLoggedInUser(user)
+      if (biometricSupported && !getStoredCreds().some(c => c.userId === user.id)) {
+        setShowBiometricTip(true)
+        setLoading(false)
+        return
+      }
       const iface = getUserInterface(user)
       if (iface === "both") {
         const forcedView = store.loginGetForcedView(identifier.trim(), password)
         if (forcedView) {
-          // offer biometric after forced-view login
-          setLoggedInUser(user)
-          if (biometricSupported && !getStoredCreds().some(c => c.userId === user.id)) {
-            setShowBiometricTip(true); setLoading(false)
-          } else { onLogin(user, forcedView) }
+          onLogin(user, forcedView)
         } else { setPendingUser(user); setLoading(false) }
       } else {
-        // offer biometric enrollment for non-dual-interface users
-        setLoggedInUser(user)
-        if (biometricSupported && !getStoredCreds().some(c => c.userId === user.id)) {
-          setShowBiometricTip(true); setLoading(false)
-        } else { onLogin(user) }
+        onLogin(user)
       }
     } else { setError("Identifiant ou mot de passe incorrect"); setLoading(false) }
   }
@@ -332,13 +371,82 @@ export default function LoginPage({ onLogin }: Props) {
     if (!forgotEmail.trim() || !forgotEmail.includes("@")) { setForgotStatus("notfound"); return }
     setForgotStatus("sending")
     const users = store.getUsers()
-    const found = users.find(u => u.email.toLowerCase() === forgotEmail.toLowerCase().trim())
+    const found = users.find(u => (u.email ?? "").toLowerCase() === forgotEmail.toLowerCase().trim())
     if (!found) { setForgotStatus("notfound"); return }
     const newPwd = generatePassword()
     const idx = users.findIndex(u => u.id === found.id)
     if (idx >= 0) { users[idx] = { ...users[idx], password: newPwd }; store.saveUsers(users) }
     await sendEmail({ to_email: found.email, subject: "FreshLink Pro — Nouveau mot de passe", body: `Bonjour ${found.name},\n\nVotre nouveau mot de passe FreshLink Pro :\n  Email : ${found.email}\n  Mot de passe : ${newPwd}\n\nMerci de le changer lors de votre prochaine connexion.` })
     setForgotStatus("sent")
+  }
+
+  // ── Must-change-password screen ──────────────────────────────────────────────
+  if (mustChangePwd) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 p-6 font-sans">
+        <div className="w-full max-w-sm bg-white rounded-2xl border border-amber-200 shadow-lg p-8 flex flex-col gap-6">
+          <div className="flex flex-col items-center gap-3 text-center">
+            <div className="w-14 h-14 rounded-2xl bg-amber-100 flex items-center justify-center">
+              <svg className="w-7 h-7 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-base font-black text-slate-800">Changement de mot de passe requis</p>
+              <p className="text-xs text-slate-500 mt-1">Bonjour <strong>{mustChangePwd.name}</strong> — créez votre mot de passe personnel avant de continuer.</p>
+              <p className="text-[10px] text-amber-600 mt-1 font-semibold" dir="rtl">مرحبا — يرجى تغيير كلمة السر الخاصة بك</p>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-slate-600">Nouveau mot de passe</label>
+              <input
+                type="password"
+                value={newPwd1}
+                onChange={e => { setNewPwd1(e.target.value); setChangePwdError("") }}
+                placeholder="Min. 6 caractères"
+                className="px-3 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-slate-600">Confirmer le mot de passe</label>
+              <input
+                type="password"
+                value={newPwd2}
+                onChange={e => { setNewPwd2(e.target.value); setChangePwdError("") }}
+                placeholder="Répétez le mot de passe"
+                className="px-3 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
+              />
+            </div>
+
+            {changePwdError && (
+              <p className="text-xs text-red-600 font-medium px-1">{changePwdError}</p>
+            )}
+
+            {/* Password strength indicator */}
+            <div className="flex gap-1">
+              {[4, 6, 8, 10].map(min => (
+                <div key={min} className={`h-1 flex-1 rounded-full transition-colors ${
+                  newPwd1.length >= min ? "bg-green-500" : "bg-slate-200"
+                }`} />
+              ))}
+            </div>
+            <p className="text-[10px] text-slate-400 text-center">
+              {newPwd1.length < 4 ? "Trop court" : newPwd1.length < 6 ? "Faible" : newPwd1.length < 8 ? "Bon" : "Fort ✓"}
+            </p>
+
+            <button
+              onClick={handleChangePassword}
+              disabled={changePwdLoading || newPwd1.length < 6}
+              className="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-sm font-bold transition-colors disabled:opacity-50"
+            >
+              {changePwdLoading ? "Enregistrement..." : "Confirmer mon mot de passe"}
+            </button>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   // ── Interface picker ─────────────────────────────────────────────────────────
@@ -528,15 +636,114 @@ export default function LoginPage({ onLogin }: Props) {
       </div>
 
       {/* ── Right — login form ─────────────────────────────────────────────────── */}
-      <div className="flex-1 flex items-center justify-center overflow-y-auto p-4 sm:p-6"
+      <div className="flex-1 flex flex-col items-center justify-start overflow-y-auto p-4 sm:p-6 pt-6"
         style={{
           backgroundImage: "radial-gradient(circle at 1px 1px, rgba(0,0,0,0.035) 1px, transparent 0)",
           backgroundSize: "22px 22px",
         }}>
+
+        {/* ── Hero banner — fraîcheur de la ferme à vous ── */}
+        <div className="w-full max-w-[390px] mb-4">
+          <style>{`
+            @keyframes truck-move {
+              0%   { transform: translateX(-8px); }
+              50%  { transform: translateX(8px); }
+              100% { transform: translateX(-8px); }
+            }
+            @keyframes leaf-bounce {
+              0%, 100% { transform: translateY(0) rotate(-5deg); }
+              50%       { transform: translateY(-4px) rotate(5deg); }
+            }
+            @keyframes dot-flow {
+              0%   { opacity: 0.2; transform: scaleX(0.6); }
+              50%  { opacity: 1;   transform: scaleX(1); }
+              100% { opacity: 0.2; transform: scaleX(0.6); }
+            }
+            @keyframes fresh-pulse {
+              0%, 100% { box-shadow: 0 0 0 0 rgba(16,185,129,0.3); }
+              50%       { box-shadow: 0 0 0 8px rgba(16,185,129,0); }
+            }
+          `}</style>
+
+          <div className="relative overflow-hidden rounded-2xl border border-green-200 bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 p-4">
+            {/* Top — logo + brand */}
+            <div className="flex items-center justify-center gap-3 mb-3">
+              <div style={{ animation: "fresh-pulse 2s ease-in-out infinite" }} className="rounded-xl">
+                <FreshLinkLogo size={36} />
+              </div>
+              <div>
+                <p className="text-sm font-black text-green-900">
+                  {companyBrand.nom || companyBrand.appName || "Empire Fresh"}
+                </p>
+                <p className="text-[10px] font-semibold text-green-600">Distribution alimentaire professionnelle</p>
+              </div>
+            </div>
+
+            {/* Journey animation — ferme → camion → vous */}
+            <div className="flex items-center justify-between gap-1 px-2">
+              {/* Farm */}
+              <div className="flex flex-col items-center gap-1 shrink-0">
+                <div className="w-11 h-11 rounded-xl bg-white border border-green-200 flex items-center justify-center shadow-sm"
+                  style={{ animation: "leaf-bounce 2.5s ease-in-out infinite" }}>
+                  <span className="text-xl">🌿</span>
+                </div>
+                <span className="text-[8px] font-bold text-green-700 uppercase tracking-wide">Ferme</span>
+                <span className="text-[8px] text-green-600 font-semibold" dir="rtl">الزرع</span>
+              </div>
+
+              {/* Animated dots left */}
+              <div className="flex-1 flex items-center justify-center gap-0.5">
+                {[0,1,2,3].map(i => (
+                  <div key={i} className="h-1 rounded-full bg-green-400"
+                    style={{ width: "18%", animation: `dot-flow 1.4s ease-in-out ${i * 0.2}s infinite` }} />
+                ))}
+              </div>
+
+              {/* Truck */}
+              <div className="flex flex-col items-center gap-1 shrink-0">
+                <div className="w-11 h-11 rounded-xl bg-white border border-emerald-200 flex items-center justify-center shadow-sm"
+                  style={{ animation: "truck-move 2s ease-in-out infinite" }}>
+                  <span className="text-xl">🚛</span>
+                </div>
+                <span className="text-[8px] font-bold text-emerald-700 uppercase tracking-wide">Livraison</span>
+                <span className="text-[8px] text-emerald-600 font-semibold" dir="rtl">التوصيل</span>
+              </div>
+
+              {/* Animated dots right */}
+              <div className="flex-1 flex items-center justify-center gap-0.5">
+                {[0,1,2,3].map(i => (
+                  <div key={i} className="h-1 rounded-full bg-teal-400"
+                    style={{ width: "18%", animation: `dot-flow 1.4s ease-in-out ${i * 0.2 + 0.3}s infinite` }} />
+                ))}
+              </div>
+
+              {/* You */}
+              <div className="flex flex-col items-center gap-1 shrink-0">
+                <div className="w-11 h-11 rounded-xl bg-white border border-teal-200 flex items-center justify-center shadow-sm"
+                  style={{ animation: "leaf-bounce 2.5s ease-in-out 0.5s infinite" }}>
+                  <span className="text-xl">🏪</span>
+                </div>
+                <span className="text-[8px] font-bold text-teal-700 uppercase tracking-wide">Vous</span>
+                <span className="text-[8px] text-teal-600 font-semibold" dir="rtl">ليكم</span>
+              </div>
+            </div>
+
+            {/* Tagline FR + Darija */}
+            <div className="text-center mt-3 space-y-0.5">
+              <p className="text-[10px] font-semibold text-green-700 opacity-90">
+                ✨ Fraîcheur garantie — de la récolte à votre table
+              </p>
+              <p className="text-[10px] font-semibold text-green-600 opacity-70" dir="rtl">
+                🌟 طازج ومضمون — من الزرع حتى لعندكم
+              </p>
+            </div>
+          </div>
+        </div>
+
         <div className="w-full max-w-[390px] flex flex-col gap-3.5">
 
-          {/* Mobile logo */}
-          <div className="md:hidden flex items-center mb-1">
+          {/* Mobile logo — hidden (now shown in hero) */}
+          <div className="md:hidden hidden flex items-center mb-1">
             <FreshLinkLogo size={34} />
           </div>
 
@@ -544,39 +751,59 @@ export default function LoginPage({ onLogin }: Props) {
           <div>
             <h1 className="text-xl font-black text-slate-800">Connexion</h1>
             <p className="text-xs text-slate-500 mt-0.5">
-              {clientMode
-                ? externalType === "chr" ? "Portail CHR — email ou téléphone" : `Portail ${externalType} — nom, téléphone ou email`
-                : "Email ou nom d'utilisateur"}
+              {clientMode ? "Espace Clients & Fournisseurs / فضاء الزبائن والموردين" : "Email ou nom d'utilisateur"}
             </p>
           </div>
 
-          {/* Mode switcher */}
-          <div className="flex rounded-xl overflow-hidden p-1 bg-white border border-slate-200 shadow-sm">
-            <button type="button" onClick={() => { setClientMode(false); setError("") }}
-              className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${!clientMode ? "bg-green-600 text-white shadow-sm" : "text-slate-500 hover:text-slate-700"}`}>
-              Personnel / Equipe
+          {/* ── Tab switcher: Personnel | Externe ── */}
+          <div className="flex rounded-2xl overflow-hidden border border-slate-200 bg-slate-100 p-1 gap-1">
+            <button type="button"
+              onClick={() => { setClientMode(false); setIdentifier(""); setPassword(""); setError("") }}
+              className={`flex-1 py-2.5 rounded-xl text-[11px] font-bold transition-all flex flex-col items-center gap-0.5 ${
+                !clientMode ? "bg-white text-green-700 shadow-sm" : "text-slate-500 hover:text-slate-700"
+              }`}>
+              <span>👔 Personnel / Équipe</span>
+              <span className="text-[9px] font-medium opacity-60">فريق العمل</span>
             </button>
-            <button type="button" onClick={() => { setClientMode(true); setError("") }}
-              className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${clientMode ? "bg-green-600 text-white shadow-sm" : "text-slate-500 hover:text-slate-700"}`}>
-              Externe / خارجي
+            <button type="button"
+              onClick={() => { setClientMode(true); setExternalType("particulier"); setIdentifier(""); setChrPwd(""); setError("") }}
+              className={`flex-1 py-2.5 rounded-xl text-[11px] font-bold transition-all flex flex-col items-center gap-0.5 ${
+                clientMode ? "bg-white text-purple-700 shadow-sm" : "text-slate-500 hover:text-slate-700"
+              }`}>
+              <span>🌐 Externe / خارجي</span>
+              <span className="text-[9px] font-medium opacity-60">زبائن وموردين</span>
             </button>
           </div>
 
           {/* Login form */}
           <form onSubmit={handleSubmit} className="flex flex-col gap-2.5" autoComplete="off">
 
-            {/* External sub-type selector */}
+            {/* ── External type selector — Particulier / Marchand / CHR / Fournisseur ── */}
             {clientMode && (
-              <div className="flex rounded-xl overflow-hidden p-1 bg-slate-100 border border-slate-200">
-                {(["client", "fournisseur", "chr"] as ExternalType[]).map(t => (
-                  <button key={t} type="button"
-                    onClick={() => { setExternalType(t); setIdentifier(""); setError("") }}
-                    className={`flex-1 py-1.5 text-[10px] font-bold rounded-lg transition-all ${
-                      externalType === t ? "bg-white text-green-700 shadow-sm" : "text-slate-400 hover:text-slate-600"
-                    }`}>
-                    {t === "client" ? "🛒 Client" : t === "fournisseur" ? "🚚 Fournisseur" : "🏨 CHR"}
-                  </button>
-                ))}
+              <div className="grid grid-cols-2 gap-2">
+                {([
+                  { type: "particulier" as ExternalType, icon: "🛒", label: "Particulier", labelDarija: "زبون عادي", color: "blue" },
+                  { type: "marchand"    as ExternalType, icon: "🏪", label: "Marchand",    labelDarija: "تاجر",       color: "amber" },
+                  { type: "chr"        as ExternalType, icon: "🏨", label: "CHR / HORECA", labelDarija: "فنادق وماكلة", color: "purple" },
+                  { type: "fournisseur" as ExternalType, icon: "🚚", label: "Fournisseur",  labelDarija: "مورد",       color: "emerald" },
+                ] satisfies { type: ExternalType; icon: string; label: string; labelDarija: string; color: string }[]).map(opt => {
+                  const isSelected = externalType === opt.type
+                  const colors: Record<string, string> = {
+                    blue:    isSelected ? "border-blue-400 bg-blue-50 text-blue-700"    : "border-slate-200 bg-white text-slate-500",
+                    amber:   isSelected ? "border-amber-400 bg-amber-50 text-amber-700"  : "border-slate-200 bg-white text-slate-500",
+                    purple:  isSelected ? "border-purple-400 bg-purple-50 text-purple-700": "border-slate-200 bg-white text-slate-500",
+                    emerald: isSelected ? "border-emerald-400 bg-emerald-50 text-emerald-700": "border-slate-200 bg-white text-slate-500",
+                  }
+                  return (
+                    <button key={opt.type} type="button"
+                      onClick={() => { setExternalType(opt.type); setIdentifier(""); setChrPwd(""); setError("") }}
+                      className={`flex flex-col items-center gap-1 py-3 px-2 rounded-xl border-2 transition-all text-center ${colors[opt.color]} ${isSelected ? "shadow-sm" : "hover:border-slate-300"}`}>
+                      <span className="text-xl">{opt.icon}</span>
+                      <span className="text-[10px] font-bold leading-tight">{opt.label}</span>
+                      <span className="text-[9px] opacity-60 leading-tight" dir="rtl">{opt.labelDarija}</span>
+                    </button>
+                  )
+                })}
               </div>
             )}
 
@@ -613,6 +840,24 @@ export default function LoginPage({ onLogin }: Props) {
                     ? "📧 Adresse email détectée"
                     : "👤 Nom d'utilisateur détecté"}
               </p>
+            )}
+
+            {/* CHR password field */}
+            {clientMode && externalType === "chr" && (
+              <div className="relative">
+                <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-purple-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+                <input
+                  type="password"
+                  value={chrPwd}
+                  onChange={e => { setChrPwd(e.target.value); setError("") }}
+                  placeholder="Mot de passe CHR"
+                  className="w-full pl-9 pr-4 py-2.5 rounded-xl text-sm border border-purple-200 bg-purple-50 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-400/30 focus:border-purple-400 transition-all shadow-sm"
+                  autoComplete="off"
+                  data-lpignore="true"
+                />
+              </div>
             )}
 
             {/* Password */}

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { store, type CompanyConfig } from "@/lib/store"
+import ComboBox, { type ComboItem } from "@/components/ui/ComboBox"
 
 // ──────────────────────────────────────────────────────────────
 // TYPES
@@ -112,6 +113,28 @@ function DocumentForm({
   userName: string
   company: CompanyConfig
 }) {
+  // Articles du catalogue pour autocomplete des lignes
+  const articleItems: ComboItem[] = store.getArticles().map(a => ({
+    id: a.id,
+    label: a.nom,
+    sublabel: a.famille,
+    badge: a.unite,
+    badgeColor: "bg-slate-100 text-slate-600",
+  }))
+
+  // Clients CHR pour autocomplete
+  const clientItems: ComboItem[] = clients.map(c => {
+    const isChr = c.type === "chr" || (c as unknown as Record<string, unknown>).categorie === "chr"
+    const badgeLabel = isChr ? "CHR" : c.type ? c.type.toUpperCase() : undefined
+    const badgeColor = isChr ? "bg-purple-100 text-purple-700" : "bg-slate-100 text-slate-500"
+    return {
+      id: c.id,
+      label: c.nom,
+      sublabel: c.telephone ?? c.email ?? undefined,
+      badge: badgeLabel,
+      badgeColor,
+    }
+  })
   const [form, setForm] = useState<Partial<Document>>({
     type_doc: "devis",
     client_nom: "",
@@ -220,11 +243,15 @@ function DocumentForm({
           </select>
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Client</label>
-          <select value={form.client_id ?? ""} onChange={e => handleClientSelect(e.target.value)} className="px-3 py-2 rounded-xl border border-border bg-background text-sm">
-            <option value="">— Choisir un client —</option>
-            {clients.map(c => <option key={c.id} value={c.id}>{c.nom}</option>)}
-          </select>
+          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+            Client CHR / HORECA
+          </label>
+          <ComboBox
+            items={clientItems}
+            value={form.client_id ?? ""}
+            onChange={(id, label) => { set("client_id", id); set("client_nom", label) }}
+            placeholder="Rechercher un client CHR…"
+          />
         </div>
       </div>
 
@@ -271,8 +298,22 @@ function DocumentForm({
             <tbody>
               {(form.lignes ?? []).map((l, i) => (
                 <tr key={i} className="border-t border-border">
-                  <td className="px-2 py-1.5">
-                    <input value={l.designation} onChange={e => updateLigne(i, "designation", e.target.value)} placeholder="Tomates, Légumes…" className="w-full px-2 py-1 rounded-lg border border-border bg-background text-sm" />
+                  <td className="px-2 py-1.5 min-w-[180px]">
+                    <ComboBox
+                      items={articleItems}
+                      value=""
+                      inputValue={l.designation}
+                      onChange={(_id, label) => {
+                        // Remplir désignation + unité depuis le catalogue
+                        const art = store.getArticles().find(a => a.nom === label)
+                        updateLigne(i, "designation", label)
+                        if (art?.unite) updateLigne(i, "unite", art.unite)
+                      }}
+                      onInputChange={txt => updateLigne(i, "designation", txt)}
+                      placeholder="Article…"
+                      allowFreeText
+                      className="px-2 py-1 text-sm rounded-lg"
+                    />
                   </td>
                   <td className="px-2 py-1.5">
                     <input type="number" value={l.qte} onChange={e => updateLigne(i, "qte", Number(e.target.value))} min={0} className="w-full px-2 py-1 rounded-lg border border-border bg-background text-sm text-right" />
@@ -398,8 +439,9 @@ function generateDocumentHTML(doc: Document, company: CompanyConfig): string {
   .page { max-width: 900px; margin: 0 auto; padding: 40px; }
   .header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:32px; border-bottom:3px solid #1a4f2a; padding-bottom:20px; }
   .logo-block { display:flex; flex-direction:column; gap:4px; }
-  .company-name { font-size:24px; font-weight:900; color:#1a4f2a; letter-spacing:-0.5px; }
-  .company-sub { font-size:12px; color:#6b7280; }
+  .company-name { font-size:28px; font-weight:900; color:#1a4f2a; letter-spacing:-0.5px; }
+  .company-tagline { font-size:11px; font-weight:700; color:#15803d; letter-spacing:2px; text-transform:uppercase; margin-top:2px; }
+  .company-sub { font-size:11px; color:#6b7280; margin-top:1px; }
   .doc-block { text-align:right; }
   .doc-type { font-size:22px; font-weight:800; color:#1a4f2a; text-transform:uppercase; }
   .doc-num { font-size:14px; color:#374151; font-weight:600; margin-top:4px; }
@@ -440,9 +482,10 @@ function generateDocumentHTML(doc: Document, company: CompanyConfig): string {
     <div class="logo-block">
       ${company.logo ? `<img src="${company.logo}" style="height:60px;object-fit:contain;margin-bottom:8px" alt="Logo" />` : ""}
       <div class="company-name">${company.nom || "Empire Fresh"}</div>
-      <div class="company-sub">${company.adresse ? company.adresse + " — " : ""}${company.ville || "Casablanca"}, ${company.pays || "Maroc"}</div>
-      ${company.telephone ? `<div class="company-sub">Tél : ${company.telephone}</div>` : ""}
-      ${company.email ? `<div class="company-sub">Email : ${company.email}</div>` : ""}
+      <div class="company-tagline">Distribution Alimentaire Professionnelle</div>
+      <div class="company-sub" style="margin-top:6px;font-style:italic;color:#6b7280">Qualité • Fiabilité • Fraîcheur</div>
+      <div class="company-sub" style="margin-top:6px">${company.adresse || "Zone Industrielle"}${company.ville ? " — " + company.ville : ", Casablanca"}, ${company.pays || "Maroc"}</div>
+      <div class="company-sub">Tél : ${company.telephone || "+212 5XX-XXXXXX"}  |  ${company.email || "contact@empire-fresh.ma"}</div>
       ${company.ice ? `<div class="company-sub">ICE : ${company.ice}</div>` : ""}
     </div>
     <div class="doc-block">
@@ -520,7 +563,9 @@ function generateDocumentHTML(doc: Document, company: CompanyConfig): string {
       <div class="signature-block">
         <div class="sig-label">Fournisseur</div>
         <div class="sig-line"></div>
-        <div style="font-size:11px;color:#6b7280">${company.nom || "Empire Fresh"}</div>
+        <div style="font-size:11px;font-weight:700;color:#1a4f2a">${company.nom || "Empire Fresh"}</div>
+        <div style="font-size:10px;color:#6b7280">Distribution Alimentaire Professionnelle</div>
+        <div style="font-size:10px;color:#6b7280">${company.email || "contact@empire-fresh.ma"}</div>
       </div>
       <div class="signature-block">
         <div class="sig-label">Client — Lu et approuvé</div>
@@ -544,6 +589,30 @@ function printDocument(doc: Document, company: CompanyConfig) {
   setTimeout(() => { w.print() }, 500)
 }
 
+function downloadDocument(doc: Document, company: CompanyConfig) {
+  const html = generateDocumentHTML(doc, company)
+  const blob = new Blob([html], { type: "text/html;charset=utf-8" })
+  const url = URL.createObjectURL(blob)
+  const a = window.document.createElement("a")
+  a.href = url
+  a.download = `${doc.type_doc === "devis" ? "Devis" : doc.type_doc === "contrat" ? "Contrat" : "Document"}-${doc.numero}-${doc.client_nom.replace(/\s+/g, "_")}.html`
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+function shareWhatsApp(doc: Document) {
+  const total = doc.tva_pct > 0 ? doc.montant_ttc : doc.montant_net
+  const text = `*${TYPE_LABELS[doc.type_doc]} N° ${doc.numero}*\nClient : ${doc.client_nom}\nMontant : ${total.toFixed(2)} DH\nDate : ${new Date(doc.date_doc).toLocaleDateString("fr-FR")}\nStatut : ${STATUT_LABELS[doc.statut]}`
+  window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank")
+}
+
+function shareEmail(doc: Document, company: CompanyConfig) {
+  const total = doc.tva_pct > 0 ? doc.montant_ttc : doc.montant_net
+  const subject = `${TYPE_LABELS[doc.type_doc]} N° ${doc.numero} — ${doc.client_nom}`
+  const body = `Bonjour,\n\nVeuillez trouver ci-joint le ${TYPE_LABELS[doc.type_doc].toLowerCase()} N° ${doc.numero}.\n\nClient : ${doc.client_nom}\nMontant total TTC : ${total.toFixed(2)} DH\nDate : ${new Date(doc.date_doc).toLocaleDateString("fr-FR")}${doc.date_validite ? `\nValidité : ${new Date(doc.date_validite).toLocaleDateString("fr-FR")}` : ""}\n\nCordialement,\n${company.nom || "Empire Fresh"}\nDistribution Alimentaire Professionnelle\n${company.email || "contact@empire-fresh.ma"}`
+  window.open(`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, "_blank")
+}
+
 // ──────────────────────────────────────────────────────────────
 // COMPOSANT PRINCIPAL
 // ──────────────────────────────────────────────────────────────
@@ -561,45 +630,144 @@ export default function BODocuments({ user }: { user: { id: string; name: string
   const [search, setSearch]   = useState("")
   const [saving, setSaving]   = useState(false)
   const [msg, setMsg]         = useState<{ ok: boolean; text: string } | null>(null)
+  const [uploading, setUploading] = useState(false)
   const company = store.getCompanyConfig()
 
   const sb = createClient()
 
   const load = useCallback(async () => {
     setLoading(true)
+
+    // Toujours charger le localStorage en premier (fallback quand table Supabase inexistante)
+    const localDocs: Document[] = (() => {
+      try { return JSON.parse(localStorage.getItem("fl_documents_local") ?? "[]") } catch { return [] }
+    })()
+
     try {
       const { data, error } = await sb.from("fl_documents").select("*").order("created_at", { ascending: false })
       if (error && (error.message?.includes("schema cache") || error.message?.includes("does not exist") || error.code === "42P01" || error.code === "PGRST204")) {
         setTablesMissing(true)
+        setDocs(localDocs.sort((a, b) => b.created_at.localeCompare(a.created_at)))
+      } else if (!error && data) {
+        const sbIds = new Set((data as Document[]).map(d => d.id))
+        const extra = localDocs.filter(d => !sbIds.has(d.id))
+        setDocs([...(data as Document[]), ...extra])
       } else {
-        setDocs((data ?? []) as Document[])
+        setDocs(localDocs.sort((a, b) => b.created_at.localeCompare(a.created_at)))
       }
-    } catch { /* offline */ }
+    } catch {
+      setDocs(localDocs.sort((a, b) => b.created_at.localeCompare(a.created_at)))
+    }
+
+    // Load CHR clients — local store + Supabase simultaneously, merge and deduplicate
+    // CHR = type==="chr" OR categorie==="chr"
+    const isChr = (rec: Record<string,unknown>) => rec.type === "chr" || rec.categorie === "chr"
     try {
-      const { data } = await sb.from("fl_clients").select("id,nom,type,telephone,email,adresse,ville").eq("actif", true).order("nom")
-      setClients((data ?? []) as ClientRecord[])
-    } catch { /* offline */ }
+      // 1. Local store immediately (fast)
+      const localAll = store.getClients()
+      const toRecord = (c: typeof localAll[0]): ClientRecord => ({
+        id: c.id,
+        nom: c.nom,
+        type: String((c as unknown as Record<string,unknown>).type ?? c.categorie ?? ""),
+        telephone: c.telephone,
+        email: c.email,
+        adresse: c.adresse,
+      })
+      const localChr = localAll.filter(c => isChr(c as unknown as Record<string,unknown>))
+      if (localChr.length > 0) {
+        setClients(localChr.map(toRecord).sort((a, b) => a.nom.localeCompare(b.nom, "fr")))
+      }
+
+      // 2. Supabase in parallel — always try to get fresh data
+      const { data } = await sb.from("fl_clients").select("id, payload")
+      if (data && data.length > 0) {
+        const sbChr = (data as { id: string; payload: Record<string, unknown> }[])
+          .filter(r => r.payload?.nom && isChr(r.payload))
+          .map(r => ({
+            id: r.id,
+            nom: String(r.payload?.nom ?? ""),
+            type: String(r.payload?.type ?? r.payload?.categorie ?? "chr"),
+            telephone: r.payload?.telephone as string | undefined,
+            email: r.payload?.email as string | undefined,
+            adresse: r.payload?.adresse as string | undefined,
+            ville: r.payload?.ville as string | undefined,
+          } as ClientRecord))
+          .sort((a, b) => a.nom.localeCompare(b.nom, "fr"))
+        // Merge: Supabase wins, fill gaps with local CHR
+        const ids = new Set(sbChr.map(c => c.id))
+        const localExtra = localChr.map(toRecord).filter(c => !ids.has(c.id))
+        const merged = [...sbChr, ...localExtra].sort((a, b) => a.nom.localeCompare(b.nom, "fr"))
+        if (merged.length > 0) setClients(merged)
+      }
+    } catch { /* offline — local store data already shown */ }
+
     setLoading(false)
   }, [sb])
 
   useEffect(() => { load() }, [load])
 
+  // ── Helpers ──────────────────────────────────────────────────
+  const extractError = (e: unknown): string => {
+    if (e instanceof Error) return e.message
+    const obj = e as Record<string, unknown>
+    return (obj?.message as string) ?? (obj?.details as string) ?? (obj?.hint as string) ?? JSON.stringify(e)
+  }
+
+  const genNumeroLocal = (type: DocType): string => {
+    const prefix = type === "devis" ? "DEV" : type === "contrat" ? "CTR" : type === "facture" ? "FAC" : "DOC"
+    const yy = new Date().getFullYear().toString().slice(-2)
+    const seq = String(Date.now()).slice(-4)
+    return `${prefix}-${yy}-${seq}`
+  }
+
+  const saveDocLocal = (doc: Document) => {
+    try {
+      const stored: Document[] = JSON.parse(localStorage.getItem("fl_documents_local") ?? "[]")
+      const idx = stored.findIndex(d => d.id === doc.id)
+      if (idx >= 0) stored[idx] = doc; else stored.unshift(doc)
+      localStorage.setItem("fl_documents_local", JSON.stringify(stored))
+    } catch { /* ignore */ }
+  }
+
   const handleSave = async (doc: Document) => {
     setSaving(true)
     try {
-      const { data: numData } = await sb.rpc("generate_document_number", { p_type: doc.type_doc } as any)
-      const saveDoc = { ...doc, numero: doc.numero.startsWith("TEMP") ? (numData ?? doc.numero) : doc.numero }
+      // 1. Générer numéro (RPC ou fallback local)
+      let numero = doc.numero
+      if (numero.startsWith("TEMP")) {
+        try {
+          const { data: numData } = await sb.rpc("generate_document_number", { p_type: doc.type_doc } as any)
+          numero = typeof numData === "string" ? numData : genNumeroLocal(doc.type_doc)
+        } catch {
+          numero = genNumeroLocal(doc.type_doc)
+        }
+      }
+      const saveDoc = { ...doc, numero }
 
+      // 2. Sauvegarder dans Supabase
       const { error } = await sb.from("fl_documents").upsert(saveDoc as any)
-      if (error) throw error
-      setMsg({ ok: true, text: "Document enregistré." })
+      if (error) {
+        // Table inexistante ou erreur réseau → fallback localStorage
+        const code = (error as unknown as Record<string,unknown>)?.code as string
+        const isTableMissing = code === "42P01" || code === "PGRST116"
+        saveDocLocal(saveDoc)
+        if (isTableMissing) {
+          setMsg({ ok: true, text: `✅ Document ${saveDoc.numero} sauvegardé localement. (Table Supabase fl_documents à créer — voir SQL ci-dessous)` })
+        } else {
+          throw error
+        }
+      } else {
+        setMsg({ ok: true, text: `✅ Document ${saveDoc.numero} enregistré.` })
+      }
+
+      // 3. Recharger liste (inclut localStorage)
       await load()
       setView("list")
     } catch (e) {
-      setMsg({ ok: false, text: `Erreur: ${e instanceof Error ? e.message : String(e)}` })
+      setMsg({ ok: false, text: `Erreur: ${extractError(e)}` })
     } finally {
       setSaving(false)
-      setTimeout(() => setMsg(null), 3000)
+      setTimeout(() => setMsg(null), 5000)
     }
   }
 
@@ -626,6 +794,37 @@ export default function BODocuments({ user }: { user: { id: string; name: string
     if (!confirm("Supprimer ce document ?")) return
     await sb.from("fl_documents").delete().eq("id", id)
     setDocs(d => d.filter(x => x.id !== id))
+  }
+
+  const handleUpload = async (docId: string, file: File) => {
+    if (file.size > 5 * 1024 * 1024) {
+      setMsg({ ok: false, text: "Fichier trop volumineux (max 5 Mo)." })
+      setTimeout(() => setMsg(null), 3000)
+      return
+    }
+    setUploading(true)
+    const reader = new FileReader()
+    reader.onload = async () => {
+      const dataUrl = reader.result as string
+      const { error } = await sb.from("fl_documents").update({
+        piece_jointe: dataUrl,
+        piece_jointe_nom: file.name,
+        piece_jointe_type: file.type,
+      } as never).eq("id", docId)
+      if (error) {
+        setMsg({ ok: false, text: `Erreur upload: ${error.message}` })
+      } else {
+        setMsg({ ok: true, text: `Fichier "${file.name}" joint au document.` })
+        await load()
+        if (detail?.id === docId) {
+          const updated = docs.find(d => d.id === docId)
+          if (updated) setDetail({ ...updated, piece_jointe: dataUrl, piece_jointe_nom: file.name } as Document)
+        }
+      }
+      setUploading(false)
+      setTimeout(() => setMsg(null), 3000)
+    }
+    reader.readAsDataURL(file)
   }
 
   const filtered = docs.filter(d => {
@@ -746,6 +945,19 @@ CREATE POLICY "fl_documents_public" ON public.fl_documents
                       <button onClick={() => printDocument(doc, company)} className="p-1.5 rounded-lg hover:bg-muted text-slate-500 hover:text-slate-700" title="Imprimer">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
                       </button>
+                      <button onClick={() => downloadDocument(doc, company)} className="p-1.5 rounded-lg hover:bg-green-50 text-slate-500 hover:text-green-700" title="Télécharger">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                      </button>
+                      <button onClick={() => shareWhatsApp(doc)} className="p-1.5 rounded-lg hover:bg-emerald-50 text-slate-500 hover:text-emerald-600" title="Envoyer WhatsApp">
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.107.547 4.085 1.504 5.806L0 24l6.345-1.483A11.945 11.945 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.882a9.869 9.869 0 01-5.032-1.378l-.36-.214-3.735.873.945-3.642-.235-.374A9.868 9.868 0 012.118 12C2.118 6.537 6.537 2.118 12 2.118c5.463 0 9.882 4.419 9.882 9.882 0 5.463-4.419 9.882-9.882 9.882z"/></svg>
+                      </button>
+                      <button onClick={() => shareEmail(doc, company)} className="p-1.5 rounded-lg hover:bg-blue-50 text-slate-500 hover:text-blue-600" title="Envoyer par email">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                      </button>
+                      <label className="p-1.5 rounded-lg hover:bg-blue-50 text-slate-500 hover:text-blue-700 cursor-pointer" title="Joindre un fichier">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
+                        <input type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" className="hidden" onChange={e => { if (e.target.files?.[0]) handleUpload(doc.id, e.target.files[0]); e.target.value = "" }} />
+                      </label>
                       {doc.type_doc === "devis" && doc.statut !== "transforme" && (
                         <button onClick={() => handleTransform(doc)} className="p-1.5 rounded-lg hover:bg-purple-50 text-purple-500" title="Transformer en contrat">
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>
@@ -796,11 +1008,28 @@ CREATE POLICY "fl_documents_public" ON public.fl_documents
           <p className="text-sm text-muted-foreground">{detail.client_nom}</p>
         </div>
         <span className={`px-3 py-1 rounded-full text-xs font-bold ${STATUT_COLORS[detail.statut]}`}>{STATUT_LABELS[detail.statut]}</span>
-        <button onClick={() => printDocument(detail, company)} className="px-4 py-2 rounded-xl bg-slate-800 text-white text-sm font-semibold hover:bg-slate-700 transition-colors flex items-center gap-2">
+        <button onClick={() => printDocument(detail, company)} className="px-3 py-2 rounded-xl bg-slate-800 text-white text-sm font-semibold hover:bg-slate-700 transition-colors flex items-center gap-2">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
-          Imprimer / PDF
+          Imprimer
         </button>
-        <button onClick={() => { setEditing(detail); setView("form") }} className="px-4 py-2 rounded-xl border border-border text-sm font-medium hover:bg-muted transition-colors">Modifier</button>
+        <button onClick={() => downloadDocument(detail, company)} className="px-3 py-2 rounded-xl bg-green-600 text-white text-sm font-semibold hover:bg-green-700 transition-colors flex items-center gap-2">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+          Télécharger
+        </button>
+        <button onClick={() => shareWhatsApp(detail)} className="px-3 py-2 rounded-xl bg-emerald-500 text-white text-sm font-semibold hover:bg-emerald-600 transition-colors flex items-center gap-2">
+          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.107.547 4.085 1.504 5.806L0 24l6.345-1.483A11.945 11.945 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.882a9.869 9.869 0 01-5.032-1.378l-.36-.214-3.735.873.945-3.642-.235-.374A9.868 9.868 0 012.118 12C2.118 6.537 6.537 2.118 12 2.118c5.463 0 9.882 4.419 9.882 9.882 0 5.463-4.419 9.882-9.882 9.882z"/></svg>
+          WhatsApp
+        </button>
+        <button onClick={() => shareEmail(detail, company)} className="px-3 py-2 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition-colors flex items-center gap-2">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+          Email
+        </button>
+        <label className={`px-3 py-2 rounded-xl border border-border text-sm font-semibold flex items-center gap-2 cursor-pointer transition-colors ${uploading ? "opacity-50 pointer-events-none" : "hover:bg-muted"}`}>
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
+          {uploading ? "Upload…" : "Joindre"}
+          <input type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" className="hidden" onChange={e => { if (e.target.files?.[0]) handleUpload(detail.id, e.target.files[0]); e.target.value = "" }} />
+        </label>
+        <button onClick={() => { setEditing(detail); setView("form") }} className="px-3 py-2 rounded-xl border border-border text-sm font-medium hover:bg-muted transition-colors">Modifier</button>
       </div>
 
       {/* Aperçu simplifié */}
@@ -844,6 +1073,26 @@ CREATE POLICY "fl_documents_public" ON public.fl_documents
             <div className="flex justify-between font-bold text-base text-green-700 pt-1 border-t border-border"><span>TOTAL NET TTC</span><span>{DH(detail.tva_pct > 0 ? detail.montant_ttc : detail.montant_net)}</span></div>
           </div>
         </div>
+
+        {/* Pièce jointe */}
+        {(detail as Document & { piece_jointe?: string; piece_jointe_nom?: string }).piece_jointe && (
+          <div className="mt-4 flex items-center gap-3 px-4 py-3 bg-blue-50 border border-blue-200 rounded-xl">
+            <svg className="w-5 h-5 text-blue-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+            </svg>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-blue-800">Pièce jointe</p>
+              <p className="text-xs text-blue-600 truncate">{(detail as Document & { piece_jointe_nom?: string }).piece_jointe_nom ?? "Fichier joint"}</p>
+            </div>
+            <a
+              href={(detail as Document & { piece_jointe?: string }).piece_jointe}
+              download={(detail as Document & { piece_jointe_nom?: string }).piece_jointe_nom ?? "piece_jointe"}
+              className="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 transition-colors"
+            >
+              Télécharger
+            </a>
+          </div>
+        )}
       </div>
     </div>
   )
