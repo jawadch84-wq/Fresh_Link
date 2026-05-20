@@ -1539,9 +1539,11 @@ export function isBackOfficeRole(role: UserRole): boolean {
 }
 
 // Returns which interface a user should see based on accessType override or default role routing
+// Uses activeRole when set (dual-role switching) — falls back to primary role
 export function getUserInterface(user: User): "mobile" | "backoffice" | "both" {
   if (user.accessType) return user.accessType
-  return isBackOfficeRole(user.role) ? "backoffice" : "mobile"
+  const effectiveRole = user.activeRole ?? user.role
+  return isBackOfficeRole(effectiveRole) ? "backoffice" : "mobile"
 }
 
 // ============================================================

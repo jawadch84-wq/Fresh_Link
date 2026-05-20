@@ -95,7 +95,9 @@ export default function App() {
   }
 
   // Clients et fournisseurs : accès portail uniquement via le site web externe
-  if (user.role === "fournisseur" || user.role === "client") {
+  // Dual-role users who switched away from client/fournisseur can bypass this redirect
+  const effectiveRole = user.activeRole ?? user.role
+  if (effectiveRole === "fournisseur" || effectiveRole === "client") {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 p-6">
         <div className="max-w-sm w-full bg-white rounded-2xl border border-slate-200 shadow-lg p-8 flex flex-col items-center gap-5 text-center">
