@@ -336,11 +336,29 @@ export default function LoginPage({ onLogin }: Props) {
           setError("Mot de passe incorrect / كلمة السر خاطئة"); setLoading(false); return
         }
       }
-      onLogin(extUser)
+      // Initialise activeRole on first login
+      if (!extUser.activeRole) {
+        const users = store.getUsers()
+        const idx = users.findIndex(u => u.id === extUser.id)
+        const withActive = { ...extUser, activeRole: extUser.role }
+        if (idx >= 0) { users[idx] = withActive; store.saveUsers(users) }
+        onLogin(withActive)
+      } else {
+        onLogin(extUser)
+      }
       return
     }
     if (!identifier.trim() || !password.trim()) { setError("Remplissez tous les champs"); setLoading(false); return }
-    const user = store.login(identifier.trim(), password)
+    const rawUser = store.login(identifier.trim(), password)
+    const user = rawUser && !rawUser.activeRole
+      ? (() => {
+          const users = store.getUsers()
+          const idx = users.findIndex(u => u.id === rawUser.id)
+          const u = { ...rawUser, activeRole: rawUser.role }
+          if (idx >= 0) { users[idx] = u; store.saveUsers(users) }
+          return u
+        })()
+      : rawUser
     if (user) {
       // First-login: must change password before continuing
       if (user.mustChangePassword) {

@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback, Component } from "react"
 import dynamic from "next/dynamic"
 import LangSwitcher from "@/components/ui/LangSwitcher"
 import type { User } from "@/lib/store"
-import { store, ROLE_LABELS, ROLE_COLORS, isDemoUser, isSuperSuperAdmin, JAWAD_ID } from "@/lib/store"
+import { store, ROLE_LABELS, ROLE_COLORS, isDemoUser, isSuperSuperAdmin, JAWAD_ID, type UserRole } from "@/lib/store"
 import { useLang, T } from "@/lib/i18n"
 import type { AppLang } from "@/lib/lang"
 
@@ -745,10 +745,26 @@ export default function BackOfficeLayout({ user, onLogout }: Props) {
               )}
               <div className="hidden sm:block text-left">
                 <p className="text-xs font-semibold text-slate-700 leading-none">{user.name}</p>
-                <p className="text-[10px] text-slate-400">{ROLE_LABELS[user.role]}</p>
+                <p className="text-[10px] text-slate-400">{ROLE_LABELS[user.activeRole ?? user.role]}</p>
               </div>
             </button>
 
+            {/* Dual-role switch */}
+            {user.secondRole && (
+              <button
+                onClick={() => {
+                  const next: UserRole = (user.activeRole ?? user.role) === user.role ? user.secondRole! : user.role
+                  const users = store.getUsers()
+                  const idx = users.findIndex(u => u.id === user.id)
+                  const updated = { ...user, activeRole: next }
+                  if (idx >= 0) { users[idx] = updated; store.saveUsers(users) }
+                  try { sessionStorage.setItem("fl_current_user", JSON.stringify(updated)) } catch (_) {}
+                  window.location.reload()
+                }}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-indigo-200 bg-indigo-50 text-xs font-bold text-indigo-700 hover:bg-indigo-100 transition-colors">
+                🔄 {ROLE_LABELS[user.secondRole]}
+              </button>
+            )}
             {/* Logout */}
             <button
               onClick={onLogout}
@@ -1061,7 +1077,7 @@ function SidebarContent({
           {!sidebarCollapsed && (
             <div className="flex-1 min-w-0">
               <p className="text-xs font-bold truncate text-white">{user.name}</p>
-              <p className="text-[10px] truncate" style={{ color: "#6ee7b7" }}>{ROLE_LABELS[user.role]}</p>
+              <p className="text-[10px] truncate" style={{ color: "#6ee7b7" }}>{ROLE_LABELS[user.activeRole ?? user.role]}</p>
             </div>
           )}
         </div>
@@ -1177,7 +1193,7 @@ function ProfilModal({ user, profilPhoto, setProfilPhoto, onClose, canUseCamera 
             <div className="rounded-xl bg-muted/40 border border-border p-3">
               <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground mb-1.5">Role</p>
               <span className={`text-xs font-bold px-2 py-1 rounded-full text-white inline-block ${ROLE_COLORS[user.role]}`}>
-                {ROLE_LABELS[user.role]}
+                {ROLE_LABELS[user.activeRole ?? user.role]}
               </span>
             </div>
             <div className="rounded-xl bg-muted/40 border border-border p-3">

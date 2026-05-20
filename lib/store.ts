@@ -85,6 +85,9 @@ export interface User {
   requireCameraAuth?: boolean
   // Multi-depot: which depot this user is assigned to (magasinier, acheteur...)
   depotId?: string
+  // Dual-role: user can optionally hold a second role and switch between them
+  secondRole?: UserRole        // optional second role
+  activeRole?: UserRole        // which role is currently active (defaults to role)
 }
 
 export type ModalitePaiement = "cash" | "cheque" | "virement" | "traite_30" | "traite_60" | "traite_90" | "credit_7" | "credit_15" | "credit_30"

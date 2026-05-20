@@ -871,6 +871,16 @@ function PermissionsTabs({
   // Only super_super_admin (Jawad) is immutable — super_admin can have perms configured
   const isFullAccessRole = form.role === "super_super_admin"
   const isSuperAdminRole = form.role === "super_admin" || form.role === "admin"
+  const isPortalRole = form.role === "client" || form.role === "fournisseur"
+
+  // Auto-apply permissions when role switches to client or fournisseur
+  useEffect(() => {
+    if (form.role === "client") {
+      setForm(prev => ({ ...prev, canViewCommercial: false, canViewAchat: false, canViewLogistique: false, canViewStock: false, canViewCash: false, canViewFinance: false, canViewRecap: false, canViewDatabase: false, canViewRH: false, canViewInvestisseur: false, canViewExternal: false, canCreateCommandeBO: false, accessType: "mobile" as UserAccessType }))
+    } else if (form.role === "fournisseur") {
+      setForm(prev => ({ ...prev, canViewCommercial: false, canViewAchat: true, canViewLogistique: false, canViewStock: false, canViewCash: false, canViewFinance: false, canViewRecap: false, canViewDatabase: false, canViewRH: false, canViewInvestisseur: false, canViewExternal: false, canCreateCommandeBO: false, accessType: "mobile" as UserAccessType }))
+    }
+  }, [form.role]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleToggleAll = (on: boolean) => {
     const update: Partial<Omit<User, "id">> = {}
@@ -924,6 +934,14 @@ function PermissionsTabs({
           </div>
         )}
       </div>
+
+      {/* Portal role banner — client / fournisseur: auto-managed permissions */}
+      {isPortalRole && (
+        <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-blue-50 border border-blue-200">
+          <svg className="w-5 h-5 text-blue-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+          <p className="text-sm text-blue-700">Les droits sont définis automatiquement pour ce type d&apos;accès portail.</p>
+        </div>
+      )}
 
       {/* Full access banner — only for super_super_admin (immutable) */}
       {isFullAccessRole ? (
@@ -1318,6 +1336,7 @@ export default function BOUsers({ currentUser }: { currentUser: User }) {
       passwordMobile: u.passwordMobile, passwordBO: u.passwordBO,
       photoUrl: u.photoUrl, telephone: u.telephone,
       requireCameraAuth: u.requireCameraAuth, fournisseurId: u.fournisseurId, clientId: u.clientId,
+      secondRole: u.secondRole,
     })
     setShowForm(true)
   }
@@ -1509,6 +1528,38 @@ export default function BOUsers({ currentUser }: { currentUser: User }) {
     { role: "fournisseur",       label: "Fournisseur",             acces: "Portail fournisseur", droits: "Consultation PO, statuts livraisons, factures, historique prix",                                      processus: "Portail fournisseur : reçoit les PO, confirme les disponibilités, met à jour les prix, consulte l'historique des transactions.",                 reception: false },
   ]
 
+  const ROLE_MODULES: Partial<Record<UserRole, string[]>> = {
+    super_super_admin: ["Tout"],
+    super_admin: ["Tout"],
+    admin: ["Tout"],
+    resp_commercial: ["Commercial","Clients","Finance","Recap"],
+    team_leader: ["Commercial","Cash","Recap"],
+    prevendeur: ["Mobile-Vente"],
+    resp_logistique: ["Stock","Dispatch","BL","Réception"],
+    magasinier: ["Réception","BL","Préparation"],
+    dispatcheur: ["Dispatch","GPS","Réception"],
+    livreur: ["BL","GPS"],
+    livreur_interne: ["BL","Cash","GPS"],
+    livreur_externe: ["BL"],
+    acheteur: ["Achats","PO"],
+    ctrl_achat: ["Achats","Contrôle"],
+    ctrl_prep: ["Préparation","Contrôle"],
+    cash_man: ["Cash","BL"],
+    financier: ["Finance","Dashboard"],
+    comptable: ["RH","Finance"],
+    rh_manager: ["RH"],
+    resp_achat: ["Achats","PO","Finance"],
+    auditeur: ["Lecture seule"],
+    investisseur: ["Dashboard"],
+    client: ["Portail client"],
+    fournisseur: ["Portail fournisseur"],
+    qualite: ["Stock","Réception"],
+    it_admin: ["DB","Système"],
+    chef_depot: ["Stock","Réception","Préparation"],
+    suivi_commande: ["Commercial","Logistique"],
+    charge_recouvrement: ["Finance","Cash"],
+  }
+
   return (
     <div className="flex flex-col gap-5">
 
@@ -1631,7 +1682,8 @@ export default function BOUsers({ currentUser }: { currentUser: User }) {
                       </span>
                     </th>
                     <th className="text-left px-4 py-2.5 font-semibold uppercase tracking-wide">Droits / Accès</th>
-                    <th className="text-left px-4 py-2.5 font-semibold uppercase tracking-wide hidden lg:table-cell">Rôle dans le processus</th>
+                    <th className="text-left px-4 py-2.5 font-semibold uppercase tracking-wide hidden lg:table-cell">Processus</th>
+                    <th className="text-left px-3 py-2.5 font-semibold uppercase tracking-wide hidden xl:table-cell">Modules</th>
                     <th className="text-center px-3 py-2.5 font-semibold uppercase tracking-wide text-[10px]">Réception</th>
                   </tr>
                 </thead>
@@ -1657,7 +1709,16 @@ export default function BOUsers({ currentUser }: { currentUser: User }) {
                         }
                       </td>
                       <td className="px-4 py-2.5 text-muted-foreground text-[11px] max-w-[220px]">{r.droits}</td>
-                      <td className="px-4 py-2.5 text-muted-foreground text-[11px] max-w-[260px] hidden lg:table-cell leading-relaxed">{r.processus}</td>
+                      <td className="px-4 py-2.5 text-muted-foreground text-[11px] max-w-[260px] hidden lg:table-cell leading-relaxed">
+                        <span title={r.processus}>{r.processus.length > 120 ? r.processus.slice(0, 120) + "…" : r.processus}</span>
+                      </td>
+                      <td className="px-3 py-2.5 hidden xl:table-cell">
+                        <div className="flex flex-wrap gap-1">
+                          {(ROLE_MODULES[r.role] ?? []).map(mod => (
+                            <span key={mod} className={`px-1.5 py-0.5 rounded-full text-[9px] font-bold ${mod === "Tout" ? "bg-green-100 text-green-700" : "bg-blue-100 text-blue-700"}`}>{mod}</span>
+                          ))}
+                        </div>
+                      </td>
                       <td className="px-3 py-2.5 text-center">
                         {r.reception
                           ? <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-green-100 text-green-600">
@@ -2131,9 +2192,13 @@ export default function BOUsers({ currentUser }: { currentUser: User }) {
                               {visibleRoles.map(r => (
                                 <button key={r} type="button"
                                   onClick={() => {
-                                    // Auto-apply default permissions for the selected role
                                     const defaultPerms = DEFAULT_PERMS_BY_ROLE[r] ?? ALL_OFF
-                                    setForm(prev => ({ ...prev, role: r, ...defaultPerms }))
+                                    const portalPerms = r === "client"
+                                      ? { canViewCommercial: false, canViewAchat: false, canViewLogistique: false, canViewStock: false, canViewCash: false, canViewFinance: false, canViewRecap: false, canViewDatabase: false, canViewRH: false, canViewInvestisseur: false, canViewExternal: false, canCreateCommandeBO: false, accessType: "mobile" as UserAccessType }
+                                      : r === "fournisseur"
+                                      ? { canViewCommercial: false, canViewAchat: true, canViewLogistique: false, canViewStock: false, canViewCash: false, canViewFinance: false, canViewRecap: false, canViewDatabase: false, canViewRH: false, canViewInvestisseur: false, canViewExternal: false, canCreateCommandeBO: false, accessType: "mobile" as UserAccessType }
+                                      : {}
+                                    setForm(prev => ({ ...prev, role: r, ...defaultPerms, ...portalPerms }))
                                   }}
                                   className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all ${form.role === r ? "text-primary-foreground border-transparent shadow-sm bg-primary" : "bg-background border-border text-muted-foreground hover:text-foreground hover:border-primary"}`}>
                                   {ROLE_LABELS[r]}
@@ -2144,6 +2209,38 @@ export default function BOUsers({ currentUser }: { currentUser: User }) {
                         )
                       })}
                     </div>
+                    {(form.role === "client" || form.role === "fournisseur") && (
+                      <div className="flex items-center gap-2 mt-2 px-3 py-2.5 rounded-xl bg-blue-50 border border-blue-200">
+                        <svg className="w-4 h-4 text-blue-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        <p className="text-xs text-blue-700 font-medium">Les droits sont définis automatiquement pour ce type d&apos;accès portail.{form.role === "fournisseur" ? " Le fournisseur voit uniquement les bons d'achat le concernant." : " Le client consulte ses commandes, BL et historique."}</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Second Role */}
+                  <div className="flex flex-col gap-1 sm:col-span-2">
+                    <label className="text-xs font-semibold text-foreground">Rôle secondaire (optionnel)</label>
+                    <p className="text-[10px] text-muted-foreground">Si défini, l&apos;utilisateur peut basculer entre ses deux rôles via le bouton 🔄 dans l&apos;application, avec les mêmes identifiants.</p>
+                    <div className="flex flex-wrap gap-1.5 mt-1">
+                      <button type="button"
+                        onClick={() => setForm(prev => ({ ...prev, secondRole: undefined }))}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all ${!form.secondRole ? "text-primary-foreground border-transparent shadow-sm bg-primary" : "bg-background border-border text-muted-foreground hover:text-foreground hover:border-primary"}`}>
+                        Aucun
+                      </button>
+                      {ALL_ROLES.filter(r => r !== form.role && creatableRoles.includes(r)).map(r => (
+                        <button key={r} type="button"
+                          onClick={() => setForm(prev => ({ ...prev, secondRole: r }))}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all ${form.secondRole === r ? "text-white border-transparent shadow-sm bg-indigo-600" : "bg-background border-border text-muted-foreground hover:text-foreground hover:border-indigo-400"}`}>
+                          {ROLE_LABELS[r]}
+                        </button>
+                      ))}
+                    </div>
+                    {form.secondRole && (
+                      <div className="flex items-center gap-2 mt-1.5 px-3 py-2 rounded-xl bg-indigo-50 border border-indigo-200">
+                        <svg className="w-4 h-4 text-indigo-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>
+                        <p className="text-xs text-indigo-700 font-medium">Ce compte peut switcher entre <strong>{ROLE_LABELS[form.role]}</strong> et <strong>{ROLE_LABELS[form.secondRole]}</strong> avec les mêmes identifiants.</p>
+                      </div>
+                    )}
                   </div>
 
                   {/* Access Type */}
