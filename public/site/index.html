@@ -539,7 +539,7 @@ const CONFIG = {
   WHATSAPP_SIGNUP: "https://chat.whatsapp.com/JOCkX8JYiVx2nMC51Tsh9a",
   HOURS:           "Lun–Sam : 06h00 – 18h00",
   APP_URL:         "https://empire-fresh.netlify.app/",
-  API_URL:         "https://fresh-link-ef.vercel.app",
+  API_URL:         "https://f-l.vercel.app",
   LOGO_URL:        "./logo.png",
   STATS: [
     { num:"500+", fr:"Clients actifs",     ar:"عميل نشيط",      en:"Active clients" },
@@ -872,11 +872,10 @@ function setLang(lang){
       <div class="cfg-grp">🔗 Application FreshLink</div>
       <div style="font-size:13px;color:var(--gy);line-height:1.8;margin-bottom:14px">Application de gestion ERP disponible sur : <a href="https://empire-fresh.netlify.app/" target="_blank" style="color:var(--g1);font-weight:700">empire-fresh.netlify.app</a></div>
       <div class="cfg-grp">📋 API FreshLink utilisées</div>
-      <div class="code-block">Table : fl_articles (visible_web=true)
-Table : fl_commandes_web
-Table : fl_company_contacts
-Table : fl_feedbacks
-Realtime : fl_articles (changes)</div>
+      <div class="code-block">GET  /api/ext/catalogue  → articles publiés
+POST /api/ext/commandes  → nouvelle commande
+POST /api/ext/demande-compte → inscription
+GET  /api/ext/commandes/:id → suivi commande</div>
     </div>
   </div>
   <div class="cfg-footer">
@@ -1418,15 +1417,15 @@ Realtime : fl_articles (changes)</div>
   <div class="chat-header">
     <div class="chat-avatar" style="font-size:22px">🤖</div>
     <div class="chat-header-info">
-      <div class="chat-header-name">Fifi — Assistante Empire Fresh</div>
-      <div class="chat-header-status" id="chat-status-txt">● En ligne — disponible 24h/24</div>
+      <div class="chat-header-name">Fifi 🤖 — Empire Fresh</div>
+      <div class="chat-header-status" id="chat-status-txt">● En ligne · متاح · Online 24h/24</div>
     </div>
     <button class="chat-close-btn" onclick="toggleChat()">✕</button>
   </div>
   <div class="chat-body" id="chat-messages"></div>
   <div id="chat-quickreplies-bar" class="chat-quickreplies" style="padding:8px 12px;background:#f7f7f7;border-top:1px solid #eee;gap:6px;flex-wrap:wrap;display:flex"></div>
   <div class="chat-input-row">
-    <input class="chat-input" id="chat-input" placeholder="Tapez votre message..." onkeydown="if(event.key==='Enter')chatSend()"/>
+    <input class="chat-input" id="chat-input" placeholder="Tapez · اكتب · Type..." onkeydown="if(event.key==='Enter')chatSend()"/>
     <button class="chat-send-btn" onclick="chatSend()" title="Envoyer">➤</button>
   </div>
 </div>
@@ -1447,20 +1446,20 @@ Realtime : fl_articles (changes)</div>
 </div>
 
 <!-- LOGIN CHOICE MODAL -->
-<div id="login-choice-modal">
+<div id="login-choice-modal" onclick="if(event.target===this)this.style.display='none'">
   <div class="choice-box">
-    <h2>👋 Mon Espace</h2>
-    <p class="choice-sub">Choisissez votre type d'accès</p>
+    <h2>👋 Mon Espace / فضائي / My Space</h2>
+    <p class="choice-sub">Choisissez votre type d'accès · اختر نوع الوصول · Choose your access type</p>
     <div class="choice-cards">
       <div class="choice-card" onclick="showLoginForm()">
         <span class="choice-card-icon">🏠</span>
         <div class="choice-card-title">Particulier</div>
-        <div class="choice-card-sub">Connectez-vous à votre espace client</div>
+        <div class="choice-card-sub">Connexion ou création de compte client</div>
       </div>
       <div class="choice-card" onclick="openProApp()">
         <span class="choice-card-icon">🏢</span>
-        <div class="choice-card-title">CHR & Marchands Pro</div>
-        <div class="choice-card-sub">Accédez à votre application de gestion</div>
+        <div class="choice-card-title">CHR &amp; Marchands Pro</div>
+        <div class="choice-card-sub">Connectez-vous via votre application</div>
       </div>
     </div>
     <button class="choice-close" onclick="document.getElementById('login-choice-modal').style.display='none'">Fermer</button>
@@ -1468,14 +1467,29 @@ Realtime : fl_articles (changes)</div>
 </div>
 
 <!-- PRO APP MESSAGE MODAL -->
-<div id="pro-app-msg-modal" style="display:none;position:fixed;inset:0;z-index:2600;background:rgba(0,0,0,.65);backdrop-filter:blur(5px);align-items:center;justify-content:center;padding:20px">
-  <div style="background:#fff;border-radius:20px;padding:36px 32px;max-width:420px;width:100%;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,.25)">
-    <div style="font-size:52px;margin-bottom:12px">📱</div>
-    <h2 style="color:#1a7a3c;margin-bottom:8px;font-size:1.4rem">Votre espace professionnel</h2>
-    <p style="color:#555;font-size:15px;line-height:1.6;margin-bottom:20px">Merci d'utiliser votre application <strong>FreshLink ERP</strong>.<br>Gérez vos commandes, stocks et factures directement depuis l'application dédiée à votre activité.</p>
-    <a href="https://empire-fresh.netlify.app/" target="_blank" style="display:inline-block;background:linear-gradient(135deg,#1a7a3c,#25a352);color:#fff;padding:12px 28px;border-radius:30px;font-weight:700;text-decoration:none;font-size:15px;margin-bottom:12px">🚀 Ouvrir FreshLink</a>
-    <br>
-    <button onclick="document.getElementById('pro-app-msg-modal').style.display='none'" style="background:none;border:2px solid #ddd;color:#666;padding:10px 24px;border-radius:30px;font-size:14px;cursor:pointer;margin-top:8px">Fermer</button>
+<div id="pro-app-msg-modal" style="display:none;position:fixed;inset:0;z-index:2600;background:rgba(0,0,0,.65);backdrop-filter:blur(5px);align-items:center;justify-content:center;padding:20px" onclick="if(event.target===this)this.style.display='none'">
+  <div style="background:#fff;border-radius:20px;padding:36px 32px;max-width:440px;width:100%;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,.25)">
+    <div style="font-size:52px;margin-bottom:12px">🏢</div>
+    <h2 style="color:#1a7a3c;margin-bottom:8px;font-size:1.35rem">Espace professionnel CHR &amp; Marchands</h2>
+    <div style="background:#f0faf4;border-radius:12px;padding:16px 18px;margin:14px 0;text-align:left">
+      <p style="color:#333;font-size:14px;line-height:1.7;margin:0">
+        🇫🇷 <strong>Entrez avec votre compte sur l'application FreshLink.</strong><br>
+        Utilisez les identifiants fournis lors de votre inscription par notre équipe.<br><br>
+        🇲🇦 <strong>دخل بحسابك على تطبيق FreshLink.</strong><br>
+        استخدم بيانات الدخول المقدمة من فريقنا عند التسجيل.<br><br>
+        🇬🇧 <strong>Log in with your account on the FreshLink app.</strong><br>
+        Use the credentials provided by our team when you registered.
+      </p>
+    </div>
+    <p style="font-size:13px;color:#888;margin-bottom:18px">Pas encore de compte ? Faites une demande en bas de page ou contactez-nous sur WhatsApp.</p>
+    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+      <button id="pro-app-link-btn" onclick="showProAppLink()" style="background:linear-gradient(135deg,#1a7a3c,#25a352);color:#fff;padding:11px 22px;border-radius:30px;font-weight:700;font-size:14px;border:none;cursor:pointer">🚀 Accéder à l'application</button>
+      <button onclick="document.getElementById('pro-app-msg-modal').style.display='none'" style="background:none;border:2px solid #ddd;color:#666;padding:11px 22px;border-radius:30px;font-size:14px;cursor:pointer">Fermer</button>
+    </div>
+    <div id="pro-app-link-reveal" style="display:none;margin-top:14px;padding:12px;background:#fffbe6;border-radius:10px;font-size:13px;color:#555">
+      🔗 <a href="https://empire-fresh.netlify.app/" target="_blank" style="color:#1a7a3c;font-weight:700">empire-fresh.netlify.app</a><br>
+      <span style="font-size:12px;color:#999">Ouvrez ce lien sur votre navigateur ou via l'app mobile.</span>
+    </div>
   </div>
 </div>
 
@@ -1520,10 +1534,20 @@ Realtime : fl_articles (changes)</div>
     </div>
     <!-- SIGNUP PANEL -->
     <div id="panelSignup" style="display:none">
-      <h2 style="margin-bottom:4px">Créer un compte</h2>
-      <p class="modal-sub">Rejoignez Empire Fresh en tant que particulier</p>
+      <h2 style="margin-bottom:4px">Demande de compte</h2>
+      <p class="modal-sub">Particulier, CHR ou Marchand — soumettez votre demande</p>
       <div class="login-error" id="signupError"></div>
-      <form onsubmit="doSignup(event)" novalidate>
+      <div id="signupSuccess" style="display:none;background:#f0faf4;border:1px solid #a7e3bf;border-radius:10px;padding:14px;text-align:center;font-size:14px;color:#1a7a3c;margin-bottom:10px"></div>
+      <form onsubmit="doSignup(event)" novalidate id="signupForm">
+        <div class="form-group">
+          <label>Type de compte</label>
+          <select id="signupType" required style="width:100%;padding:10px 12px;border:1.5px solid #ddd;border-radius:10px;font-size:14px;font-family:inherit;background:#fff">
+            <option value="">Choisir...</option>
+            <option value="client">🏠 Particulier</option>
+            <option value="chr">🏨 Restaurant / Hôtel / Café (CHR)</option>
+            <option value="marchand">🏪 Marchand / Grossiste</option>
+          </select>
+        </div>
         <div class="form-group">
           <label>Prénom &amp; Nom</label>
           <input type="text" id="signupName" placeholder="Mohammed Alami" autocomplete="name" required/>
@@ -1533,14 +1557,18 @@ Realtime : fl_articles (changes)</div>
           <div class="phone-input-wrap"><span class="phone-flag">🇲🇦</span><input type="tel" id="signupPhone" placeholder="06 XX XX XX XX" autocomplete="tel" required/></div>
         </div>
         <div class="form-group">
-          <label>Adresse (optionnel)</label>
-          <input type="text" id="signupAddr" placeholder="Quartier, Ville" autocomplete="street-address"/>
+          <label>Email (optionnel)</label>
+          <input type="email" id="signupEmail" placeholder="email@exemple.ma" autocomplete="email"/>
+        </div>
+        <div class="form-group" id="signupSocieteWrap" style="display:none">
+          <label>Nom de l'établissement / Société</label>
+          <input type="text" id="signupSociete" placeholder="Restaurant Al Warda, Épicerie Alami..." autocomplete="organization"/>
         </div>
         <div class="form-group">
-          <label>Mot de passe</label>
-          <input type="password" id="signupPass" placeholder="Choisir un mot de passe" required/>
+          <label>Ville</label>
+          <input type="text" id="signupVille" placeholder="Casablanca" autocomplete="address-level2"/>
         </div>
-        <button type="submit" class="btn-submit" id="btnSignupSubmit">Créer mon compte</button>
+        <button type="submit" class="btn-submit" id="btnSignupSubmit">📋 Envoyer ma demande</button>
       </form>
       <p style="margin-top:12px;text-align:center;font-size:13px;color:var(--gy)">
         <span>Déjà un compte ?</span>
@@ -1618,32 +1646,29 @@ var PRODS=DEFAULT_PRODS.slice();
 
 // ── SUPABASE SYNC ──
 function syncFromSupabase(){
-  if(!sb) sb=initSupabase();
-  if(!sb){ setERPBar("offline","Catalogue local (Supabase non configuré)",""); setSyncBadge("offline","Local"); renderProds(); updateCatCounts(); return; }
   setERPBar("loading","Synchronisation avec FreshLink ERP...",""); setSyncBadge("loading","Sync...");
-  sb.from("fl_articles")
-    .select("id,nom,famille,unite,prix,stock_actuel,photo,visible_web,promo_active,prix_promo,promo_taux,promo_label,tags,description,position_catalogue")
-    .eq("visible_web",true)
-    .order("position_catalogue",{ascending:true})
-    .then(function(r){
-      if(r.error) throw r.error;
-      var data=r.data||[];
-      if(!data.length) throw new Error("Aucun produit");
+  fetch(CONFIG.API_URL+"/api/ext/catalogue",{method:"GET",headers:{"Content-Type":"application/json"},cache:"no-cache"})
+    .then(function(r){ if(!r.ok) throw new Error("HTTP "+r.status); return r.json(); })
+    .then(function(data){
+      if(!Array.isArray(data)||!data.length) throw new Error("Catalogue vide");
       PRODS=data.map(function(row){
         var cat=mapFamille(row.famille), tags=Array.isArray(row.tags)?row.tags:[], firstTag=tags[0]||"frais";
-        var prix=row.promo_active&&row.prix_promo?parseFloat(row.prix_promo):parseFloat(row.prix||0);
-        return{id:row.id,em:getEmoji(row.nom,cat),n:row.nom||"",o:row.description||row.famille||"Maroc",p:prix,prixBase:parseFloat(row.prix||prix),u:row.unite||"kg",cat:cat,tags:tags,t:firstTag,dispo:(row.stock_actuel||0)>0,stock:row.stock_actuel,img:row.photo||"",promo:row.promo_active,promoLabel:row.promo_label||(row.promo_taux?"-"+row.promo_taux+"%":""),fromSupabase:true};
+        var promoObj=row.promo&&typeof row.promo==="object"?row.promo:null;
+        var prixBase=parseFloat(row.prix||row.prixVente||0);
+        var prix=promoObj&&promoObj.prixPromo?parseFloat(promoObj.prixPromo):prixBase;
+        var promoLabel=promoObj?(promoObj.label||(promoObj.taux?"-"+promoObj.taux+"%":"Promo")):"";
+        return{id:row.id,em:getEmoji(row.nom,cat),n:row.nom||"",no:row.nomAr||"",o:row.description||row.famille||"Maroc",p:prix,prixBase:prixBase,u:row.unite||"kg",cat:cat,tags:tags,t:firstTag,dispo:row.statut!=="rupture"&&(row.stockDisponible||0)>0,stock:row.stockDisponible||0,img:row.photo||"",promo:!!promoObj,promoLabel:promoLabel,fromERP:true};
       });
       sbSynced=true;
       var now=new Date().toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"});
-      setERPBar("online","FreshLink ERP — synchronisé en temps réel","Dernière sync : "+now);
-      setSyncBadge("online","Temps réel"); renderProds(); renderHeroCards(); updateCatCounts();
-      showToast("✅ Catalogue synchronisé depuis FreshLink ERP !"); updateERPConnBox(true,"Connecté — "+PRODS.length+" produits");
-      subscribeRealtime();
+      setERPBar("online","FreshLink ERP — catalogue en ligne","Dernière sync : "+now);
+      setSyncBadge("online","En ligne"); renderProds(); renderHeroCards(); updateCatCounts();
+      showToast("✅ "+PRODS.length+" articles chargés depuis FreshLink ERP !");
+      updateERPConnBox(true,"Connecté — "+PRODS.length+" articles");
     })
     .catch(function(err){
-      console.warn("[Supabase] sync fallback:",err);
-      setERPBar("offline","Catalogue local (vérifiez la table fl_articles)",""); setSyncBadge("offline","Local");
+      console.warn("[ERP] catalogue fallback:",err.message);
+      setERPBar("offline","Catalogue local (ERP non joignable)",""); setSyncBadge("offline","Local");
       renderProds(); updateCatCounts();
     });
 }
@@ -1922,32 +1947,38 @@ async function doLogin(e){
   }catch(err){errEl.textContent=t("login_err_api");errEl.classList.add("show");}
   btnEl.disabled=false; btnEl.textContent=t("btn_login_ok");
 }
+// Show/hide société field based on type
+document.addEventListener("change",function(e){ if(e.target&&e.target.id==="signupType"){ var v=e.target.value; var sw=document.getElementById("signupSocieteWrap"); if(sw) sw.style.display=(v==="chr"||v==="marchand")?"block":"none"; } });
+function showProAppLink(){ var d=document.getElementById("pro-app-link-reveal"); if(d){d.style.display="block";} var b=document.getElementById("pro-app-link-btn"); if(b){b.style.display="none";} }
 async function doSignup(e){
   e.preventDefault();
+  var type=document.getElementById("signupType").value.trim();
   var name=document.getElementById("signupName").value.trim(), phone=document.getElementById("signupPhone").value.trim();
-  var addr=document.getElementById("signupAddr").value.trim(), pass=document.getElementById("signupPass").value.trim();
-  var errEl=document.getElementById("signupError"), btnEl=document.getElementById("btnSignupSubmit");
-  errEl.classList.remove("show");
-  if(!name||!phone||!pass){errEl.textContent="Veuillez remplir tous les champs obligatoires.";errEl.classList.add("show");return;}
-  if(pass.length<6){errEl.textContent="Le mot de passe doit contenir au moins 6 caractères.";errEl.classList.add("show");return;}
-  btnEl.disabled=true; btnEl.textContent="⏳ Création...";
+  var email=document.getElementById("signupEmail").value.trim(), societe=document.getElementById("signupSociete").value.trim();
+  var ville=document.getElementById("signupVille").value.trim();
+  var errEl=document.getElementById("signupError"), succEl=document.getElementById("signupSuccess"), btnEl=document.getElementById("btnSignupSubmit");
+  errEl.classList.remove("show"); if(succEl) succEl.style.display="none";
+  if(!type){errEl.textContent="Veuillez choisir le type de compte.";errEl.classList.add("show");return;}
+  if(!name||!phone){errEl.textContent="Nom et téléphone sont obligatoires.";errEl.classList.add("show");return;}
+  btnEl.disabled=true; btnEl.textContent="⏳ Envoi en cours...";
+  var payload={type:type,nom:name,telephone:phone,email:email||undefined,societe:societe||undefined,ville:ville||undefined};
   try{
-    var res=await fetch(CONFIG.API_URL+"/api/ext/signup",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name,phone,address:addr,password:pass,type:"particulier"})});
+    var res=await fetch(CONFIG.API_URL+"/api/ext/demande-compte",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
     var data=await res.json();
-    if(!res.ok){errEl.textContent=data.error||"Erreur lors de la création du compte.";errEl.classList.add("show");}
+    if(!res.ok){errEl.textContent=data.error||data.message||"Erreur lors de l'envoi.";errEl.classList.add("show");}
     else{
-      if(data.user||data.token){saveSession(data);closeLogin();showPortal(data);showToast("✅ Compte créé ! Bienvenue "+(data.user?.name||name)+" !");}
-      else{showToast("✅ Compte créé ! Vous pouvez maintenant vous connecter.");switchLoginTab("login");}
+      if(succEl){ succEl.style.display="block"; succEl.innerHTML="✅ Demande envoyée !<br><span style='font-size:13px;color:#555'>Notre équipe examinera votre demande et vous contactera sous 24h au "+phone+".</span>"; }
+      document.getElementById("signupForm").style.display="none";
+      showToast("✅ Demande de compte envoyée !");
     }
   }catch(err){
-    // Fallback: if no signup API, send via WhatsApp
-    errEl.textContent="API indisponible. Nous vous contactons par WhatsApp pour finaliser votre inscription.";errEl.classList.add("show");
+    errEl.textContent="Connexion impossible. Contactez-nous par WhatsApp pour créer votre compte.";errEl.classList.add("show");
     setTimeout(function(){
-      var waMsg=encodeURIComponent("🆕 Nouvelle inscription Empire Fresh\n👤 Nom : "+name+"\n📱 Tel : "+phone+(addr?"\n📍 Adresse : "+addr:""));
+      var waMsg=encodeURIComponent("🆕 Demande de compte Empire Fresh\nType : "+type+"\nNom : "+name+"\nTél : "+phone+(ville?"\nVille : "+ville:"")+(societe?"\nSociété : "+societe:""));
       window.open("https://wa.me/"+CFG.wa+"?text="+waMsg,"_blank");
     },1500);
   }
-  btnEl.disabled=false; btnEl.textContent="Créer mon compte";
+  btnEl.disabled=false; btnEl.textContent="📋 Envoyer ma demande";
 }
 function showPortal(data){
   document.getElementById("mon-espace").classList.add("visible");
@@ -2103,41 +2134,46 @@ var LEGAL_CONTENT = {
 function openLegal(key){ document.getElementById('legal-content').innerHTML=LEGAL_CONTENT[key]; document.getElementById('legal-modal').style.display='flex'; }
 function closeLegal(){ document.getElementById('legal-modal').style.display='none'; }
 
-// ── CHAT WIDGET ──
 // ── CHAT BOT ENGINE ──
 var chatOpen=false, chatInitialized=false, chatContext={step:"home"};
+// Close chat on outside click
+document.addEventListener("click",function(e){
+  if(chatOpen&&!document.getElementById("chat-panel").contains(e.target)&&e.target.id!=="chat-fab"&&!document.getElementById("chat-fab").contains(e.target)){
+    chatOpen=false; document.getElementById("chat-panel").classList.remove("open");
+  }
+});
 var CHAT_FLOWS={
   home:{
-    bot:["Bonjour 👋 Je suis **Fifi**, votre assistante virtuelle Empire Fresh !", "Comment puis-je vous aider aujourd'hui ?"],
-    qr:[{label:"🛒 Commander",step:"commander"},{label:"🚚 Livraison",step:"livraison"},{label:"💰 Tarifs & Promos",step:"tarifs"},{label:"🏪 Produits frais",step:"produits"},{label:"👥 Devenir partenaire",step:"partenaire"},{label:"📞 Contact humain",step:"contact"}]
+    bot:{fr:["Bonjour 👋 Je suis **Fifi**, votre assistante virtuelle Empire Fresh !","Comment puis-je vous aider aujourd'hui ?"],ar:["مرحبا 👋 أنا **فيفي**، مساعدتك الافتراضية لـ Empire Fresh !","كيف يمكنني مساعدتك اليوم؟"],en:["Hello 👋 I'm **Fifi**, your virtual assistant at Empire Fresh!","How can I help you today?"]},
+    qr:[{fr:"🛒 Commander",ar:"🛒 طلب",en:"🛒 Order",step:"commander"},{fr:"🚚 Livraison",ar:"🚚 التوصيل",en:"🚚 Delivery",step:"livraison"},{fr:"💰 Tarifs & Promos",ar:"💰 الأثمنة",en:"💰 Prices",step:"tarifs"},{fr:"🥦 Produits",ar:"🥦 المنتجات",en:"🥦 Products",step:"produits"},{fr:"👥 Devenir partenaire",ar:"👥 شراكة",en:"👥 Partnership",step:"partenaire"},{fr:"📞 Contact",ar:"📞 اتصال",en:"📞 Contact",step:"contact"}]
   },
   commander:{
-    bot:["Super ! 🛒 Pour passer votre commande, vous avez 3 options :","1️⃣ **Panier en ligne** — ajoutez vos produits au panier sur cette page\n2️⃣ **WhatsApp** — envoyez votre liste directement\n3️⃣ **Application** — connectez-vous à empire-fresh.netlify.app"],
-    qr:[{label:"🛒 Voir le catalogue",action:"scrollCatalogue"},{label:"💬 Commander via WhatsApp",action:"waOrder"},{label:"🔙 Menu principal",step:"home"}]
+    bot:{fr:["🛒 Pour passer votre commande, vous avez 3 options :","1️⃣ **Panier en ligne** — ajoutez vos produits sur cette page\n2️⃣ **WhatsApp** — envoyez votre liste directement\n3️⃣ **Application FreshLink** pour les pros"],ar:["🛒 لتقديم طلبك لديك 3 خيارات :","1️⃣ **سلة التسوق** — أضف منتجاتك في هذه الصفحة\n2️⃣ **واتساب** — أرسل قائمتك مباشرة\n3️⃣ **تطبيق FreshLink** للمهنيين"],en:["🛒 To place your order, you have 3 options:","1️⃣ **Online cart** — add products on this page\n2️⃣ **WhatsApp** — send your list directly\n3️⃣ **FreshLink App** for professionals"]},
+    qr:[{fr:"🛒 Voir le catalogue",ar:"🛒 الكتالوج",en:"🛒 Browse catalogue",action:"scrollCatalogue"},{fr:"💬 Commander via WhatsApp",ar:"💬 الطلب عبر واتساب",en:"💬 Order on WhatsApp",action:"waOrder"},{fr:"🔙 Menu",ar:"🔙 القائمة",en:"🔙 Menu",step:"home"}]
   },
   livraison:{
-    bot:["🚚 **Informations livraison :**","📍 **Zone** : Casablanca & banlieue\n⏱ **Standard** : sous 24h ("+CFG.expDelay+" livraison)\n⚡ **Express** : 2 à 4h selon disponibilité\n🎁 **Livraison offerte** dès "+CFG.free+" DH d'achat\n💳 **Sinon** : "+CFG.std+" DH forfait livraison"],
-    qr:[{label:"📦 Suivre ma commande",action:"waTrack"},{label:"⏰ Horaires de livraison",step:"horaires"},{label:"🔙 Menu principal",step:"home"}]
+    bot:{fr:["🚚 **Informations livraison :**","📍 Zone : Casablanca & banlieue\n⏱ Standard : sous 24h\n⚡ Express : 2–4h selon disponibilité\n🎁 Gratuite dès "+CFG.free+" DH\n💳 Sinon : "+CFG.std+" DH"],ar:["🚚 **معلومات التوصيل :**","📍 المنطقة: الدار البيضاء وضواحيها\n⏱ عادي: خلال 24 ساعة\n⚡ سريع: 2 إلى 4 ساعات\n🎁 مجاني من "+CFG.free+" درهم\n💳 وإلا: "+CFG.std+" درهم"],en:["🚚 **Delivery information:**","📍 Zone: Casablanca & suburbs\n⏱ Standard: within 24h\n⚡ Express: 2–4h on availability\n🎁 Free from "+CFG.free+" DH\n💳 Otherwise: "+CFG.std+" DH"]},
+    qr:[{fr:"📦 Suivre ma commande",ar:"📦 تتبع طلبي",en:"📦 Track my order",action:"waTrack"},{fr:"⏰ Horaires",ar:"⏰ التوقيت",en:"⏰ Hours",step:"horaires"},{fr:"🔙 Menu",ar:"🔙 القائمة",en:"🔙 Menu",step:"home"}]
   },
   horaires:{
-    bot:["⏰ **Horaires de livraison :**","🕐 Matin : 8h – 13h\n🕕 Après-midi : 14h – 19h\n📅 Du Lundi au Samedi\n❌ Fermé le Dimanche (livraison urgente sur demande)"],
-    qr:[{label:"📞 Appeler l'équipe",action:"callTeam"},{label:"🔙 Livraison",step:"livraison"},{label:"🏠 Accueil",step:"home"}]
+    bot:{fr:["⏰ **Horaires de livraison :**","🕐 Matin : 8h – 13h\n🕕 Après-midi : 14h – 19h\n📅 Lundi au Samedi\n❌ Dimanche sur demande urgente"],ar:["⏰ **أوقات التوصيل :**","🕐 الصباح: 8ص – 1م\n🕕 المساء: 2م – 7م\n📅 من الاثنين إلى السبت\n❌ الأحد بطلب خاص"],en:["⏰ **Delivery hours:**","🕐 Morning: 8am – 1pm\n🕕 Afternoon: 2pm – 7pm\n📅 Monday to Saturday\n❌ Sunday on urgent request"]},
+    qr:[{fr:"📞 Appeler",ar:"📞 اتصل بنا",en:"📞 Call us",action:"callTeam"},{fr:"🔙 Livraison",ar:"🔙 التوصيل",en:"🔙 Delivery",step:"livraison"},{fr:"🏠 Accueil",ar:"🏠 الرئيسية",en:"🏠 Home",step:"home"}]
   },
   tarifs:{
-    bot:["💰 **Nos offres & promos :**","✅ Prix frais du marché actualisés chaque matin\n🏷️ Promotions flash sur les produits en saison\n👥 **Tarifs PRO** réservés aux CHR & marchands\n📊 Remises volume à partir de 500 DH/commande"],
-    qr:[{label:"🏢 Tarifs CHR/Pro",step:"partenaire"},{label:"🛍️ Voir les promos",action:"scrollPromo"},{label:"🔙 Menu principal",step:"home"}]
+    bot:{fr:["💰 **Nos tarifs & promos :**","✅ Prix marché actualisés chaque matin\n🏷️ Promotions flash produits de saison\n👥 **Tarifs PRO** réservés CHR & marchands\n📊 Remises volume dès 500 DH/commande"],ar:["💰 **أثمنتنا والعروض :**","✅ أسعار السوق محدثة كل صباح\n🏷️ عروض خاصة على منتجات الموسم\n👥 **أثمنة مهنية** للمطاعم والتجار\n📊 تخفيضات حجم من 500 درهم"],en:["💰 **Pricing & promotions:**","✅ Market prices updated every morning\n🏷️ Flash deals on seasonal products\n👥 **PRO prices** for CHR & merchants\n📊 Volume discounts from 500 DH/order"]},
+    qr:[{fr:"🏢 Tarifs CHR/Pro",ar:"🏢 أثمنة المهنيين",en:"🏢 CHR/Pro pricing",step:"partenaire"},{fr:"🛍️ Voir les promos",ar:"🛍️ العروض",en:"🛍️ See promos",action:"scrollPromo"},{fr:"🔙 Menu",ar:"🔙 القائمة",en:"🔙 Menu",step:"home"}]
   },
   produits:{
-    bot:["🥦 **Notre gamme de produits frais :**","🍅 Fruits & légumes de saison\n🐟 Produits de la mer (selon disponibilité)\n🧀 Épicerie fine & produits laitiers\n🌿 Herbes aromatiques & épices\n🥩 Viandes & volailles (sur commande)\n\nTous nos produits sont sourcés directement auprès des producteurs marocains 🇲🇦"],
-    qr:[{label:"🛒 Voir le catalogue",action:"scrollCatalogue"},{label:"📋 Produits disponibles",action:"waProduitsDispos"},{label:"🔙 Menu principal",step:"home"}]
+    bot:{fr:["🥦 **Notre gamme de produits :**","🍅 Fruits & légumes de saison\n🐟 Produits de la mer\n🧀 Épicerie fine & produits laitiers\n🌿 Herbes aromatiques & épices\n🥩 Viandes & volailles (sur commande)\n\n🇲🇦 Sourcés auprès des producteurs marocains"],ar:["🥦 **مجموعة منتجاتنا :**","🍅 الفواكه والخضروات الموسمية\n🐟 المأكولات البحرية\n🧀 المنتجات الغذائية الفاخرة\n🌿 الأعشاب والتوابل\n🥩 اللحوم والدواجن (بالطلب)\n\n🇲🇦 مصدرها مباشرة من المنتجين المغاربة"],en:["🥦 **Our product range:**","🍅 Seasonal fruits & vegetables\n🐟 Seafood\n🧀 Fine foods & dairy\n🌿 Herbs & spices\n🥩 Meat & poultry (on order)\n\n🇲🇦 Sourced from Moroccan producers"]},
+    qr:[{fr:"🛒 Voir le catalogue",ar:"🛒 الكتالوج",en:"🛒 See catalogue",action:"scrollCatalogue"},{fr:"📋 Dispo du jour",ar:"📋 المتوفر اليوم",en:"📋 Today's availability",action:"waProduitsDispos"},{fr:"🔙 Menu",ar:"🔙 القائمة",en:"🔙 Menu",step:"home"}]
   },
   partenaire:{
-    bot:["🏢 **Espace CHR & Marchands Pro :**","Rejoignez notre réseau de partenaires professionnels et bénéficiez de :\n✅ Tarifs professionnels exclusifs\n✅ Livraison prioritaire\n✅ Accès à l'application FreshLink ERP\n✅ Facturation mensuelle disponible\n✅ Gestionnaire de compte dédié"],
-    qr:[{label:"📋 Rejoindre via WhatsApp",action:"waSignup"},{label:"🚀 Ouvrir l'application",action:"openApp"},{label:"🔙 Menu principal",step:"home"}]
+    bot:{fr:["🏢 **Espace CHR & Marchands :**","Rejoignez notre réseau pro et bénéficiez de :\n✅ Tarifs exclusifs\n✅ Livraison prioritaire\n✅ Accès FreshLink ERP\n✅ Facturation mensuelle\n✅ Gestionnaire de compte dédié\n\nVotre demande est approuvée par notre équipe."],ar:["🏢 **فضاء المهنيين :**","انضم لشبكة شركائنا واستفد من:\n✅ أثمنة حصرية\n✅ توصيل ذو أولوية\n✅ وصول لتطبيق FreshLink\n✅ فاتورة شهرية\n✅ مدير حساب مخصص\n\nطلبك يُراجع من فريقنا."],en:["🏢 **CHR & Merchants space:**","Join our professional network and benefit from:\n✅ Exclusive pricing\n✅ Priority delivery\n✅ FreshLink ERP access\n✅ Monthly billing\n✅ Dedicated account manager\n\nYour request is reviewed by our team."]},
+    qr:[{fr:"📋 Demander un compte",ar:"📋 طلب حساب",en:"📋 Request an account",action:"openSignup"},{fr:"💬 Via WhatsApp",ar:"💬 عبر واتساب",en:"💬 Via WhatsApp",action:"waSignup"},{fr:"🔙 Menu",ar:"🔙 القائمة",en:"🔙 Menu",step:"home"}]
   },
   contact:{
-    bot:["📞 **Nous contacter :**","🕐 Notre équipe est disponible du Lundi au Samedi, 8h-19h.\nPour toute urgence ou question rapide, contactez-nous directement :"],
-    qr:[{label:"💬 WhatsApp direct",action:"waDirect"},{label:"📞 Appeler",action:"callTeam"},{label:"🔙 Menu principal",step:"home"}]
+    bot:{fr:["📞 **Nous contacter :**","🕐 Disponibles du Lundi au Samedi, 8h–19h.\nContactez-nous directement pour toute question urgente."],ar:["📞 **تواصل معنا :**","🕐 متاحون من الاثنين للسبت، 8ص–7م.\nتواصل معنا مباشرة لأي سؤال عاجل."],en:["📞 **Contact us:**","🕐 Available Monday to Saturday, 8am–7pm.\nContact us directly for any urgent question."]},
+    qr:[{fr:"💬 WhatsApp direct",ar:"💬 واتساب مباشر",en:"💬 Direct WhatsApp",action:"waDirect"},{fr:"📞 Appeler",ar:"📞 اتصل",en:"📞 Call",action:"callTeam"},{fr:"🔙 Menu",ar:"🔙 القائمة",en:"🔙 Menu",step:"home"}]
   }
 };
 function chatAddMsg(who,text,delay){
@@ -2145,6 +2181,7 @@ function chatAddMsg(who,text,delay){
   setTimeout(function(){
     var body=document.getElementById("chat-messages");
     if(!body) return;
+    if(typeof text==="object"&&text!==null){ var l=chatLang(); text=text[l]||text.fr||""; }
     var div=document.createElement("div");
     var html=text.replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>").replace(/\n/g,"<br>");
     if(who==="bot"){
@@ -2158,16 +2195,19 @@ function chatAddMsg(who,text,delay){
     body.scrollTop=body.scrollHeight;
   },delay);
 }
+function chatLang(){ return(typeof currentLang!=="undefined"&&currentLang)||"fr"; }
+function chatT(obj){ var l=chatLang(); return obj[l]||obj.fr||""; }
 function chatShowQuickReplies(qrs){
   var bar=document.getElementById("chat-quickreplies-bar");
   if(!bar) return;
   bar.innerHTML="";
   (qrs||[]).forEach(function(qr){
+    var l=chatLang(), label=qr[l]||qr.fr||qr.label||"";
     var btn=document.createElement("button");
-    btn.className="chat-qr"; btn.textContent=qr.label;
+    btn.className="chat-qr"; btn.textContent=label;
     btn.style.cssText="flex:0 0 auto;white-space:nowrap";
     btn.onclick=function(){
-      chatAddMsg("user",qr.label);
+      chatAddMsg("user",label);
       bar.innerHTML="";
       if(qr.action) chatDoAction(qr.action);
       else if(qr.step) chatGoStep(qr.step);
@@ -2179,46 +2219,49 @@ function chatGoStep(step){
   var flow=CHAT_FLOWS[step];
   if(!flow) return;
   chatContext.step=step;
-  var msgs=flow.bot, delay=400;
-  // Typing indicator
+  var msgs=chatT(flow.bot), delay=400;
   var body=document.getElementById("chat-messages");
   var typing=document.createElement("div");
   typing.id="chat-typing"; typing.style.cssText="display:flex;align-items:center;gap:6px;margin-bottom:10px;color:#999;font-size:12px";
-  typing.innerHTML='<div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#075e54,#128c7e);display:flex;align-items:center;justify-content:center;font-size:14px">🤖</div><span style="animation:pulse 1s infinite">En train d\'écrire…</span>';
+  var typingText={fr:"En train d'écrire…",ar:"يكتب…",en:"Typing…"};
+  typing.innerHTML='<div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#075e54,#128c7e);display:flex;align-items:center;justify-content:center;font-size:14px">🤖</div><span>'+chatT(typingText)+'</span>';
   if(body) body.appendChild(typing);
   msgs.forEach(function(msg,i){
     setTimeout(function(){
-      var t=document.getElementById("chat-typing");
-      if(t) t.remove();
+      var t=document.getElementById("chat-typing"); if(t) t.remove();
       chatAddMsg("bot",msg);
       if(i===msgs.length-1) setTimeout(function(){ chatShowQuickReplies(flow.qr); },300);
     }, delay*(i+1)+400);
   });
 }
 function chatDoAction(action){
-  var waBase="https://wa.me/"+CFG.wa+"?text=";
+  var l=chatLang(), waBase="https://wa.me/"+CFG.wa+"?text=";
+  var menuQR=[{fr:"🏠 Menu",ar:"🏠 الرئيسية",en:"🏠 Menu",step:"home"}];
+  var botReply={fr:"",ar:"",en:""};
+  function done(fr,ar,en){ chatAddMsg("bot",{fr:fr,ar:ar,en:en}[l]||fr); setTimeout(function(){chatShowQuickReplies(menuQR);},600); }
   var actions={
-    waOrder:function(){ window.open(waBase+encodeURIComponent("Bonjour ! Je souhaite passer une commande de produits frais 🛒"),"_blank"); chatAddMsg("bot","Je vous redirige vers WhatsApp 💬 Notre équipe va vous prendre en charge immédiatement !"); setTimeout(function(){chatShowQuickReplies([{label:"🏠 Menu principal",step:"home"}]);},600); },
-    waTrack:function(){ window.open(waBase+encodeURIComponent("Bonjour, je voudrais suivre l'état de ma commande 📦"),"_blank"); chatAddMsg("bot","Redirection vers WhatsApp pour le suivi de votre commande 📦"); setTimeout(function(){chatShowQuickReplies([{label:"🏠 Menu principal",step:"home"}]);},600); },
-    waSignup:function(){ window.open("https://chat.whatsapp.com/JOCkX8JYiVx2nMC51Tsh9a","_blank"); chatAddMsg("bot","Je vous redirige vers notre groupe WhatsApp Partenaires 🤝 Notre équipe commerciale vous contactera sous 24h !"); setTimeout(function(){chatShowQuickReplies([{label:"🏠 Menu principal",step:"home"}]);},600); },
-    waDirect:function(){ window.open(waBase+encodeURIComponent("Bonjour Empire Fresh, j'ai une question."),"_blank"); chatAddMsg("bot","Je vous mets en contact avec notre équipe 💬"); setTimeout(function(){chatShowQuickReplies([{label:"🏠 Menu principal",step:"home"}]);},600); },
-    waProduitsDispos:function(){ window.open(waBase+encodeURIComponent("Bonjour ! Quels produits sont disponibles aujourd'hui ? 🥦"),"_blank"); chatAddMsg("bot","Je demande à notre équipe la liste des produits disponibles du jour 📋"); setTimeout(function(){chatShowQuickReplies([{label:"🏠 Menu principal",step:"home"}]);},600); },
-    callTeam:function(){ window.open("tel:+"+CFG.wa); chatAddMsg("bot","📞 Appel en cours… Si vous êtes sur mobile, votre téléphone va s'ouvrir."); setTimeout(function(){chatShowQuickReplies([{label:"🏠 Menu principal",step:"home"}]);},600); },
+    waOrder:function(){ window.open(waBase+encodeURIComponent("Bonjour ! Je souhaite passer une commande 🛒"),"_blank"); done("Je vous redirige vers WhatsApp 💬 Notre équipe vous prend en charge !","يتم تحويلك إلى واتساب 💬 فريقنا سيهتم بك!","Redirecting to WhatsApp 💬 Our team will take care of you!"); },
+    waTrack:function(){ window.open(waBase+encodeURIComponent("Bonjour, je voudrais suivre ma commande 📦"),"_blank"); done("Redirection WhatsApp pour le suivi 📦","تتبع طلبك عبر واتساب 📦","Tracking your order on WhatsApp 📦"); },
+    waSignup:function(){ window.open(CONFIG.WHATSAPP_SIGNUP,"_blank"); done("Groupe WhatsApp Partenaires 🤝 Notre équipe vous contactera sous 24h !","مجموعة واتساب الشركاء 🤝 فريقنا سيتصل بك خلال 24 ساعة!","Partner WhatsApp group 🤝 Our team will contact you within 24h!"); },
+    waDirect:function(){ window.open(waBase+encodeURIComponent("Bonjour Empire Fresh, j'ai une question."),"_blank"); done("En contact avec notre équipe 💬","على تواصل مع فريقنا 💬","In touch with our team 💬"); },
+    waProduitsDispos:function(){ window.open(waBase+encodeURIComponent("Bonjour ! Quels produits sont disponibles aujourd'hui ? 🥦"),"_blank"); done("Demande envoyée à notre équipe 📋","تم إرسال الطلب لفريقنا 📋","Request sent to our team 📋"); },
+    callTeam:function(){ window.open("tel:+"+CFG.wa); done("📞 Appel en cours — ouvrez votre téléphone","📞 مكالمة جارية — افتح هاتفك","📞 Calling — check your phone"); },
     scrollCatalogue:function(){ toggleChat(); setTimeout(function(){ var el=document.getElementById("catalogue"); if(el) el.scrollIntoView({behavior:"smooth"}); },200); },
-    scrollPromo:function(){ toggleChat(); setTimeout(function(){ var el=document.querySelector("[data-tag='promo']"); if(el) el.click(); var cat=document.getElementById("catalogue"); if(cat) cat.scrollIntoView({behavior:"smooth"}); },200); },
-    openApp:function(){ window.open("https://empire-fresh.netlify.app/","_blank"); chatAddMsg("bot","🚀 Application ouverte dans un nouvel onglet !"); setTimeout(function(){chatShowQuickReplies([{label:"🏠 Menu principal",step:"home"}]);},600); }
+    scrollPromo:function(){ toggleChat(); setTimeout(function(){ var cat=document.getElementById("catalogue"); if(cat) cat.scrollIntoView({behavior:"smooth"}); },200); },
+    openSignup:function(){ toggleChat(); setTimeout(function(){ openLogin(); setTimeout(function(){switchLoginTab("signup");},200); },300); },
+    openApp:function(){ var d=document.getElementById("pro-app-msg-modal"); if(d) d.style.display="flex"; done("Informations sur l'application affichées.","تم عرض معلومات التطبيق.","App information displayed."); }
   };
   if(actions[action]) actions[action]();
 }
 function chatKeywordReply(text){
   var t=text.toLowerCase();
-  if(/commander|commande|acheter|achat|panier/.test(t)) return "commander";
-  if(/livrai|délai|express|horaire|heure/.test(t)) return "livraison";
-  if(/prix|tarif|promo|remise|offre|réduction/.test(t)) return "tarifs";
-  if(/produit|fruit|légume|frais|poisson|viande/.test(t)) return "produits";
-  if(/chr|partenaire|professionnel|marchand|restaurant|hotel/.test(t)) return "partenaire";
-  if(/contact|appel|tel|téléphone|humain|agent/.test(t)) return "contact";
-  if(/bonjour|salut|allo|hello|hi/.test(t)) return "home";
+  if(/commander|commande|acheter|achat|panier|order|طلب|شراء/.test(t)) return "commander";
+  if(/livrai|délai|express|horaire|توصيل|delivery/.test(t)) return "livraison";
+  if(/prix|tarif|promo|remise|offre|أثمنة|price|promo/.test(t)) return "tarifs";
+  if(/produit|fruit|légume|frais|viande|منتج|product/.test(t)) return "produits";
+  if(/chr|partenaire|professionnel|marchand|restaurant|شريك|partner/.test(t)) return "partenaire";
+  if(/contact|appel|tel|اتصال/.test(t)) return "contact";
+  if(/bonjour|salut|hello|مرحبا|hi|سلام/.test(t)) return "home";
   return null;
 }
 function chatSend(){
@@ -2230,16 +2273,14 @@ function chatSend(){
   var matched=chatKeywordReply(text);
   if(matched){ setTimeout(function(){ chatGoStep(matched); },600); }
   else {
-    setTimeout(function(){
-      chatAddMsg("bot","Je n'ai pas bien compris votre demande 🤔 Voici ce que je peux faire pour vous :");
-      setTimeout(function(){ chatGoStep("home"); },800);
-    },700);
+    var l=chatLang(), notUnderstood={fr:"Je n'ai pas bien compris 🤔 Voici ce que je peux faire :",ar:"لم أفهم جيدًا 🤔 هذا ما يمكنني فعله:",en:"I didn't quite understand 🤔 Here's what I can do:"};
+    setTimeout(function(){ chatAddMsg("bot",notUnderstood[l]||notUnderstood.fr); setTimeout(function(){ chatGoStep("home"); },800); },700);
   }
 }
-function chatAction(type){ chatGoStep(type); } // legacy compat
+function chatAction(type){ chatGoStep(type); }
 function toggleChat(){
   chatOpen=!chatOpen;
-  var panel=document.getElementById("chat-panel"), fab=document.getElementById("chat-fab");
+  var panel=document.getElementById("chat-panel");
   if(chatOpen){ panel.classList.add("open"); document.getElementById("chat-notif-dot").style.display="none"; if(!chatInitialized){ chatInitialized=true; document.getElementById("chat-messages").innerHTML=""; chatGoStep("home"); } }
   else panel.classList.remove("open");
 }
@@ -2257,7 +2298,7 @@ window.filterAvis=filterAvis; window.setStars=setStars; window.submitReview=subm
 window.footerSecretClick=footerSecretClick; window.checkAdminPin=checkAdminPin;
 window.openLegal=openLegal; window.closeLegal=closeLegal;
 window.toggleChat=toggleChat; window.chatAction=chatAction; window.chatSend=chatSend;
-window.showLoginForm=showLoginForm; window.openProApp=openProApp; window.switchLoginTab=switchLoginTab; window.doSignup=doSignup;
+window.showLoginForm=showLoginForm; window.openProApp=openProApp; window.switchLoginTab=switchLoginTab; window.doSignup=doSignup; window.showProAppLink=showProAppLink;
 
 })();
 </script>
