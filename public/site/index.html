@@ -1982,6 +1982,66 @@ document.addEventListener("DOMContentLoaded",function(){
   }
 });
 
+// ── ADMIN PIN ──
+var ADMIN_PIN = "EmpireFresh2026";
+var cfgClickCount=0,cfgTimer;
+function footerSecretClick(){
+  cfgClickCount++;
+  clearTimeout(cfgTimer);
+  cfgTimer=setTimeout(function(){cfgClickCount=0;},800);
+  if(cfgClickCount>=3){
+    cfgClickCount=0;
+    document.getElementById('admin-pwd-modal').style.display='flex';
+    setTimeout(function(){document.getElementById('admin-pin-input').focus();},100);
+  }
+}
+function checkAdminPin(){
+  var val=document.getElementById('admin-pin-input').value;
+  var err=document.getElementById('admin-pwd-err');
+  if(val===ADMIN_PIN){
+    document.getElementById('admin-pwd-modal').style.display='none';
+    document.getElementById('admin-pin-input').value='';
+    if(err) err.style.display='none';
+    openCfg();
+  } else {
+    if(err){ err.style.display='block'; setTimeout(function(){err.style.display='none';},2500); }
+    document.getElementById('admin-pin-input').value='';
+    document.getElementById('admin-pin-input').focus();
+  }
+}
+
+// ── LEGAL MODAL ──
+var LEGAL_CONTENT = {
+  mentions: "<h2>Mentions légales</h2><p><strong>Éditeur du site</strong><br>Empire Fresh — Distribution Alimentaire<br>Zone Industrielle, Casablanca, Maroc<br>Téléphone : +212 6 00 00 00 00<br>Email : contact@empire-fresh.ma</p><p><strong>Directeur de la publication</strong><br>Empire Fresh SARL</p><p><strong>Hébergement</strong><br>Netlify Inc. — 2325 3rd Street, San Francisco, CA 94107, USA</p><p><strong>Propriété intellectuelle</strong><br>L'ensemble du contenu de ce site (textes, images, logos) est la propriété exclusive d'Empire Fresh et est protégé par les lois marocaines sur la propriété intellectuelle.</p>",
+  confidentialite: "<h2>Politique de confidentialité</h2><p><strong>Collecte des données</strong><br>Empire Fresh collecte uniquement les données nécessaires au traitement de vos commandes : nom, téléphone, adresse de livraison et email (optionnel).</p><p><strong>Utilisation</strong><br>Vos données sont utilisées exclusivement pour : le traitement de vos commandes, la livraison, la communication commerciale avec votre accord.</p><p><strong>Conservation</strong><br>Vos données sont conservées pendant 3 ans à compter du dernier achat.</p><p><strong>Vos droits</strong><br>Conformément à la loi marocaine 09-08, vous disposez d'un droit d'accès, de rectification et de suppression de vos données. Contact : contact@empire-fresh.ma</p><p><strong>Cookies</strong><br>Ce site utilise uniquement des cookies fonctionnels (préférences de langue, panier). Aucun cookie publicitaire n'est utilisé.</p>",
+  cgv: "<h2>Conditions Générales de Vente</h2><p><strong>Objet</strong><br>Les présentes CGV régissent les ventes de fruits, légumes et produits frais par Empire Fresh à ses clients.</p><p><strong>Commandes</strong><br>Toute commande passée via le site, WhatsApp ou l'application constitue un engagement d'achat. Les commandes sont confirmées par SMS ou WhatsApp.</p><p><strong>Prix</strong><br>Les prix sont indiqués en Dirham Marocain (MAD) TTC. Empire Fresh se réserve le droit de modifier ses prix à tout moment.</p><p><strong>Livraison</strong><br>Livraison standard sous 24h — Livraison express sous 2 à 4h selon la zone. Casablanca uniquement. Les frais de livraison sont indiqués lors de la commande.</p><p><strong>Paiement</strong><br>Paiement accepté : Cash à la livraison, virement bancaire.</p><p><strong>Retours</strong><br>Tout produit non conforme doit être signalé dans l'heure suivant la livraison. Empire Fresh procédera au remplacement ou au remboursement.</p><p><strong>Litige</strong><br>En cas de litige, les tribunaux de Casablanca sont seuls compétents.</p>"
+};
+function openLegal(key){ document.getElementById('legal-content').innerHTML=LEGAL_CONTENT[key]; document.getElementById('legal-modal').style.display='flex'; }
+function closeLegal(){ document.getElementById('legal-modal').style.display='none'; }
+
+// ── CHAT WIDGET ──
+function toggleChat(){
+  var panel=document.getElementById('chat-panel');
+  panel.classList.toggle('open');
+}
+function chatAction(type){
+  var msgs={
+    commander:"Bonjour, je souhaite passer une commande de produits frais.",
+    livraison:"Bonjour, j'aimerais avoir des informations sur la livraison et les délais.",
+    tarifs:"Bonjour, je suis professionnel (CHR/Marchand) et je voudrais connaître vos tarifs pro."
+  };
+  var text=msgs[type]||"Bonjour, j'ai une question.";
+  window.open("https://wa.me/"+CFG.wa+"?text="+encodeURIComponent(text),"_blank");
+  document.getElementById('chat-panel').classList.remove('open');
+}
+function chatSend(){
+  var input=document.getElementById('chat-input'), text=input.value.trim();
+  if(!text) return;
+  window.open("https://wa.me/"+CFG.wa+"?text="+encodeURIComponent(text),"_blank");
+  input.value='';
+  document.getElementById('chat-panel').classList.remove('open');
+}
+
 // Expose globals
 window.filt=filt; window.fcat=fcat; window.setDel=setDel; window.setCt=setCt; window.upCart=upCart;
 window.submitOrder=submitOrder; window.openCfg=openCfg; window.closeCfg=closeCfg; window.cfgTab=cfgTab;
@@ -1991,6 +2051,10 @@ window.closeMobileMenu=closeMobileMenu; window.openLogin=openLogin; window.close
 window.closeLoginOutside=closeLoginOutside; window.logout=logout; window.submitProForm=submitProForm;
 window.orderWhatsApp=orderWhatsApp; window.joinWaSignup=joinWaSignup;
 window.filterAvis=filterAvis; window.setStars=setStars; window.submitReview=submitReview;
+window.footerSecretClick=footerSecretClick; window.checkAdminPin=checkAdminPin;
+window.openLegal=openLegal; window.closeLegal=closeLegal;
+window.toggleChat=toggleChat; window.chatAction=chatAction; window.chatSend=chatSend;
+window.showLoginForm=showLoginForm; window.openProApp=openProApp;
 
 })();
 </script>
