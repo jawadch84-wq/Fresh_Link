@@ -468,6 +468,24 @@ html[dir="rtl"] .modal-close{right:auto;left:14px}
 @media(max-width:1024px){.hero-cards{display:none}.pgrid{grid-template-columns:repeat(3,1fr)}.cats{grid-template-columns:repeat(2,1fr)}.erp-g{grid-template-columns:1fr;gap:32px}.footer-cols{grid-template-columns:1fr 1fr;gap:24px}.cfg-drawer{width:100%;right:-100%}.wa-section-grid{grid-template-columns:1fr}}
 @media(max-width:768px){.nav-links{display:none}.hamburger{display:flex}.hero-inner{grid-template-columns:1fr}.hero{padding:52px 16px}.hero h1{font-size:32px}.pro-grid{grid-template-columns:1fr}.ogrid{grid-template-columns:1fr}.tg{grid-template-columns:1fr}.footer-cols{grid-template-columns:1fr}.frow{grid-template-columns:1fr}.form-row{grid-template-columns:1fr}.zone-grid{grid-template-columns:1fr}.delivery-modes{grid-template-columns:1fr}.pgrid{grid-template-columns:repeat(2,1fr)}.popts{grid-template-columns:repeat(2,1fr)}.dopts{grid-template-columns:1fr}.container{padding:0 16px}}
 @media(max-width:480px){.pgrid{grid-template-columns:1fr}.hero-ctas{flex-direction:column}.btn-hero-primary,.btn-hero-whatsapp,.btn-hero-app{justify-content:center}.cat-wa-banner{flex-direction:column;text-align:center}.btn-wa-green{margin:0 auto}.erp-bar{padding:7px 14px}.strip{padding:12px}}
+/* MEDIA GALLERY */
+.media-sec{padding:64px 0;background:var(--gray-50,#f9fafb)}
+.media-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:36px}
+.media-item{border-radius:14px;overflow:hidden;aspect-ratio:4/3;position:relative;background:#e5e7eb;cursor:pointer;transition:transform .3s,box-shadow .3s}
+.media-item:hover{transform:scale(1.03);box-shadow:0 12px 32px rgba(0,0,0,.15)}
+.media-item img{width:100%;height:100%;object-fit:cover;display:block}
+.media-item video{width:100%;height:100%;object-fit:cover;display:block}
+.media-item .media-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.5) 0%,transparent 50%);display:flex;align-items:flex-end;padding:14px;opacity:0;transition:opacity .3s}
+.media-item:hover .media-overlay{opacity:1}
+.media-item .media-caption{color:#fff;font-size:13px;font-weight:600}
+.media-item .play-icon{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:40px;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.5);pointer-events:none}
+.media-lightbox{display:none;position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,.92);align-items:center;justify-content:center}
+.media-lightbox.show{display:flex}
+.media-lightbox-inner{position:relative;max-width:90vw;max-height:90vh}
+.media-lightbox-inner img,.media-lightbox-inner video{max-width:90vw;max-height:85vh;border-radius:12px;display:block}
+.media-lightbox-close{position:absolute;top:-16px;right:-16px;background:#fff;border:none;border-radius:50%;width:36px;height:36px;font-size:18px;cursor:pointer;font-weight:700;display:flex;align-items:center;justify-content:center;line-height:1}
+@media(max-width:768px){.media-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:480px){.media-grid{grid-template-columns:1fr}}
 /* ADMIN PASSWORD MODAL */
 #admin-pwd-modal{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);align-items:center;justify-content:center}
 .admin-pwd-box{background:#111;border:1px solid rgba(255,255,255,.1);border-radius:18px;padding:36px 32px;width:100%;max-width:360px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.5)}
@@ -830,6 +848,7 @@ function setLang(lang){
     <button class="cfg-tab on" onclick="cfgTab(this,'s-contact')">📱 Contact</button>
     <button class="cfg-tab"    onclick="cfgTab(this,'s-livraison')">🚚 Livraison</button>
     <button class="cfg-tab"    onclick="cfgTab(this,'s-supabase')">🔗 Connexion ERP</button>
+    <button class="cfg-tab"    onclick="cfgTab(this,'s-galerie')">🖼️ Galerie</button>
     <button class="cfg-tab"    onclick="cfgTab(this,'s-guide')">📖 Guide</button>
   </div>
   <div class="cfg-body">
@@ -838,6 +857,10 @@ function setLang(lang){
       <div class="cfg-f"><label>Numéro WhatsApp</label><input id="c-wa" type="tel" placeholder="212661234567"><div class="cfg-hint">Sans le + — ex: 212661234567</div></div>
       <div class="cfg-f"><label>Email</label><input id="c-email" type="email" placeholder="contact@empire-fresh.ma"></div>
       <div class="cfg-f"><label>Adresse / Ville</label><input id="c-addr" type="text" placeholder="Casablanca, Maroc"></div>
+      <div class="cfg-grp">🏦 Virement bancaire — RIB</div>
+      <div class="cfg-f"><label>RIB complet</label><input id="c-rib" type="text" placeholder="007 780 0000000000000 53" style="font-family:monospace"><div class="cfg-hint">Affiché automatiquement quand le client choisit "Virement bancaire".</div></div>
+      <div class="cfg-f"><label>Bénéficiaire</label><input id="c-rib-benef" type="text" placeholder="Empire Fresh SARL"></div>
+      <div class="cfg-f"><label>Banque</label><input id="c-rib-banque" type="text" placeholder="CIH / Attijariwafa / BMCE"></div>
       <div class="cfg-grp">🌍 Réseaux sociaux</div>
       <div class="cfg-f"><label>Facebook</label><input id="c-fb" type="url" placeholder="https://facebook.com/empirefreshmaroc"></div>
       <div class="cfg-f"><label>Instagram</label><input id="c-ig" type="url" placeholder="https://instagram.com/empirefreshmaroc"></div>
@@ -892,6 +915,25 @@ function setLang(lang){
       <div class="cfg-f"><label>🔑 Supabase Anon Key (publique)</label><input id="c-sb-key" type="text" placeholder="eyJhbGci..."><div class="cfg-hint">Clé anon uniquement — jamais la service role key.</div></div>
       <button class="test-btn" onclick="testSupabase()">🔄 Tester les deux connexions</button>
       <div class="erp-conn-box" id="sb-stats-box" style="display:none"><div id="sb-stats-text" style="font-size:12px;color:var(--g1);line-height:1.8"></div></div>
+    </div>
+    <div class="cfg-sec" id="s-galerie">
+      <div class="cfg-grp">🖼️ Galerie photos &amp; vidéos</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+        <div style="font-size:13px;color:var(--gy)">Afficher la section galerie sur le site</div>
+        <label style="position:relative;display:inline-block;width:44px;height:24px;cursor:pointer">
+          <input type="checkbox" id="c-gallery-show" onchange="toggleGallerySection()" style="opacity:0;width:0;height:0">
+          <span id="gallery-toggle-track" style="position:absolute;inset:0;background:#ccc;border-radius:24px;transition:.3s"></span>
+          <span id="gallery-toggle-thumb" style="position:absolute;top:3px;left:3px;width:18px;height:18px;background:#fff;border-radius:50%;transition:.3s"></span>
+        </label>
+      </div>
+      <div id="gallery-admin-items" style="display:grid;gap:10px;margin-bottom:16px">
+        <!-- items rendered by renderGalleryAdmin() -->
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button onclick="addGalleryItem('image')" style="padding:9px 16px;border-radius:8px;background:var(--g1);color:#fff;border:none;cursor:pointer;font-size:13px;font-weight:700">➕ Ajouter image (URL)</button>
+        <button onclick="addGalleryItem('video')" style="padding:9px 16px;border-radius:8px;background:#7c3aed;color:#fff;border:none;cursor:pointer;font-size:13px;font-weight:700">🎥 Ajouter vidéo (URL)</button>
+      </div>
+      <div style="font-size:11px;color:var(--gy);margin-top:10px">Entrez des URLs directes d'images (.jpg/.png/.webp) ou de vidéos (.mp4). Vous pouvez utiliser des liens Supabase Storage ou tout hébergement public.</div>
     </div>
     <div class="cfg-sec" id="s-guide">
       <div class="cfg-grp">🚀 Comment publier ce site</div>
@@ -1150,9 +1192,9 @@ GET  /api/ext/commandes/:id → suivi commande</div>
         <div id="virement-bloc" style="display:none;background:#fffbe6;border:1px solid #f59e0b;border-radius:12px;padding:14px;margin-bottom:12px">
           <div style="font-weight:700;color:#b45309;margin-bottom:8px">🏦 Virement bancaire</div>
           <div id="rib-display" style="font-size:13px;line-height:1.8;color:#333">
-            <strong>RIB :</strong> <span id="rib-val">Configurable dans les paramètres admin</span><br>
-            <strong>Bénéficiaire :</strong> Empire Fresh SARL<br>
-            <strong>Banque :</strong> CIH / Attijariwafa / BMCE
+            <strong>RIB :</strong> <span id="rib-val" style="font-family:monospace;font-weight:700;letter-spacing:1px">—</span><br>
+            <strong>Bénéficiaire :</strong> <span id="rib-benef">Empire Fresh SARL</span><br>
+            <strong>Banque :</strong> <span id="rib-banque">CIH / Attijariwafa / BMCE</span>
           </div>
           <div style="margin-top:10px;font-size:13px;color:#b45309">⚠️ <strong>Justificatif obligatoire</strong> — envoyez le reçu de virement via WhatsApp avant préparation de votre commande.</div>
           <div class="fg" style="margin-top:10px">
@@ -1350,6 +1392,28 @@ GET  /api/ext/commandes/:id → suivi commande</div>
   </div>
 </section>
 
+<!-- MEDIA GALLERY -->
+<section class="media-sec reveal" id="media-section" style="display:none">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-tag">📸 Galerie</span>
+      <h2 class="section-title">Notre univers en images</h2>
+      <p class="section-sub">Découvrez nos entrepôts, nos produits et notre équipe</p>
+    </div>
+    <div class="media-grid" id="media-grid">
+      <!-- populated by renderGallery() -->
+    </div>
+  </div>
+</section>
+
+<!-- LIGHTBOX -->
+<div class="media-lightbox" id="media-lightbox" onclick="closeLightbox()">
+  <div class="media-lightbox-inner" onclick="event.stopPropagation()">
+    <button class="media-lightbox-close" onclick="closeLightbox()">✕</button>
+    <div id="lightbox-content"></div>
+  </div>
+</div>
+
 <!-- AVIS -->
 <section class="t-sec reveal" id="avis-section">
   <div class="container">
@@ -1362,9 +1426,16 @@ GET  /api/ext/commandes/:id → suivi commande</div>
       <button class="avis-tab" data-source="fournisseur" onclick="filterAvis('fournisseur',this)">Fournisseurs</button>
     </div>
     <div class="tg" id="avis-grid">
+      <!-- Virtual reviews — completed from ERP fl_feedbacks when available -->
       <div class="tc2" data-source="client"><div class="stars">★★★★★</div><div class="tt">"Produits toujours frais, livrés à l'heure. Le service express est parfait pour mon restaurant."</div><div class="ta2"><div class="av">👨‍🍳</div><div><div class="an">Hassan B.</div><div class="ar">Restaurateur · Client</div></div></div></div>
       <div class="tc2" data-source="client"><div class="stars">★★★★★</div><div class="tt">"Commande le soir, livraison le lendemain matin avant l'ouverture. Parfait pour mon épicerie."</div><div class="ta2"><div class="av">🏪</div><div><div class="an">Fatima Z.</div><div class="ar">Épicière · Client</div></div></div></div>
       <div class="tc2" data-source="fournisseur"><div class="stars">★★★★☆</div><div class="tt">"Partenariat sérieux, paiements ponctuels et communication claire. Très professionnel."</div><div class="ta2"><div class="av">🚚</div><div><div class="an">Ahmed R.</div><div class="ar">Grossiste · Fournisseur</div></div></div></div>
+      <div class="tc2" data-source="client"><div class="stars">★★★★★</div><div class="tt">"Le rapport qualité-prix est imbattable. Mes clients remarquent la différence avec les autres fournisseurs."</div><div class="ta2"><div class="av">🥗</div><div><div class="an">Karim M.</div><div class="ar">Traiteur CHR · Client</div></div></div></div>
+      <div class="tc2" data-source="client"><div class="stars">★★★★★</div><div class="tt">"Service WhatsApp très réactif. J'envoie ma liste et c'est livré sans faute. Bravo Empire Fresh !"</div><div class="ta2"><div class="av">🛒</div><div><div class="an">Nadia O.</div><div class="ar">Épicerie fine · Client</div></div></div></div>
+      <div class="tc2" data-source="client"><div class="stars">★★★★☆</div><div class="tt">"منتجات طازجة دائمًا والتسليم في الوقت المحدد. خدمة ممتازة ونسيتها مع الموردين الآخرين."</div><div class="ta2"><div class="av">🏬</div><div><div class="an">يوسف ب.</div><div class="ar">تاجر تجزئة · عميل</div></div></div></div>
+      <div class="tc2" data-source="fournisseur"><div class="stars">★★★★★</div><div class="tt">"Une équipe professionnelle et sérieuse. La logistique est bien organisée et les volumes sont respectés."</div><div class="ta2"><div class="av">🌾</div><div><div class="an">Omar T.</div><div class="ar">Maraîcher · Fournisseur</div></div></div></div>
+      <div class="tc2" data-source="client"><div class="stars">★★★★★</div><div class="tt">"Great service! Fresh vegetables delivered early morning. My hotel kitchen has never been better supplied."</div><div class="ta2"><div class="av">🏨</div><div><div class="an">Sarah L.</div><div class="ar">Hotel F&amp;B Manager · Client</div></div></div></div>
+      <div class="tc2" data-source="client"><div class="stars">★★★★★</div><div class="tt">"La livraison express en 2h est une révolution pour mon café-restaurant. Je commande toujours à la dernière minute et ça arrive !"</div><div class="ta2"><div class="av">☕</div><div><div class="an">Meryem K.</div><div class="ar">Café-Restaurant · Client</div></div></div></div>
     </div>
 
     <!-- REVIEW FORM -->
@@ -1472,7 +1543,7 @@ GET  /api/ext/commandes/:id → suivi commande</div>
   <span id="chat-fab-icon">💬</span>
   <span id="chat-notif-dot" style="position:absolute;top:4px;right:4px;width:12px;height:12px;background:#ff4444;border-radius:50%;border:2px solid #fff;display:none"></span>
 </button>
-<div id="chat-panel">
+<div id="chat-panel" onclick="event.stopPropagation()">
   <div class="chat-header">
     <div class="chat-avatar" style="font-size:22px">🤖</div>
     <div class="chat-header-info">
@@ -1485,7 +1556,7 @@ GET  /api/ext/commandes/:id → suivi commande</div>
   <div id="chat-quickreplies-bar" class="chat-quickreplies" style="padding:8px 12px;background:#f7f7f7;border-top:1px solid #eee;gap:6px;flex-wrap:wrap;display:flex"></div>
   <div class="chat-input-row">
     <input class="chat-input" id="chat-input" placeholder="Tapez · اكتب · Type..." onkeydown="if(event.key==='Enter')chatSend()"/>
-    <button class="chat-send-btn" onclick="chatSend()" title="Envoyer">➤</button>
+    <button class="chat-send-btn" onclick="event.stopPropagation();chatSend()" title="Envoyer">➤</button>
   </div>
 </div>
 
@@ -1513,23 +1584,21 @@ GET  /api/ext/commandes/:id → suivi commande</div>
 <div id="login-choice-modal" onclick="if(event.target===this)this.style.display='none'">
   <div class="choice-box">
     <h2>👋 Mon Espace</h2>
-    <p class="choice-sub">Particulier, CHR ou Marchand — choisissez votre accès</p>
-    <div class="choice-cards" style="grid-template-columns:1fr 1fr 1fr;gap:10px">
+    <p class="choice-sub">Particuliers, CHR &amp; Marchands — connexion ou inscription</p>
+    <div class="choice-cards" style="grid-template-columns:1fr 1fr;gap:12px">
       <div class="choice-card" onclick="showLoginForm('login')">
         <span class="choice-card-icon">🔑</span>
         <div class="choice-card-title">Se connecter</div>
-        <div class="choice-card-sub">Vous avez déjà un compte</div>
+        <div class="choice-card-sub">Vous avez déjà un compte (Particulier, CHR ou Marchand)</div>
       </div>
       <div class="choice-card" onclick="showLoginForm('signup')">
         <span class="choice-card-icon">📋</span>
         <div class="choice-card-title">S'inscrire</div>
-        <div class="choice-card-sub">Particulier, CHR ou Marchand</div>
+        <div class="choice-card-sub">Particulier · CHR · Marchand — demande de compte, approuvée sous 24h</div>
       </div>
-      <div class="choice-card" onclick="openProApp()">
-        <span class="choice-card-icon">🏢</span>
-        <div class="choice-card-title">Espace Pro</div>
-        <div class="choice-card-sub">Application FreshLink ERP</div>
-      </div>
+    </div>
+    <div style="margin-top:12px;padding:10px 14px;background:#f0faf4;border-radius:10px;font-size:12px;color:#1a7a3c;text-align:center">
+      🏢 <strong>CHR &amp; Marchands</strong> : utilisez le formulaire "S'inscrire" pour soumettre votre demande. Notre équipe valide et crée votre accès professionnel.
     </div>
     <button class="choice-close" onclick="document.getElementById('login-choice-modal').style.display='none'">Fermer</button>
   </div>
@@ -1666,6 +1735,7 @@ GET  /api/ext/commandes/:id → suivi commande</div>
 var CFG = {
   wa:"212600000000", email:"contact@empire-fresh.ma", addr:"Casablanca, Maroc",
   fb:"", ig:"", exp:20, expDelay:"2h", free:150, std:15,
+  rib:"", ribBanque:"CIH / Attijariwafa / BMCE", ribBenef:"Empire Fresh SARL",
   sbUrl:"https://jwdrwapuetqoqnankgma.supabase.co",
   sbKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp3ZHJ3YXB1ZXRxb3FuYW5rZ21hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0NDE1NzUsImV4cCI6MjA5NDAxNzU3NX0.9l0e2eE9milvCWg29TIoGXgWY-ULOmTVrPmWRCsIvtw"
 };
@@ -1938,8 +2008,11 @@ function onPayChange(val){
   var bloc=document.getElementById("virement-bloc");
   if(bloc) bloc.style.display=(val==="virement")?"block":"none";
   if(val==="virement"){
-    var waMsg=encodeURIComponent("🏦 Justificatif virement — Empire Fresh\nCommande en cours de validation.\nVeuillez joindre la photo de votre reçu de virement.");
-    var btn=document.getElementById("vir-wa-btn"); if(btn) btn.href="https://wa.me/"+CFG.wa+"?text="+waMsg;
+    var rv=document.getElementById("rib-val"); if(rv) rv.textContent=CFG.rib||"Non configuré — voir Admin";
+    var rb=document.getElementById("rib-benef"); if(rb) rb.textContent=CFG.ribBenef||"Empire Fresh SARL";
+    var rk=document.getElementById("rib-banque"); if(rk) rk.textContent=CFG.ribBanque||"CIH / Attijariwafa / BMCE";
+    var waMsg=encodeURIComponent("🏦 Justificatif virement — Empire Fresh\n💰 RIB : "+CFG.rib+"\nMerci de joindre la photo de votre reçu de virement.");
+    var wbtn=document.getElementById("vir-wa-btn"); if(wbtn) wbtn.href="https://chat.whatsapp.com/D11jvGbbWd5Kc2pyXl79SK";
   }
 }
 function submitOrder(){
@@ -1953,7 +2026,8 @@ function submitOrder(){
   var zone=document.getElementById("f-zone").value, notes=document.getElementById("f-notes").value, pay=document.getElementById("f-pay").value;
   var preps=Array.from(document.querySelectorAll(".popt.on")).map(function(e){return e.textContent.trim();}).join(", ");
   virJustif=(document.getElementById("vir-ref")||{}).value||"";
-  var lignes=items.map(function(p){return{id:p.id,nom:p.n,qty:p.qty,prix_unitaire:p.p,total:p.p*p.qty,unite:p.u};});
+  // Map to ERP LigneCommande interface (articleId, articleNom, unite, quantite, prixUnitaire, prixVente, total)
+  var lignes=items.map(function(p){return{articleId:p.id,articleNom:p.n,unite:p.u||"kg",quantite:p.qty,prixUnitaire:p.p,prixVente:p.p,total:Math.round(p.p*p.qty*100)/100};});
   var orderData={nom_client:nom+(co?" ("+co+")":""),telephone:tel,email:email||null,adresse_livraison:adr+(zone?" — "+zone:""),lignes:lignes,montant_total:tot,creneau:delMode==="exp"?"Express "+CFG.expDelay:"Standard 24h",instructions:[preps?"Préparation: "+preps:"",notes].filter(Boolean).join(" | ")||null,statut:"recu"};
   var msg="🍃 *COMMANDE EMPIRE FRESH*\n\n👤 *Client :* "+nom+"\n"+(co?"🏢 *Enseigne :* "+co+"\n":"")+"📱 *Tél :* "+tel+"\n📍 *Adresse :* "+adr+"\n"+(zone?"🗺️ *Zone :* "+zone+"\n":"")+"\n🛒 *Produits :*\n";
   items.forEach(function(p){msg+="  • "+p.em+" "+p.n+" — "+p.qty+" "+p.u+" × "+p.p+" MAD = *"+(p.p*p.qty)+" MAD*\n";});
@@ -1962,7 +2036,21 @@ function submitOrder(){
   document.getElementById("mod-wa").href="https://chat.whatsapp.com/D11jvGbbWd5Kc2pyXl79SK";
   var cmdId="cmd_"+Date.now()+"_"+Math.random().toString(36).slice(2,7);
   // Write to fl_commandes (payload JSONB — same structure as ERP)
-  var cmdPayload={id:cmdId,payload:{nomClient:nom,telephone:tel,email:email||null,adresse:adr+(zone?" — "+zone:""),lignes:lignes,total:tot,livraison:delMode==="exp"?"express":"standard",fraisLivraison:df,paiement:pay,preparation:preps||"Frais tel quel",notes:notes||null,source:"site_web",statut:"recu",date:new Date().toISOString(),ribJustificatif:(pay==="virement"?virJustif||null:null)},updated_at:new Date().toISOString()};
+  // Payload matches ERP Commande interface
+  var cmdPayload={id:cmdId,payload:{
+    id:cmdId, date:new Date().toISOString(),
+    commercialId:"WEBSITE", commercialNom:"Site Web",
+    clientId:"WEB_"+tel.replace(/\D/g,""), clientNom:nom+(co?" — "+co:""),
+    secteur:"Casablanca", zone:zone||"",
+    adresse:adr+(zone?" — "+zone:""),
+    telephone:tel, email:email||null,
+    lignes:lignes, total:tot,
+    livraison:delMode==="exp"?"express":"standard",
+    fraisLivraison:df, paiement:pay,
+    preparation:preps||"Frais tel quel",
+    notes:notes||null, source:"site_web",
+    statut:"recu", ribJustificatif:(pay==="virement"?virJustif||null:null)
+  },updated_at:new Date().toISOString()};
   function showConfirm(num){ btn.disabled=false; btn.innerHTML="✅ Commande envoyée — <span id='total-btn'>"+tot+" MAD</span>"; document.getElementById("mod-order-num").textContent=num||cmdId.split("_")[1]; document.getElementById("modal").classList.add("show"); }
   if(sb){
     sb.from("fl_commandes").insert([cmdPayload]).then(function(r){
@@ -1983,6 +2071,8 @@ function loadCfgFields(){
   function set(id,v){var el=document.getElementById(id);if(el)el.value=v||"";}
   set("c-wa",CFG.wa);set("c-email",CFG.email);set("c-addr",CFG.addr);set("c-fb",CFG.fb);set("c-ig",CFG.ig);
   set("c-exp",CFG.exp);set("c-free",CFG.free);set("c-std",CFG.std);set("c-sb-url",CFG.sbUrl);set("c-sb-key",CFG.sbKey);
+  set("c-rib",CFG.rib);set("c-rib-benef",CFG.ribBenef);set("c-rib-banque",CFG.ribBanque);
+  syncGalleryAdminUI();
   var ds=document.getElementById("c-expdelay"); if(ds) ds.value=CFG.expDelay||"2h";
   // Show current connection status in admin panel
   if(sbSynced){
@@ -2005,6 +2095,7 @@ function saveConfig(){
   CFG.fb=get("c-fb"); CFG.ig=get("c-ig");
   CFG.exp=parseInt(get("c-exp"))||CFG.exp; CFG.free=parseInt(get("c-free"))||CFG.free; CFG.std=parseInt(get("c-std"))||CFG.std;
   var expDelay=document.getElementById("c-expdelay"); CFG.expDelay=expDelay?expDelay.value:CFG.expDelay;
+  CFG.rib=get("c-rib"); CFG.ribBenef=get("c-rib-benef")||"Empire Fresh SARL"; CFG.ribBanque=get("c-rib-banque")||"CIH / Attijariwafa / BMCE";
   var newUrl=get("c-sb-url"), newKey=get("c-sb-key");
   if(newUrl)CFG.sbUrl=newUrl; if(newKey)CFG.sbKey=newKey;
   localStorage.setItem("ef_cfg_v2",JSON.stringify(CFG)); updateContactLinks();
@@ -2251,6 +2342,107 @@ async function submitReview(event){
   finally{ btn.disabled=false; btn.textContent='Soumettre mon avis'; }
 }
 
+// ── MEDIA GALLERY ──
+var GALLERY_ITEMS = [];
+var GALLERY_SHOW = false;
+
+function loadGalleryState(){
+  try{
+    var saved=JSON.parse(localStorage.getItem("ef_gallery")||"null");
+    if(saved){GALLERY_ITEMS=saved.items||[];GALLERY_SHOW=saved.show||false;}
+  }catch(_){}
+}
+function saveGalleryState(){
+  localStorage.setItem("ef_gallery",JSON.stringify({items:GALLERY_ITEMS,show:GALLERY_SHOW}));
+}
+function toggleGallerySection(){
+  var chk=document.getElementById("c-gallery-show");
+  GALLERY_SHOW=chk?chk.checked:GALLERY_SHOW;
+  var track=document.getElementById("gallery-toggle-track");
+  var thumb=document.getElementById("gallery-toggle-thumb");
+  if(track){track.style.background=GALLERY_SHOW?"#22c55e":"#ccc";}
+  if(thumb){thumb.style.left=GALLERY_SHOW?"23px":"3px";}
+  applyGalleryVisibility();
+  saveGalleryState();
+}
+function applyGalleryVisibility(){
+  var sec=document.getElementById("media-section");
+  if(sec) sec.style.display=(GALLERY_SHOW&&GALLERY_ITEMS.length>0)?"":"none";
+}
+function renderGallery(){
+  var grid=document.getElementById("media-grid"); if(!grid) return;
+  grid.innerHTML="";
+  GALLERY_ITEMS.forEach(function(item,idx){
+    var isVideo=item.type==="video"||/\.(mp4|webm|ogg)(\?|$)/i.test(item.url);
+    var div=document.createElement("div"); div.className="media-item";
+    div.onclick=function(){openLightbox(idx);};
+    if(isVideo){
+      div.innerHTML='<video src="'+item.url+'" muted loop playsinline style="width:100%;height:100%;object-fit:cover"></video>'
+        +'<div class="play-icon">▶</div>'
+        +'<div class="media-overlay"><span class="media-caption">'+(item.caption||"")+'</span></div>';
+    } else {
+      div.innerHTML='<img src="'+item.url+'" alt="'+(item.caption||"")+'" loading="lazy" onerror="this.style.display=\'none\'">'
+        +'<div class="media-overlay"><span class="media-caption">'+(item.caption||"")+'</span></div>';
+    }
+    grid.appendChild(div);
+  });
+  applyGalleryVisibility();
+}
+function renderGalleryAdmin(){
+  var container=document.getElementById("gallery-admin-items"); if(!container) return;
+  container.innerHTML="";
+  if(!GALLERY_ITEMS.length){
+    container.innerHTML='<div style="font-size:13px;color:var(--gy);font-style:italic;padding:10px 0">Aucun média ajouté. Cliquez sur "Ajouter image" ou "Ajouter vidéo".</div>';
+    return;
+  }
+  GALLERY_ITEMS.forEach(function(item,idx){
+    var row=document.createElement("div");
+    row.style.cssText="display:flex;gap:8px;align-items:center;background:#f3f4f6;border-radius:8px;padding:8px 10px";
+    row.innerHTML='<span style="font-size:18px">'+(item.type==="video"?"🎥":"🖼️")+'</span>'
+      +'<input value="'+(item.caption||"")+'" placeholder="Légende..." onchange="GALLERY_ITEMS['+idx+'].caption=this.value;saveGalleryState();renderGallery()" style="flex:1;padding:6px 8px;border-radius:6px;border:1px solid #d1d5db;font-size:12px;font-family:\'Inter\',sans-serif">'
+      +'<button onclick="removeGalleryItem('+idx+')" style="padding:5px 10px;border-radius:6px;background:#fee2e2;color:#dc2626;border:none;cursor:pointer;font-size:12px;font-weight:700">✕</button>';
+    container.appendChild(row);
+    var urlRow=document.createElement("div");
+    urlRow.style.cssText="display:flex;gap:8px;align-items:center;padding:0 10px 6px 36px";
+    urlRow.innerHTML='<input value="'+item.url+'" placeholder="https://..." onchange="GALLERY_ITEMS['+idx+'].url=this.value;saveGalleryState();renderGallery()" style="flex:1;padding:6px 8px;border-radius:6px;border:1px solid #d1d5db;font-size:11px;font-family:monospace;color:#6b7280">';
+    container.appendChild(urlRow);
+  });
+}
+function addGalleryItem(type){
+  var url=window.prompt("Entrez l'URL de votre "+(type==="video"?"vidéo":"image")+" :","");
+  if(!url||!url.trim()) return;
+  GALLERY_ITEMS.push({type:type,url:url.trim(),caption:""});
+  saveGalleryState(); renderGallery(); renderGalleryAdmin();
+}
+function removeGalleryItem(idx){
+  GALLERY_ITEMS.splice(idx,1);
+  saveGalleryState(); renderGallery(); renderGalleryAdmin();
+}
+function openLightbox(idx){
+  var item=GALLERY_ITEMS[idx]; if(!item) return;
+  var isVideo=item.type==="video"||/\.(mp4|webm|ogg)(\?|$)/i.test(item.url);
+  var content=document.getElementById("lightbox-content");
+  content.innerHTML=isVideo
+    ?'<video src="'+item.url+'" controls autoplay style="max-width:90vw;max-height:85vh;border-radius:12px;display:block"></video>'
+    :'<img src="'+item.url+'" alt="'+(item.caption||"")+'" style="max-width:90vw;max-height:85vh;border-radius:12px;display:block">';
+  document.getElementById("media-lightbox").classList.add("show");
+  document.body.style.overflow="hidden";
+}
+function closeLightbox(){
+  var lb=document.getElementById("media-lightbox"); if(lb) lb.classList.remove("show");
+  var cnt=document.getElementById("lightbox-content"); if(cnt) cnt.innerHTML="";
+  document.body.style.overflow="";
+}
+// Sync gallery toggle state to admin UI
+function syncGalleryAdminUI(){
+  var chk=document.getElementById("c-gallery-show"); if(chk) chk.checked=GALLERY_SHOW;
+  var track=document.getElementById("gallery-toggle-track");
+  var thumb=document.getElementById("gallery-toggle-thumb");
+  if(track){track.style.background=GALLERY_SHOW?"#22c55e":"#ccc";}
+  if(thumb){thumb.style.left=GALLERY_SHOW?"23px":"3px";}
+  renderGalleryAdmin();
+}
+
 // ── SCROLL REVEAL ──
 function initReveal(){
   var obs=new IntersectionObserver(function(entries){
@@ -2264,6 +2456,7 @@ document.addEventListener("DOMContentLoaded",function(){
   updateContactLinks(); renderStats(); renderZones();
   setLang(currentLang);
   showSkeletons(8);
+  loadGalleryState(); renderGallery();
   sb=initSupabase(); syncFromSupabase(); loadCompanyContacts();
   // Auto-refresh catalogue every 5 minutes
   setInterval(function(){ syncFromSupabase(); }, 5*60*1000);
@@ -2386,7 +2579,8 @@ function chatShowQuickReplies(qrs){
     var btn=document.createElement("button");
     btn.className="chat-qr"; btn.textContent=label;
     btn.style.cssText="flex:0 0 auto;white-space:nowrap";
-    btn.onclick=function(){
+    btn.onclick=function(e){
+      e.stopPropagation(); // prevent outside-click from closing chat
       chatAddMsg("user",label);
       bar.innerHTML="";
       if(qr.action) chatDoAction(qr.action);
@@ -2476,6 +2670,7 @@ window.closeMobileMenu=closeMobileMenu; window.openLogin=openLogin; window.close
 window.closeLoginOutside=closeLoginOutside; window.logout=logout; window.submitProForm=submitProForm;
 window.orderWhatsApp=orderWhatsApp; window.joinWaSignup=joinWaSignup;
 window.filterAvis=filterAvis; window.setStars=setStars; window.submitReview=submitReview;
+window.toggleGallerySection=toggleGallerySection; window.addGalleryItem=addGalleryItem; window.removeGalleryItem=removeGalleryItem; window.closeLightbox=closeLightbox;
 window.footerSecretClick=footerSecretClick; window.checkAdminPin=checkAdminPin;
 window.openLegal=openLegal; window.closeLegal=closeLegal;
 window.toggleChat=toggleChat; window.chatAction=chatAction; window.chatSend=chatSend;
