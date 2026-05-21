@@ -568,7 +568,7 @@ const CONFIG = {
   PHONE:           "+212 6 00 00 00 00",
   WHATSAPP:        "212600000000",
   WHATSAPP_ORDER:  "https://chat.whatsapp.com/D11jvGbbWd5Kc2pyXl79SK",
-  WHATSAPP_SIGNUP: "https://chat.whatsapp.com/JOCkX8JYiVx2nMC51Tsh9a",
+  WHATSAPP_SIGNUP: "https://chat.whatsapp.com/K9zqxKXd3qLEIMLt3Oh3lI",
   // Numéros privés équipe (commandes complètes — confidentielles)
   WA_EQUIPE_1:     "212647333456",
   WA_EQUIPE_2:     "212681736910",
@@ -985,7 +985,7 @@ GET  /api/ext/commandes/:id → suivi commande</div>
       <li><a href="#services"   data-i18n="nav_services">Services</a></li>
       <li><a href="#livraison"  data-i18n="nav_delivery">Livraison</a></li>
       <li><a href="#catalogue"  data-i18n="nav_catalogue">Catalogue</a></li>
-      <li><a href="#commander"  data-i18n="nav_catalogue">Commander</a></li>
+      <li><a href="#commander">Commander</a></li>
       <li><a href="#contact"    data-i18n="nav_contact">Contact</a></li>
     </ul>
     <div class="nav-right">
@@ -994,7 +994,7 @@ GET  /api/ext/commandes/:id → suivi commande</div>
         <button class="lang-btn" data-lang="ar" onclick="setLang('ar')">🇲🇦 عر</button>
         <button class="lang-btn" data-lang="en" onclick="setLang('en')">🇬🇧 EN</button>
       </div>
-      <a class="btn-app-link" href="https://empire-fresh.netlify.app/" target="_blank" data-i18n="nav_app">📱 Application</a>
+      <a class="btn-app-link" href="#" onclick="openGuide();return false;">📖 Guide</a>
       <button class="btn-cart" onclick="document.getElementById('commander').scrollIntoView({behavior:'smooth'})">🛒 <span id="cart-n">0</span><div class="cbadge" id="cart-badge" style="display:none">0</div></button>
       <button class="btn-login" id="btnLogin" onclick="openLogin()"><span data-i18n="btn_login">Mon Espace</span></button>
       <button class="hamburger" id="hamburger" onclick="toggleMenu()"><span></span><span></span><span></span></button>
@@ -1006,7 +1006,7 @@ GET  /api/ext/commandes/:id → suivi commande</div>
   <a href="#livraison"  onclick="closeMobileMenu()" data-i18n="nav_delivery">Livraison</a>
   <a href="#catalogue"  onclick="closeMobileMenu()" data-i18n="nav_catalogue">Catalogue</a>
   <a href="#commander"  onclick="closeMobileMenu()">Commander</a>
-  <a href="https://empire-fresh.netlify.app/" target="_blank" data-i18n="nav_app">📱 Application</a>
+  <a href="#" onclick="closeMobileMenu();openGuide();return false;">📖 Guide FreshLink</a>
 </div>
 
 <!-- ERP STATUS BAR -->
@@ -1041,7 +1041,7 @@ GET  /api/ext/commandes/:id → suivi commande</div>
       <div class="hero-ctas">
         <a href="#catalogue" class="btn-hero-primary">🥦 <span data-i18n="btn_catalogue">Voir le catalogue</span></a>
         <a href="#" class="btn-hero-whatsapp" onclick="orderWhatsApp(event)">📲 <span data-i18n="btn_wa_order">Commander</span></a>
-        <a href="https://empire-fresh.netlify.app/" target="_blank" class="btn-hero-app">📱 <span data-i18n="btn_app">Application</span></a>
+        <a href="#" class="btn-hero-app" onclick="openGuide();return false;">📖 <span>Guide commande</span></a>
       </div>
       <div class="hero-stats" style="display:flex;gap:28px;margin-top:44px;padding-top:28px;border-top:1px solid rgba(255,255,255,.1);animation:fadeSlideUp .75s .55s cubic-bezier(.22,1,.36,1) both">
         <div><div style="font-size:26px;font-weight:700;background:linear-gradient(135deg,var(--o2),#FFE066);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text" id="stat-prods">50+</div><div style="font-size:12px;color:rgba(255,255,255,.45);margin-top:2px">Produits frais</div></div>
@@ -1420,7 +1420,7 @@ GET  /api/ext/commandes/:id → suivi commande</div>
         <div class="wa-card-icon">🤝</div>
         <div class="wa-card-title" data-i18n="wa_signup_title">Devenir Partenaire</div>
         <div class="wa-card-desc" data-i18n="wa_signup_desc">Rejoignez notre réseau de partenaires professionnels et accédez aux tarifs exclusifs.</div>
-        <a href="https://chat.whatsapp.com/JOCkX8JYiVx2nMC51Tsh9a" target="_blank" class="btn-wa-join">
+        <a href="https://chat.whatsapp.com/K9zqxKXd3qLEIMLt3Oh3lI" target="_blank" class="btn-wa-join">
           <span style="font-size:20px">🌿</span><span data-i18n="wa_join">Rejoindre le groupe</span>
         </a>
       </div>
@@ -1543,15 +1543,14 @@ GET  /api/ext/commandes/:id → suivi commande</div>
           <li><a href="#commander">Commander</a></li>
           <li><a href="#espace-pro">Espace Pro</a></li>
           <li><a href="#livraison">Zones livraison</a></li>
-          <li><a href="#whatsapp">WhatsApp groupes</a></li>
-          <li><a href="https://empire-fresh.netlify.app/" target="_blank">📱 Application</a></li>
+          <li><a href="#" onclick="openGuide();return false;">📖 Guide FreshLink</a></li>
         </ul>
       </div>
       <div>
         <div class="footer-heading">WhatsApp</div>
         <ul class="footer-links">
           <li><a href="https://chat.whatsapp.com/D11jvGbbWd5Kc2pyXl79SK" target="_blank">📦 Groupe Commandes</a></li>
-          <li><a href="https://chat.whatsapp.com/JOCkX8JYiVx2nMC51Tsh9a" target="_blank">👥 Groupe Partenaires</a></li>
+          <li><a href="https://chat.whatsapp.com/K9zqxKXd3qLEIMLt3Oh3lI" target="_blank">👥 Groupe Partenaires</a></li>
           <li><a id="footer-wa2" href="#">💬 Contact direct</a></li>
           <li><a id="footer-fb" href="#" style="display:none">Facebook</a></li>
           <li><a id="footer-ig" href="#" style="display:none">Instagram</a></li>
@@ -1573,6 +1572,93 @@ GET  /api/ext/commandes/:id → suivi commande</div>
     </div>
   </div>
 </footer>
+
+<!-- GUIDE MODAL -->
+<div id="guide-modal" style="display:none;position:fixed;inset:0;z-index:2500;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px" onclick="if(event.target===this)closeGuide()">
+  <div style="background:#fff;border-radius:20px;width:100%;max-width:620px;max-height:88vh;overflow-y:auto;position:relative;box-shadow:0 24px 64px rgba(0,0,0,.3)">
+    <div style="background:linear-gradient(135deg,#1B4332,#22c55e);padding:28px 28px 24px;border-radius:20px 20px 0 0;position:sticky;top:0;z-index:1">
+      <button onclick="closeGuide()" style="position:absolute;top:14px;right:14px;background:rgba(255,255,255,.15);border:none;color:#fff;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:16px;font-weight:700;display:flex;align-items:center;justify-content:center">✕</button>
+      <div style="font-size:28px;margin-bottom:8px">📱</div>
+      <h2 style="color:#fff;font-size:20px;font-weight:800;margin-bottom:4px">Guide — FreshLink & Commandes</h2>
+      <p style="color:rgba(255,255,255,.75);font-size:13px">Comment passer votre commande et utiliser l'application Empire Fresh</p>
+    </div>
+    <div style="padding:28px">
+
+      <!-- SECTION 1 : Commander via le site -->
+      <div style="margin-bottom:28px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+          <div style="width:36px;height:36px;background:linear-gradient(135deg,#22c55e,#16a34a);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🛒</div>
+          <h3 style="font-size:16px;font-weight:800;color:#1B4332">Commander via ce site</h3>
+        </div>
+        <ol style="margin:0;padding-left:20px;display:flex;flex-direction:column;gap:10px">
+          <li style="font-size:14px;color:#374151;line-height:1.6"><strong>Parcourez le catalogue</strong> — cliquez sur <em>Catalogue</em> dans le menu. Filtrez par catégorie (Fruits, Légumes, Prêt à cuisiner).</li>
+          <li style="font-size:14px;color:#374151;line-height:1.6"><strong>Ajoutez au panier</strong> — appuyez sur <strong>+</strong> à côté de chaque produit. Le compteur 🛒 en haut se met à jour.</li>
+          <li style="font-size:14px;color:#374151;line-height:1.6"><strong>Choisissez votre livraison</strong> — Standard (24h) ou Express ⚡ (2h) selon votre zone à Casablanca.</li>
+          <li style="font-size:14px;color:#374151;line-height:1.6"><strong>Remplissez le formulaire</strong> — nom, téléphone, adresse, mode de paiement.</li>
+          <li style="font-size:14px;color:#374151;line-height:1.6"><strong>Cliquez "✅ Envoyer ma commande"</strong> — votre commande est enregistrée. Confirmez ensuite par WhatsApp en cliquant sur les boutons qui apparaissent.</li>
+        </ol>
+      </div>
+      <hr style="border:none;border-top:1px solid #e5e7eb;margin-bottom:24px">
+
+      <!-- SECTION 2 : Commander via WhatsApp -->
+      <div style="margin-bottom:28px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+          <div style="width:36px;height:36px;background:linear-gradient(135deg,#25d366,#128c7e);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">💬</div>
+          <h3 style="font-size:16px;font-weight:800;color:#1B4332">Commander via WhatsApp</h3>
+        </div>
+        <ol style="margin:0;padding-left:20px;display:flex;flex-direction:column;gap:10px">
+          <li style="font-size:14px;color:#374151;line-height:1.6">Cliquez sur <strong>"📲 Commander maintenant"</strong> depuis la section WhatsApp du site ou le bouton vert en haut.</li>
+          <li style="font-size:14px;color:#374151;line-height:1.6">Un message pré-rempli avec votre panier s'ouvre automatiquement dans WhatsApp — modifiez-le si nécessaire.</li>
+          <li style="font-size:14px;color:#374151;line-height:1.6">Envoyez directement à notre équipe. Réponse garantie sous <strong>1h</strong>.</li>
+        </ol>
+        <div style="background:#f0fdf4;border-radius:10px;padding:12px 14px;margin-top:14px;font-size:13px;color:#166534">
+          💡 <strong>Astuce :</strong> Ajoutez d'abord vos articles au panier sur le site, puis cliquez "Commander par WhatsApp" — votre liste est automatiquement incluse dans le message.
+        </div>
+      </div>
+      <hr style="border:none;border-top:1px solid #e5e7eb;margin-bottom:24px">
+
+      <!-- SECTION 3 : Utiliser l'application FreshLink -->
+      <div style="margin-bottom:28px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+          <div style="width:36px;height:36px;background:linear-gradient(135deg,#B8960C,#f59e0b);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🌐</div>
+          <h3 style="font-size:16px;font-weight:800;color:#1B4332">Utiliser l'application FreshLink (ERP)</h3>
+        </div>
+        <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:13px;color:#92400e">
+          ⚠️ Cette application est réservée à l'équipe interne Empire Fresh (gérants, commerciaux, livreurs).
+        </div>
+        <ol style="margin:0;padding-left:20px;display:flex;flex-direction:column;gap:10px">
+          <li style="font-size:14px;color:#374151;line-height:1.6"><strong>Accédez à :</strong> <a href="https://empire-fresh.netlify.app/" target="_blank" style="color:#16a34a;font-weight:700">empire-fresh.netlify.app</a></li>
+          <li style="font-size:14px;color:#374151;line-height:1.6"><strong>Connectez-vous</strong> avec vos identifiants fournis par l'administrateur.</li>
+          <li style="font-size:14px;color:#374151;line-height:1.6"><strong>Tableau de bord</strong> — visualisez les commandes du jour, le stock et les livraisons en temps réel.</li>
+          <li style="font-size:14px;color:#374151;line-height:1.6"><strong>Créer une commande terrain</strong> → menu <em>Commandes</em> → <em>Nouvelle commande</em> → sélectionnez client, articles, zone.</li>
+          <li style="font-size:14px;color:#374151;line-height:1.6"><strong>Gérer le stock</strong> → menu <em>Articles</em> → modifiez les prix, la disponibilité et les photos (visible sur ce site en temps réel).</li>
+          <li style="font-size:14px;color:#374151;line-height:1.6"><strong>Gérer les clients</strong> → menu <em>Clients</em> → créez des comptes CHR/Marchand, consultez l'historique.</li>
+        </ol>
+      </div>
+      <hr style="border:none;border-top:1px solid #e5e7eb;margin-bottom:24px">
+
+      <!-- SECTION 4 : Paiements -->
+      <div style="margin-bottom:24px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+          <div style="width:36px;height:36px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">💳</div>
+          <h3 style="font-size:16px;font-weight:800;color:#1B4332">Modes de paiement acceptés</h3>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div style="background:#f9fafb;border-radius:10px;padding:12px;font-size:13px;color:#374151"><strong>💵 Cash à la livraison</strong><br>Payez à la réception de votre commande.</div>
+          <div style="background:#f9fafb;border-radius:10px;padding:12px;font-size:13px;color:#374151"><strong>🏦 Virement bancaire</strong><br>RIB disponible après validation de la commande.</div>
+          <div style="background:#f9fafb;border-radius:10px;padding:12px;font-size:13px;color:#374151"><strong>📲 Virement mobile</strong><br>CIH Online, Attijariwafa, BMCE — envoyez le reçu par WA.</div>
+          <div style="background:#f9fafb;border-radius:10px;padding:12px;font-size:13px;color:#374151"><strong>🤝 Crédit client</strong><br>Réservé aux partenaires CHR &amp; Marchands (conditions sur demande).</div>
+        </div>
+      </div>
+
+      <!-- CTA -->
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <a href="#catalogue" onclick="closeGuide()" style="flex:1;min-width:140px;padding:13px;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;border-radius:12px;text-align:center;text-decoration:none;font-weight:700;font-size:14px">🥦 Voir le catalogue</a>
+        <a href="#" onclick="closeGuide();orderWhatsApp(event)" style="flex:1;min-width:140px;padding:13px;background:#25d366;color:#fff;border-radius:12px;text-align:center;text-decoration:none;font-weight:700;font-size:14px">💬 Commander sur WA</a>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- CHAT BOT FAB (single icon) -->
 <button id="chat-fab" onclick="toggleChat()" title="Assistant Empire Fresh" aria-label="Assistant virtuel">
@@ -2799,6 +2885,9 @@ window.testSupabase=testSupabase; window.showToast=showToast; window.toggleMenu=
 window.closeMobileMenu=closeMobileMenu; window.openLogin=openLogin; window.closeLogin=closeLogin;
 window.closeLoginOutside=closeLoginOutside; window.logout=logout; window.submitProForm=submitProForm;
 window.orderWhatsApp=orderWhatsApp; window.joinWaSignup=joinWaSignup;
+function openGuide(){ var m=document.getElementById("guide-modal"); if(m){m.style.display="flex";document.body.style.overflow="hidden";} }
+function closeGuide(){ var m=document.getElementById("guide-modal"); if(m){m.style.display="none";document.body.style.overflow="";} }
+window.openGuide=openGuide; window.closeGuide=closeGuide;
 window.filterAvis=filterAvis; window.setStars=setStars; window.submitReview=submitReview;
 window.toggleGallerySection=toggleGallerySection; window.addGalleryItem=addGalleryItem; window.removeGalleryItem=removeGalleryItem; window.closeLightbox=closeLightbox;
 window.footerSecretClick=footerSecretClick; window.checkAdminPin=checkAdminPin;
