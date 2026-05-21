@@ -569,6 +569,9 @@ const CONFIG = {
   WHATSAPP:        "212600000000",
   WHATSAPP_ORDER:  "https://chat.whatsapp.com/D11jvGbbWd5Kc2pyXl79SK",
   WHATSAPP_SIGNUP: "https://chat.whatsapp.com/JOCkX8JYiVx2nMC51Tsh9a",
+  // Numéros privés équipe (commandes complètes — confidentielles)
+  WA_EQUIPE_1:     "212647333456",
+  WA_EQUIPE_2:     "212681736910",
   HOURS:           "Lun–Sam : 06h00 – 18h00",
   APP_URL:         "https://empire-fresh.netlify.app/",
   API_URL:         "https://f-l.vercel.app",
@@ -1396,13 +1399,21 @@ GET  /api/ext/commandes/:id → suivi commande</div>
       <h2 style="font-size:clamp(22px,3vw,34px);font-weight:800;color:#fff;margin-bottom:10px" data-i18n="wa_grp_title">Rejoignez notre communauté WhatsApp</h2>
       <p style="font-size:15px;color:rgba(255,255,255,.75);max-width:520px;margin:0 auto" data-i18n="wa_grp_sub">Restez connectés avec nos groupes WhatsApp professionnels</p>
     </div>
-    <div class="wa-section-grid">
+    <div class="wa-section-grid" style="grid-template-columns:repeat(3,1fr)">
+      <div class="wa-card">
+        <div class="wa-card-icon">📲</div>
+        <div class="wa-card-title">Commander directement</div>
+        <div class="wa-card-desc">Envoyez votre liste de courses à notre équipe. Réponse rapide garantie — traitement prioritaire.</div>
+        <a href="#" onclick="orderWhatsApp(event)" class="btn-wa-join">
+          <span style="font-size:20px">💬</span>Commander maintenant
+        </a>
+      </div>
       <div class="wa-card">
         <div class="wa-card-icon">📦</div>
         <div class="wa-card-title" data-i18n="wa_order_title">Groupe Commandes</div>
-        <div class="wa-card-desc" data-i18n="wa_order_desc">Passez vos commandes directement dans notre groupe WhatsApp dédié. Réponse garantie sous 1h.</div>
+        <div class="wa-card-desc" data-i18n="wa_order_desc">Rejoignez notre groupe WhatsApp dédié. Promos, disponibilités et actualités en temps réel.</div>
         <a href="https://chat.whatsapp.com/D11jvGbbWd5Kc2pyXl79SK" target="_blank" class="btn-wa-join">
-          <span style="font-size:20px">💬</span><span data-i18n="wa_join">Rejoindre le groupe</span>
+          <span style="font-size:20px">👥</span><span data-i18n="wa_join">Rejoindre le groupe</span>
         </a>
       </div>
       <div class="wa-card">
@@ -1410,7 +1421,7 @@ GET  /api/ext/commandes/:id → suivi commande</div>
         <div class="wa-card-title" data-i18n="wa_signup_title">Devenir Partenaire</div>
         <div class="wa-card-desc" data-i18n="wa_signup_desc">Rejoignez notre réseau de partenaires professionnels et accédez aux tarifs exclusifs.</div>
         <a href="https://chat.whatsapp.com/JOCkX8JYiVx2nMC51Tsh9a" target="_blank" class="btn-wa-join">
-          <span style="font-size:20px">👥</span><span data-i18n="wa_join">Rejoindre le groupe</span>
+          <span style="font-size:20px">🌿</span><span data-i18n="wa_join">Rejoindre le groupe</span>
         </a>
       </div>
     </div>
@@ -1746,11 +1757,23 @@ GET  /api/ext/commandes/:id → suivi commande</div>
   <div class="mod">
     <button class="mod-x" onclick="document.getElementById('modal').classList.remove('show')">✕</button>
     <div class="mod-ic">✅</div>
-    <div class="mod-t">Commande envoyée !</div>
-    <div class="mod-d">Votre commande a bien été enregistrée dans FreshLink ERP. Notre équipe vous contactera dans les plus brefs délais.</div>
-    <div class="mod-erp" id="mod-erp-info"><strong>🔗 Enregistrée dans FreshLink ERP</strong>Numéro de commande : <span id="mod-order-num">—</span></div>
-    <a class="mbtn mwa" id="mod-wa" href="#" target="_blank">💬 Confirmer sur WhatsApp</a>
-    <button class="mbtn mcl" onclick="document.getElementById('modal').classList.remove('show');cart={};updateCartUI()">Fermer</button>
+    <div class="mod-t">Commande enregistrée !</div>
+    <div class="mod-d">Votre commande est bien reçue. Envoyez-la sur WhatsApp pour confirmation rapide par notre équipe.</div>
+    <div class="mod-erp" id="mod-erp-info"><strong>🔗 Réf. commande :</strong> <span id="mod-order-num">—</span></div>
+    <!-- Boutons WA privés (détails complets — confidentiels) -->
+    <div style="display:grid;gap:10px;margin-top:16px;width:100%">
+      <a class="mbtn mwa" id="mod-wa-1" href="#" target="_blank" style="text-decoration:none;display:flex;align-items:center;justify-content:center;gap:8px">
+        📲 Envoyer à l'équipe (1)
+      </a>
+      <a class="mbtn mwa" id="mod-wa-2" href="#" target="_blank" style="text-decoration:none;display:flex;align-items:center;justify-content:center;gap:8px;background:#128c7e">
+        📲 Envoyer à l'équipe (2)
+      </a>
+      <!-- Notification groupe anonymisée -->
+      <a class="mbtn" id="mod-wa-group" href="#" target="_blank" style="text-decoration:none;display:flex;align-items:center;justify-content:center;gap:8px;background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.2);font-size:13px;padding:10px">
+        👥 Notifier le groupe (résumé anonyme)
+      </a>
+    </div>
+    <button class="mbtn mcl" style="margin-top:8px" onclick="document.getElementById('modal').classList.remove('show');cart={};updateCartUI()">✕ Fermer</button>
   </div>
 </div>
 
@@ -2041,7 +2064,8 @@ function onPayChange(val){
     var rb=document.getElementById("rib-benef"); if(rb) rb.textContent=CFG.ribBenef||"Empire Fresh SARL";
     var rk=document.getElementById("rib-banque"); if(rk) rk.textContent=CFG.ribBanque||"CIH / Attijariwafa / BMCE";
     var waMsg=encodeURIComponent("🏦 Justificatif virement — Empire Fresh\n💰 RIB : "+CFG.rib+"\nMerci de joindre la photo de votre reçu de virement.");
-    var wbtn=document.getElementById("vir-wa-btn"); if(wbtn) wbtn.href="https://chat.whatsapp.com/D11jvGbbWd5Kc2pyXl79SK";
+    // Envoyer le justificatif virement sur le numéro privé (pas le groupe public)
+    var wbtn=document.getElementById("vir-wa-btn"); if(wbtn) wbtn.href="https://wa.me/"+CONFIG.WA_EQUIPE_1+"?text="+waMsg;
   }
 }
 function submitOrder(){
@@ -2058,11 +2082,48 @@ function submitOrder(){
   // Map to ERP LigneCommande interface (articleId, articleNom, unite, quantite, prixUnitaire, prixVente, total)
   var lignes=items.map(function(p){return{articleId:p.id,articleNom:p.n,unite:p.u||"kg",quantite:p.qty,prixUnitaire:p.p,prixVente:p.p,total:Math.round(p.p*p.qty*100)/100};});
   var orderData={nom_client:nom+(co?" ("+co+")":""),telephone:tel,email:email||null,adresse_livraison:adr+(zone?" — "+zone:""),lignes:lignes,montant_total:tot,creneau:delMode==="exp"?"Express "+CFG.expDelay:"Standard 24h",instructions:[preps?"Préparation: "+preps:"",notes].filter(Boolean).join(" | ")||null,statut:"recu"};
-  var msg="🍃 *COMMANDE EMPIRE FRESH*\n\n👤 *Client :* "+nom+"\n"+(co?"🏢 *Enseigne :* "+co+"\n":"")+"📱 *Tél :* "+tel+"\n📍 *Adresse :* "+adr+"\n"+(zone?"🗺️ *Zone :* "+zone+"\n":"")+"\n🛒 *Produits :*\n";
-  items.forEach(function(p){msg+="  • "+p.em+" "+p.n+" — "+p.qty+" "+p.u+" × "+p.p+" MAD = *"+(p.p*p.qty)+" MAD*\n";});
-  msg+="\n🔪 *Préparation :* "+(preps||"Frais tel quel")+"\n🚚 *Livraison :* "+(delMode==="exp"?"EXPRESS ⚡ ("+CFG.expDelay+")":"Standard 24h")+"\n💳 *Paiement :* "+pay+(notes?"\n📝 *Notes :* "+notes:"")+"\n\n💰 *Sous-total :* "+sub+" MAD\n🚚 *Livraison :* "+(df===0?"Gratuite":"+"+df+" MAD")+"\n✅ *TOTAL : "+tot+" MAD*\n📅 "+new Date().toLocaleDateString("fr-FR",{weekday:"long",year:"numeric",month:"long",day:"numeric"});
-  // WhatsApp group confirmation (not direct number)
-  document.getElementById("mod-wa").href="https://chat.whatsapp.com/D11jvGbbWd5Kc2pyXl79SK";
+  var cmdRef=Date.now().toString().slice(-6);
+  // ── Message COMPLET (privé — équipe seulement) ──
+  var msgFull="🍃 *COMMANDE EMPIRE FRESH*\n";
+  msgFull+="━━━━━━━━━━━━━━━━━━━━\n";
+  msgFull+="👤 *Client :* "+nom+"\n";
+  if(co) msgFull+="🏢 *Enseigne :* "+co+"\n";
+  msgFull+="📱 *Tél :* "+tel+"\n";
+  msgFull+="📍 *Adresse :* "+adr+"\n";
+  if(zone) msgFull+="🗺️ *Zone :* "+zone+"\n";
+  msgFull+="━━━━━━━━━━━━━━━━━━━━\n";
+  msgFull+="🛒 *Produits :*\n";
+  items.forEach(function(p){msgFull+="  • "+p.em+" "+p.n+" — "+p.qty+" "+p.u+" × "+p.p+" MAD = *"+(p.p*p.qty)+" MAD*\n";});
+  msgFull+="━━━━━━━━━━━━━━━━━━━━\n";
+  msgFull+="🔪 *Préparation :* "+(preps||"Frais tel quel")+"\n";
+  msgFull+="🚚 *Livraison :* "+(delMode==="exp"?"EXPRESS ⚡ ("+CFG.expDelay+")":"Standard 24h")+"\n";
+  msgFull+="💳 *Paiement :* "+pay+"\n";
+  if(notes) msgFull+="📝 *Notes :* "+notes+"\n";
+  msgFull+="━━━━━━━━━━━━━━━━━━━━\n";
+  msgFull+="💰 *Sous-total :* "+sub+" MAD\n";
+  msgFull+="🚚 *Livraison :* "+(df===0?"Gratuite ✅":"+"+df+" MAD")+"\n";
+  msgFull+="✅ *TOTAL : "+tot+" MAD*\n";
+  msgFull+="📅 "+new Date().toLocaleDateString("fr-FR",{weekday:"long",year:"numeric",month:"long",day:"numeric"})+"\n";
+  msgFull+="🔑 *Réf :* #"+cmdRef;
+
+  // ── Message ANONYME pour le groupe (aucune info client) ──
+  var msgGroupe="📦 *Nouvelle Commande Confirmée !*\n";
+  msgGroupe+="━━━━━━━━━━━━━━━━━━━━\n";
+  msgGroupe+="🔑 *Référence :* #"+cmdRef+"\n";
+  msgGroupe+="📦 *Nombre d'articles :* "+items.reduce(function(s,p){return s+p.qty;},0)+"\n";
+  msgGroupe+="💰 *Montant total :* "+tot+" MAD\n";
+  msgGroupe+="🚚 *Livraison :* "+(delMode==="exp"?"Express ⚡ ("+CFG.expDelay+")":"Standard 24h")+"\n";
+  if(zone) msgGroupe+="🗺️ *Zone :* "+zone+"\n";
+  msgGroupe+="━━━━━━━━━━━━━━━━━━━━\n";
+  msgGroupe+="⏳ En cours de traitement...";
+
+  // Liens WA privés (message complet)
+  var wa1=document.getElementById("mod-wa-1"), wa2=document.getElementById("mod-wa-2");
+  if(wa1) wa1.href="https://wa.me/"+CONFIG.WA_EQUIPE_1+"?text="+encodeURIComponent(msgFull);
+  if(wa2) wa2.href="https://wa.me/"+CONFIG.WA_EQUIPE_2+"?text="+encodeURIComponent(msgFull);
+  // Lien groupe WA (résumé anonyme uniquement)
+  var waGrp=document.getElementById("mod-wa-group");
+  if(waGrp) waGrp.href="https://chat.whatsapp.com/D11jvGbbWd5Kc2pyXl79SK";
   var cmdId="cmd_"+Date.now()+"_"+Math.random().toString(36).slice(2,7);
   // Write to fl_commandes (payload JSONB — same structure as ERP)
   // Payload matches ERP Commande interface
@@ -2080,7 +2141,7 @@ function submitOrder(){
     notes:notes||null, source:"site_web",
     statut:"recu", ribJustificatif:(pay==="virement"?virJustif||null:null)
   },updated_at:new Date().toISOString()};
-  function showConfirm(num){ btn.disabled=false; btn.innerHTML="✅ Commande envoyée — <span id='total-btn'>"+tot+" MAD</span>"; document.getElementById("mod-order-num").textContent=num||cmdId.split("_")[1]; document.getElementById("modal").classList.add("show"); }
+  function showConfirm(num){ btn.disabled=false; btn.innerHTML="✅ Commande envoyée — <span id='total-btn'>"+tot+" MAD</span>"; document.getElementById("mod-order-num").textContent="#"+(num||cmdRef); document.getElementById("modal").classList.add("show"); }
   if(sb){
     sb.from("fl_commandes").insert([cmdPayload]).then(function(r){
       if(r.error){
@@ -2165,7 +2226,23 @@ function loadCompanyContacts(){
 }
 
 // ── WHATSAPP ──
-function orderWhatsApp(e){ if(e) e.preventDefault(); window.open(CONFIG.WHATSAPP_ORDER,"_blank"); }
+function orderWhatsApp(e){
+  if(e) e.preventDefault();
+  // Construire un message rapide avec le panier actuel si non vide
+  var items=Object.values(cart);
+  var msg="🍃 *Bonjour Empire Fresh !*\n\nJe souhaite passer une commande :\n\n";
+  if(items.length){
+    items.forEach(function(p){msg+="  • "+p.em+" "+p.n+" — "+p.qty+" "+p.u+"\n";});
+    var sub=items.reduce(function(s,p){return s+p.p*p.qty;},0);
+    msg+="\n💰 *Sous-total estimé :* "+sub+" MAD\n";
+  } else {
+    msg+="(Je vais vous préciser ma liste de produits)\n";
+  }
+  msg+="\nMerci de me confirmer la disponibilité et les délais de livraison.";
+  var encoded=encodeURIComponent(msg);
+  // Ouvrir vers numéro 1
+  window.open("https://wa.me/"+CONFIG.WA_EQUIPE_1+"?text="+encoded,"_blank");
+}
 function joinWaSignup(e){ if(e) e.preventDefault(); window.open(CONFIG.WHATSAPP_SIGNUP,"_blank"); }
 
 // ── TOAST ──
