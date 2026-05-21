@@ -829,7 +829,7 @@ function setLang(lang){
   <div class="cfg-tabs">
     <button class="cfg-tab on" onclick="cfgTab(this,'s-contact')">📱 Contact</button>
     <button class="cfg-tab"    onclick="cfgTab(this,'s-livraison')">🚚 Livraison</button>
-    <button class="cfg-tab"    onclick="cfgTab(this,'s-supabase')">🔗 Supabase</button>
+    <button class="cfg-tab"    onclick="cfgTab(this,'s-supabase')">🔗 Connexion ERP</button>
     <button class="cfg-tab"    onclick="cfgTab(this,'s-guide')">📖 Guide</button>
   </div>
   <div class="cfg-body">
@@ -856,14 +856,38 @@ function setLang(lang){
       <div class="price-box" id="price-box"><strong>📊 Aperçu actuel</strong>Express : <b>20 MAD</b> — Standard gratuite dès <b>150 MAD</b> — Sinon <b>15 MAD</b></div>
     </div>
     <div class="cfg-sec" id="s-supabase">
-      <div class="cfg-grp">🔗 Connexion Supabase (FreshLink ERP)</div>
-      <div class="erp-conn-box">
-        <div class="erp-conn-status"><div class="erp-conn-dot warn" id="sb-conn-dot"></div><span id="sb-conn-label">Vérification...</span></div>
-        <div class="erp-conn-sub" id="sb-conn-sub">Connexion en cours...</div>
+      <div class="cfg-grp">🔗 Connexion FreshLink ERP</div>
+
+      <!-- Mode 1 : API REST ERP -->
+      <div style="background:#f0faf4;border-radius:10px;padding:12px 14px;margin-bottom:12px;font-size:13px">
+        <div style="font-weight:700;color:#1a7a3c;margin-bottom:4px">🌐 Mode 1 — API REST ERP (recommandé)</div>
+        <div class="erp-conn-status" style="margin-bottom:6px">
+          <div class="erp-conn-dot warn" id="sb-conn-dot" style="width:9px;height:9px"></div>
+          <span id="sb-conn-label" style="font-size:13px">En attente...</span>
+        </div>
+        <div class="erp-conn-sub" id="sb-conn-sub">Non testé</div>
+        <div style="margin-top:8px;padding:8px;background:#fff;border-radius:8px;font-size:12px;color:#555;line-height:1.7">
+          URL : <strong>https://f-l.vercel.app/api/ext/catalogue</strong><br>
+          ⚠️ Pour activer : dans votre ERP → <strong>Administration → Intégration Site Web</strong><br>
+          1. Cliquez <strong>"Activer l'API externe"</strong><br>
+          2. Activez <strong>"Catalogue public"</strong><br>
+          3. Ajoutez votre domaine dans <strong>Origines autorisées (CORS)</strong>
+        </div>
       </div>
-      <div class="cfg-f"><label>🌐 Supabase URL</label><input id="c-sb-url" type="url" placeholder="https://xxx.supabase.co"><div class="cfg-hint">URL du projet Supabase FreshLink.</div></div>
-      <div class="cfg-f"><label>🔑 Supabase Anon Key (publique)</label><input id="c-sb-key" type="text" placeholder="eyJhbGci..."><div class="cfg-hint">Clé anon/publique uniquement — jamais la service role key.</div></div>
-      <button class="test-btn" onclick="testSupabase()">🔄 Tester &amp; synchroniser le catalogue</button>
+
+      <!-- Mode 2 : Supabase direct (fallback) -->
+      <div style="background:#fffbe6;border-radius:10px;padding:12px 14px;margin-bottom:12px;font-size:13px">
+        <div style="font-weight:700;color:#b45309;margin-bottom:4px">🗄️ Mode 2 — Supabase direct (fallback automatique)</div>
+        <div class="erp-conn-status" style="margin-bottom:6px">
+          <div class="erp-conn-dot warn" id="sb2-conn-dot" style="width:9px;height:9px"></div>
+          <span id="sb2-conn-label" style="font-size:13px">En attente...</span>
+        </div>
+        <div class="erp-conn-sub" id="sb2-conn-sub">Si l'API ERP n'est pas disponible, le site se connecte directement à Supabase.</div>
+      </div>
+
+      <div class="cfg-f"><label>🌐 Supabase URL</label><input id="c-sb-url" type="url" placeholder="https://xxx.supabase.co"><div class="cfg-hint">URL de votre projet Supabase FreshLink.</div></div>
+      <div class="cfg-f"><label>🔑 Supabase Anon Key (publique)</label><input id="c-sb-key" type="text" placeholder="eyJhbGci..."><div class="cfg-hint">Clé anon uniquement — jamais la service role key.</div></div>
+      <button class="test-btn" onclick="testSupabase()">🔄 Tester les deux connexions</button>
       <div class="erp-conn-box" id="sb-stats-box" style="display:none"><div id="sb-stats-text" style="font-size:12px;color:var(--g1);line-height:1.8"></div></div>
     </div>
     <div class="cfg-sec" id="s-guide">
@@ -1645,32 +1669,76 @@ var DEFAULT_PRODS=[
 var PRODS=DEFAULT_PRODS.slice();
 
 // ── SUPABASE SYNC ──
+// Map ERP REST API article format to internal PROD object
+function mapERPArticle(row){
+  var cat=mapFamille(row.famille), tags=Array.isArray(row.tags)?row.tags:[], firstTag=tags[0]||"frais";
+  var promoObj=row.promo&&typeof row.promo==="object"?row.promo:null;
+  var prixBase=parseFloat(row.prix||row.prixVente||0);
+  var prix=promoObj&&promoObj.prixPromo?parseFloat(promoObj.prixPromo):prixBase;
+  var promoLabel=promoObj?(promoObj.label||(promoObj.taux?"-"+promoObj.taux+"%":"Promo")):"";
+  return{id:row.id,em:getEmoji(row.nom,cat),n:row.nom||"",no:row.nomAr||"",o:row.description||row.famille||"Maroc",p:prix,prixBase:prixBase,u:row.unite||"kg",cat:cat,tags:tags,t:firstTag,dispo:row.statut!=="rupture"&&(row.stockDisponible||0)>0,stock:row.stockDisponible||0,img:row.photo||"",promo:!!promoObj,promoLabel:promoLabel,fromERP:true};
+}
+// Map Supabase fl_articles row to internal PROD object
+function mapSBArticle(row){
+  var cat=mapFamille(row.famille), tags=Array.isArray(row.tags)?row.tags:[], firstTag=tags[0]||"frais";
+  var prix=row.promo_active&&row.prix_promo?parseFloat(row.prix_promo):parseFloat(row.prix||0);
+  return{id:row.id,em:getEmoji(row.nom,cat),n:row.nom||"",no:"",o:row.description||row.famille||"Maroc",p:prix,prixBase:parseFloat(row.prix||prix),u:row.unite||"kg",cat:cat,tags:tags,t:firstTag,dispo:(row.stock_actuel||0)>0,stock:row.stock_actuel||0,img:row.photo||"",promo:!!row.promo_active,promoLabel:row.promo_label||(row.promo_taux?"-"+row.promo_taux+"%":""),fromSB:true};
+}
+function applyProds(data,source){
+  PRODS=data; sbSynced=true;
+  var now=new Date().toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"});
+  setERPBar("online","FreshLink ERP — "+source,"Dernière sync : "+now);
+  setSyncBadge("online","En ligne"); renderProds(); renderHeroCards(); updateCatCounts();
+  showToast("✅ "+PRODS.length+" articles chargés ("+source+")");
+  updateERPConnBox(true,"Connecté — "+PRODS.length+" articles · "+source);
+}
 function syncFromSupabase(){
-  setERPBar("loading","Synchronisation avec FreshLink ERP...",""); setSyncBadge("loading","Sync...");
-  fetch(CONFIG.API_URL+"/api/ext/catalogue",{method:"GET",headers:{"Content-Type":"application/json"},cache:"no-cache"})
-    .then(function(r){ if(!r.ok) throw new Error("HTTP "+r.status); return r.json(); })
+  setERPBar("loading","Connexion FreshLink ERP...",""); setSyncBadge("loading","Sync...");
+  // Mode 1: ERP REST API
+  fetch(CONFIG.API_URL+"/api/ext/catalogue",{method:"GET",headers:{"Accept":"application/json"},cache:"no-cache"})
+    .then(function(r){ if(!r.ok) throw new Error("API ERP HTTP "+r.status); return r.json(); })
     .then(function(data){
       if(!Array.isArray(data)||!data.length) throw new Error("Catalogue vide");
-      PRODS=data.map(function(row){
-        var cat=mapFamille(row.famille), tags=Array.isArray(row.tags)?row.tags:[], firstTag=tags[0]||"frais";
-        var promoObj=row.promo&&typeof row.promo==="object"?row.promo:null;
-        var prixBase=parseFloat(row.prix||row.prixVente||0);
-        var prix=promoObj&&promoObj.prixPromo?parseFloat(promoObj.prixPromo):prixBase;
-        var promoLabel=promoObj?(promoObj.label||(promoObj.taux?"-"+promoObj.taux+"%":"Promo")):"";
-        return{id:row.id,em:getEmoji(row.nom,cat),n:row.nom||"",no:row.nomAr||"",o:row.description||row.famille||"Maroc",p:prix,prixBase:prixBase,u:row.unite||"kg",cat:cat,tags:tags,t:firstTag,dispo:row.statut!=="rupture"&&(row.stockDisponible||0)>0,stock:row.stockDisponible||0,img:row.photo||"",promo:!!promoObj,promoLabel:promoLabel,fromERP:true};
-      });
-      sbSynced=true;
-      var now=new Date().toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"});
-      setERPBar("online","FreshLink ERP — catalogue en ligne","Dernière sync : "+now);
-      setSyncBadge("online","En ligne"); renderProds(); renderHeroCards(); updateCatCounts();
-      showToast("✅ "+PRODS.length+" articles chargés depuis FreshLink ERP !");
-      updateERPConnBox(true,"Connecté — "+PRODS.length+" articles");
+      applyProds(data.map(mapERPArticle),"API ERP");
+      updateSBConnBox("api",true,data.length+" articles via API ERP");
     })
-    .catch(function(err){
-      console.warn("[ERP] catalogue fallback:",err.message);
-      setERPBar("offline","Catalogue local (ERP non joignable)",""); setSyncBadge("offline","Local");
-      renderProds(); updateCatCounts();
+    .catch(function(apiErr){
+      console.warn("[ERP API] fallback Supabase:",apiErr.message);
+      updateSBConnBox("api",false,apiErr.message);
+      // Mode 2: Supabase direct fallback
+      if(!sb) sb=initSupabase();
+      if(!sb){ setERPBar("offline","Catalogue local (aucune connexion)",""); setSyncBadge("offline","Local"); renderProds(); updateCatCounts(); return; }
+      sb.from("fl_articles")
+        .select("id,nom,famille,unite,prix,stock_actuel,photo,visible_web,promo_active,prix_promo,promo_taux,promo_label,tags,description")
+        .eq("visible_web",true)
+        .then(function(r){
+          if(r.error) throw r.error;
+          var data=r.data||[];
+          if(!data.length) throw new Error("Aucun article visible");
+          applyProds(data.map(mapSBArticle),"Supabase direct");
+          updateSBConnBox("sb",true,data.length+" articles via Supabase");
+          subscribeRealtime();
+        })
+        .catch(function(sbErr){
+          console.warn("[Supabase] fallback local:",sbErr.message||sbErr);
+          updateSBConnBox("sb",false,sbErr.message||String(sbErr));
+          setERPBar("offline","Catalogue local (connexions indisponibles)",""); setSyncBadge("offline","Local");
+          renderProds(); updateCatCounts();
+        });
     });
+}
+function updateSBConnBox(mode,ok,msg){
+  if(mode==="api"){
+    var dot=document.getElementById("sb-conn-dot"), lbl=document.getElementById("sb-conn-label"), sub=document.getElementById("sb-conn-sub");
+    if(dot) dot.className="erp-conn-dot"+(ok?"":" err");
+    if(lbl) lbl.textContent=ok?"✅ API ERP connectée":"❌ API ERP non joignable";
+    if(sub) sub.textContent=msg;
+  } else {
+    var dot2=document.getElementById("sb2-conn-dot"), lbl2=document.getElementById("sb2-conn-label"), sub2=document.getElementById("sb2-conn-sub");
+    if(dot2) dot2.className="erp-conn-dot"+(ok?"":" err");
+    if(lbl2) lbl2.textContent=ok?"✅ Supabase connecté":"❌ Supabase erreur";
+    if(sub2) sub2.textContent=msg;
+  }
 }
 
 function subscribeRealtime(){
@@ -1690,10 +1758,15 @@ function setSyncBadge(state,label){
   if(dot) dot.className="dot"+(state==="loading"?" loading":""); if(lbl) lbl.textContent=label;
 }
 function updateERPConnBox(ok,msg){
-  var dot=document.getElementById("sb-conn-dot"), lbl=document.getElementById("sb-conn-label"), sub=document.getElementById("sb-conn-sub");
-  if(dot) dot.className="erp-conn-dot"+(ok?"":" err"); if(lbl) lbl.textContent=ok?"Connecté à FreshLink ERP":"Erreur de connexion"; if(sub) sub.textContent=msg;
+  // legacy — also update both indicators
+  updateSBConnBox(sbSynced?"api":"sb", ok, msg);
 }
-function testSupabase(){ var url=document.getElementById("c-sb-url").value.trim(), key=document.getElementById("c-sb-key").value.trim(); if(url)CFG.sbUrl=url; if(key)CFG.sbKey=key; sb=initSupabase(); syncFromSupabase(); }
+function testSupabase(){
+  var url=document.getElementById("c-sb-url").value.trim(), key=document.getElementById("c-sb-key").value.trim();
+  if(url)CFG.sbUrl=url; if(key)CFG.sbKey=key;
+  sb=null; // force reinit with new credentials
+  syncFromSupabase();
+}
 
 // ── HERO CARDS ──
 function renderHeroCards(){
@@ -1815,7 +1888,14 @@ function loadCfgFields(){
   set("c-wa",CFG.wa);set("c-email",CFG.email);set("c-addr",CFG.addr);set("c-fb",CFG.fb);set("c-ig",CFG.ig);
   set("c-exp",CFG.exp);set("c-free",CFG.free);set("c-std",CFG.std);set("c-sb-url",CFG.sbUrl);set("c-sb-key",CFG.sbKey);
   var ds=document.getElementById("c-expdelay"); if(ds) ds.value=CFG.expDelay||"2h";
-  updateERPConnBox(sbSynced,sbSynced?CFG.sbUrl:"Non synchronisé");
+  // Show current connection status in admin panel
+  if(sbSynced){
+    updateSBConnBox("api",true,"Catalogue chargé — "+PRODS.length+" articles");
+    updateSBConnBox("sb",true,"Fallback Supabase disponible");
+  } else {
+    updateSBConnBox("api",false,"Pas encore connecté — cliquez 'Tester'");
+    updateSBConnBox("sb",false,"Pas encore connecté — cliquez 'Tester'");
+  }
 }
 function refreshPriceBox(){
   var exp=parseInt(document.getElementById("c-exp").value)||CFG.exp;
