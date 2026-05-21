@@ -958,7 +958,6 @@ GET  /api/ext/commandes/:id → suivi commande</div>
   </div>
   <div style="display:flex;align-items:center;gap:10px">
     <span class="erp-last" id="erp-last-sync"></span>
-    <button class="erp-refresh" onclick="syncFromSupabase()">🔄 Sync ERP</button>
   </div>
 </div>
 
@@ -1051,16 +1050,34 @@ GET  /api/ext/commandes/:id → suivi commande</div>
 
 <div class="prod-sec">
   <div class="container">
+    <!-- Search + Sort bar -->
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px">
+      <div style="flex:1;min-width:200px;position:relative">
+        <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#aaa;font-size:15px">🔍</span>
+        <input id="prod-search" type="text" placeholder="Rechercher un produit..." oninput="renderProds()" style="width:100%;padding:10px 12px 10px 36px;border:1.5px solid #dde;border-radius:24px;font-size:14px;font-family:inherit;outline:none;background:#fff;box-sizing:border-box"/>
+      </div>
+      <select id="prod-sort" onchange="renderProds()" style="padding:10px 14px;border:1.5px solid #dde;border-radius:24px;font-size:13px;font-family:inherit;background:#fff;cursor:pointer">
+        <option value="def">Tri par défaut</option>
+        <option value="prix-asc">Prix ↑ croissant</option>
+        <option value="prix-desc">Prix ↓ décroissant</option>
+        <option value="nom-asc">Nom A→Z</option>
+        <option value="dispo">Disponibilité</option>
+      </select>
+      <div class="erp-sync-badge">
+        <div class="dot loading" id="sync-dot"></div>
+        <span id="sync-label">Connexion...</span>
+      </div>
+    </div>
+    <!-- Info banner: washed/peeled on demand -->
+    <div style="background:linear-gradient(90deg,#f0faf4,#e8f5e9);border-left:4px solid #25a352;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:13px;color:#1a7a3c;line-height:1.6">
+      🔪💧 <strong>Produits lavés et/ou épluchés disponibles sur demande</strong> — sélectionnez la préparation souhaitée dans votre commande. <em>Confirmation sous 1h par l'équipe Empire Fresh.</em>
+    </div>
     <div class="fbar">
       <button class="fb on" onclick="filt(this,'tous')">Tous</button>
       <button class="fb" onclick="filt(this,'frais')">🌿 Frais</button>
       <button class="fb" onclick="filt(this,'epluche')">🔪 Épluché</button>
       <button class="fb" onclick="filt(this,'lave')">💧 Lavé</button>
       <button class="fb" onclick="filt(this,'promo')">🔥 Promo</button>
-      <div class="erp-sync-badge">
-        <div class="dot loading" id="sync-dot"></div>
-        <span id="sync-label">Connexion...</span>
-      </div>
     </div>
     <div class="pgrid" id="pgrid"></div>
   </div>
@@ -1123,11 +1140,26 @@ GET  /api/ext/commandes/:id → suivi commande</div>
           <textarea id="f-notes" placeholder="Heure préférée, accès immeuble, allergies..."></textarea>
         </div>
         <div class="fg"><label>Mode de paiement</label>
-          <select id="f-pay">
-            <option>💵 Cash à la livraison</option>
-            <option>🏦 Virement bancaire</option>
-            <option>💳 Paiement en ligne (bientôt)</option>
+          <select id="f-pay" onchange="onPayChange(this.value)">
+            <option value="cash">💵 Cash à la livraison</option>
+            <option value="virement">🏦 Virement bancaire</option>
+            <option value="online">💳 Paiement en ligne (bientôt)</option>
           </select>
+        </div>
+        <!-- Virement bancaire bloc (hidden by default) -->
+        <div id="virement-bloc" style="display:none;background:#fffbe6;border:1px solid #f59e0b;border-radius:12px;padding:14px;margin-bottom:12px">
+          <div style="font-weight:700;color:#b45309;margin-bottom:8px">🏦 Virement bancaire</div>
+          <div id="rib-display" style="font-size:13px;line-height:1.8;color:#333">
+            <strong>RIB :</strong> <span id="rib-val">Configurable dans les paramètres admin</span><br>
+            <strong>Bénéficiaire :</strong> Empire Fresh SARL<br>
+            <strong>Banque :</strong> CIH / Attijariwafa / BMCE
+          </div>
+          <div style="margin-top:10px;font-size:13px;color:#b45309">⚠️ <strong>Justificatif obligatoire</strong> — envoyez le reçu de virement via WhatsApp avant préparation de votre commande.</div>
+          <div class="fg" style="margin-top:10px">
+            <label style="font-size:13px">Référence / numéro de virement (optionnel)</label>
+            <input type="text" id="vir-ref" placeholder="Ex: VIR-20250521-001" style="font-size:13px"/>
+          </div>
+          <a id="vir-wa-btn" href="#" target="_blank" style="display:inline-block;margin-top:8px;background:#25d366;color:#fff;padding:9px 18px;border-radius:20px;font-size:13px;font-weight:700;text-decoration:none">📸 Envoyer le justificatif sur WhatsApp</a>
         </div>
         <button class="sbtn" id="submit-btn" onclick="submitOrder()">
           ✅ Envoyer ma commande — <span id="total-btn">0 MAD</span>
@@ -1457,6 +1489,11 @@ GET  /api/ext/commandes/:id → suivi commande</div>
   </div>
 </div>
 
+<!-- FLOATING MOBILE CART BUTTON -->
+<button id="mob-cart-fab" onclick="document.getElementById('commander').scrollIntoView({behavior:'smooth'})" style="display:none;position:fixed;bottom:170px;left:20px;z-index:998;background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;border:none;width:56px;height:56px;border-radius:50%;font-size:22px;cursor:pointer;box-shadow:0 6px 24px rgba(245,158,11,.5);align-items:center;justify-content:center;flex-direction:column" title="Voir le panier">
+  🛒<span id="mob-cart-count" style="font-size:10px;font-weight:700;line-height:1">0</span>
+</button>
+
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
@@ -1475,18 +1512,23 @@ GET  /api/ext/commandes/:id → suivi commande</div>
 <!-- LOGIN CHOICE MODAL -->
 <div id="login-choice-modal" onclick="if(event.target===this)this.style.display='none'">
   <div class="choice-box">
-    <h2>👋 Mon Espace / فضائي / My Space</h2>
-    <p class="choice-sub">Choisissez votre type d'accès · اختر نوع الوصول · Choose your access type</p>
-    <div class="choice-cards">
-      <div class="choice-card" onclick="showLoginForm()">
-        <span class="choice-card-icon">🏠</span>
-        <div class="choice-card-title">Particulier</div>
-        <div class="choice-card-sub">Connexion ou création de compte client</div>
+    <h2>👋 Mon Espace</h2>
+    <p class="choice-sub">Particulier, CHR ou Marchand — choisissez votre accès</p>
+    <div class="choice-cards" style="grid-template-columns:1fr 1fr 1fr;gap:10px">
+      <div class="choice-card" onclick="showLoginForm('login')">
+        <span class="choice-card-icon">🔑</span>
+        <div class="choice-card-title">Se connecter</div>
+        <div class="choice-card-sub">Vous avez déjà un compte</div>
+      </div>
+      <div class="choice-card" onclick="showLoginForm('signup')">
+        <span class="choice-card-icon">📋</span>
+        <div class="choice-card-title">S'inscrire</div>
+        <div class="choice-card-sub">Particulier, CHR ou Marchand</div>
       </div>
       <div class="choice-card" onclick="openProApp()">
         <span class="choice-card-icon">🏢</span>
-        <div class="choice-card-title">CHR &amp; Marchands Pro</div>
-        <div class="choice-card-sub">Connectez-vous via votre application</div>
+        <div class="choice-card-title">Espace Pro</div>
+        <div class="choice-card-sub">Application FreshLink ERP</div>
       </div>
     </div>
     <button class="choice-close" onclick="document.getElementById('login-choice-modal').style.display='none'">Fermer</button>
@@ -1684,22 +1726,24 @@ function mapERPArticle(row){
 // Map Supabase fl_articles row (payload JSONB) to internal PROD object
 function mapSBArticle(row){
   var p=row.payload||{};
-  // Price: marketplacePrixPublic > promo price > calculated PV
-  var prixBase=p.marketplacePrixPublic||p.prixVente||p.pvValeur||parseFloat(p.prixAchat||0)*1.3;
-  // Calculate prixVente from pvMethode if not set
-  if(!prixBase&&p.prixAchat){
-    if(p.pvMethode==="pourcentage") prixBase=Math.round(parseFloat(p.prixAchat)*(1+(parseFloat(p.pvValeur)||60)/100)*100)/100;
-    else if(p.pvMethode==="montant") prixBase=parseFloat(p.prixAchat)+parseFloat(p.pvValeur||0);
-    else prixBase=parseFloat(p.pvValeur||0)||parseFloat(p.prixAchat||0);
+  // Price: marketplacePrixPublic is the correct display price
+  // Fallback: calculate from pvMethode + pvValeur + prixAchat
+  var prixBase=parseFloat(p.marketplacePrixPublic||0);
+  if(!prixBase && p.prixAchat){
+    var pa=parseFloat(p.prixAchat||0), pv=parseFloat(p.pvValeur||0);
+    if(p.pvMethode==="pourcentage") prixBase=Math.round(pa*(1+pv/100)*100)/100;
+    else if(p.pvMethode==="montant") prixBase=Math.round((pa+pv)*100)/100;
+    else prixBase=pv||pa; // manuel: pvValeur IS the price
   }
+  if(!prixBase) prixBase=parseFloat(p.pvValeur||0)||0;
   var promoObj=p.marketplacePromo&&p.marketplacePromo.actif?p.marketplacePromo:null;
-  var prix=promoObj&&promoObj.prixPromo?parseFloat(promoObj.prixPromo):parseFloat(prixBase||0);
-  var promoLabel=promoObj?(promoObj.etiquette||(promoObj.prixPromo&&prixBase?"-"+Math.round((1-promoObj.prixPromo/prixBase)*100)+"%":"Promo")):"";
+  var prix=promoObj&&promoObj.prixPromo?parseFloat(promoObj.prixPromo):prixBase;
+  var promoLabel=promoObj?(promoObj.etiquette||(prixBase&&promoObj.prixPromo?"-"+Math.round((1-promoObj.prixPromo/prixBase)*100)+"%":"Promo")):"";
   var cat=mapFamille(p.famille), tags=Array.isArray(p.marketplaceTags)?p.marketplaceTags:(Array.isArray(p.tags)?p.tags:[]), firstTag=tags[0]||"frais";
   return{
     id:row.id, em:getEmoji(p.nom,cat), n:p.nom||"", no:p.nomAr||"",
-    o:p.marketplaceDescription||p.famille||"Maroc",
-    p:prix, prixBase:parseFloat(prixBase||prix),
+    o:p.marketplaceDescription||p.marketplaceCommentaire||p.famille||"Maroc",
+    p:prix, prixBase:prixBase,
     u:p.unite||"kg", cat:cat, tags:tags, t:firstTag,
     dispo:p.marketplaceStatut!=="out_of_stock"&&(p.stockDisponible||0)>0,
     stock:p.stockDisponible||0, img:p.photo||(p.photos&&p.photos[0])||"",
@@ -1815,11 +1859,23 @@ function renderProds(f){
   var filter=currentFilter;
   var specTags=["frais","epluche","lave","combo","promo"];
   var list;
-  if(filter==="tous") list=PRODS;
-  else if(specTags.indexOf(filter)>=0) list=PRODS.filter(function(p){return p.tags&&p.tags.indexOf(filter)>=0;});
+  if(filter==="tous"||!filter) list=PRODS.slice();
+  else if(specTags.indexOf(filter)>=0){
+    if(filter==="promo") list=PRODS.filter(function(p){return p.promo;});
+    else list=PRODS.filter(function(p){return p.tags&&p.tags.indexOf(filter)>=0;});
+  }
   else list=PRODS.filter(function(p){return p.cat===filter;});
+  // Search filter
+  var searchEl=document.getElementById("prod-search"), q=(searchEl?searchEl.value:"").trim().toLowerCase();
+  if(q) list=list.filter(function(p){ return (p.n||"").toLowerCase().includes(q)||(p.no||"").includes(q)||(p.o||"").toLowerCase().includes(q); });
+  // Sort
+  var sortEl=document.getElementById("prod-sort"), sort=sortEl?sortEl.value:"def";
+  if(sort==="prix-asc") list.sort(function(a,b){return a.p-b.p;});
+  else if(sort==="prix-desc") list.sort(function(a,b){return b.p-a.p;});
+  else if(sort==="nom-asc") list.sort(function(a,b){return (a.n||"").localeCompare(b.n||"","fr");});
+  else if(sort==="dispo") list.sort(function(a,b){return (b.dispo?1:0)-(a.dispo?1:0);});
   if(!list.length){
-    document.getElementById("pgrid").innerHTML='<div class="no-prods"><span class="no-prods-icon">🔍</span><h3>Aucun produit trouvé</h3><p>Essayez une autre catégorie.</p></div>'; return;
+    document.getElementById("pgrid").innerHTML='<div class="no-prods"><span class="no-prods-icon">🔍</span><h3>Aucun produit trouvé</h3><p>'+(q?"Essayez un autre terme de recherche.":"Essayez une autre catégorie.")+'</p></div>'; return;
   }
   document.getElementById("pgrid").innerHTML=list.map(function(p){
     var qty=cart[p.id]?cart[p.id].qty:0, outStock=!p.dispo;
@@ -1857,6 +1913,10 @@ function updateCartUI(){
   var df=delMode==="exp"?CFG.exp:(sub>=CFG.free?0:CFG.std), tot=sub+df;
   document.getElementById("total-btn").textContent=tot+" MAD";
   var ci=document.getElementById("cart-items"), ct=document.getElementById("cart-totals");
+  // Mobile cart FAB
+  var mobFab=document.getElementById("mob-cart-fab"), mobCnt=document.getElementById("mob-cart-count");
+  if(mobFab){mobFab.style.display=total?"flex":"none";}
+  if(mobCnt)mobCnt.textContent=total;
   if(!items.length){ci.innerHTML='<div class="cempty">Votre panier est vide.<br>Ajoutez des produits depuis le catalogue.</div>';ct.style.display="none";return;}
   ci.innerHTML=items.map(function(p){return'<div class="ci"><div class="ci-l"><div class="ci-em">'+p.em+'</div><div><div class="ci-n">'+p.n+'</div><div class="ci-m">'+p.qty+' '+p.u+' × '+p.p+' MAD</div></div></div><div style="display:flex;align-items:center;gap:8px"><div class="ci-p">'+(p.p*p.qty)+' MAD</div><button class="crm" onclick="upCart(\''+p.id+'\',-'+p.qty+')">✕</button></div></div>';}).join("");
   ct.style.display="block";
@@ -1873,6 +1933,15 @@ function setDel(m){ delMode=m; document.getElementById("d-std").classList.toggle
 function setCt(el,tp){ document.querySelectorAll(".ctab").forEach(function(x){x.classList.remove("on");}); el.classList.add("on"); document.getElementById("co-row").style.display=tp!=="part"?"block":"none"; }
 
 // ── SUBMIT ORDER ──
+var virJustif="";
+function onPayChange(val){
+  var bloc=document.getElementById("virement-bloc");
+  if(bloc) bloc.style.display=(val==="virement")?"block":"none";
+  if(val==="virement"){
+    var waMsg=encodeURIComponent("🏦 Justificatif virement — Empire Fresh\nCommande en cours de validation.\nVeuillez joindre la photo de votre reçu de virement.");
+    var btn=document.getElementById("vir-wa-btn"); if(btn) btn.href="https://wa.me/"+CFG.wa+"?text="+waMsg;
+  }
+}
 function submitOrder(){
   var nom=document.getElementById("f-nom").value.trim(), tel=document.getElementById("f-tel").value.trim(), adr=document.getElementById("f-adr").value.trim();
   if(!nom||!tel||!adr){showToast("⚠️ Remplissez nom, téléphone et adresse");return;}
@@ -1883,24 +1952,27 @@ function submitOrder(){
   var co=(document.getElementById("f-co")||{}).value||"", email=document.getElementById("f-email").value||"";
   var zone=document.getElementById("f-zone").value, notes=document.getElementById("f-notes").value, pay=document.getElementById("f-pay").value;
   var preps=Array.from(document.querySelectorAll(".popt.on")).map(function(e){return e.textContent.trim();}).join(", ");
+  virJustif=(document.getElementById("vir-ref")||{}).value||"";
   var lignes=items.map(function(p){return{id:p.id,nom:p.n,qty:p.qty,prix_unitaire:p.p,total:p.p*p.qty,unite:p.u};});
   var orderData={nom_client:nom+(co?" ("+co+")":""),telephone:tel,email:email||null,adresse_livraison:adr+(zone?" — "+zone:""),lignes:lignes,montant_total:tot,creneau:delMode==="exp"?"Express "+CFG.expDelay:"Standard 24h",instructions:[preps?"Préparation: "+preps:"",notes].filter(Boolean).join(" | ")||null,statut:"recu"};
   var msg="🍃 *COMMANDE EMPIRE FRESH*\n\n👤 *Client :* "+nom+"\n"+(co?"🏢 *Enseigne :* "+co+"\n":"")+"📱 *Tél :* "+tel+"\n📍 *Adresse :* "+adr+"\n"+(zone?"🗺️ *Zone :* "+zone+"\n":"")+"\n🛒 *Produits :*\n";
   items.forEach(function(p){msg+="  • "+p.em+" "+p.n+" — "+p.qty+" "+p.u+" × "+p.p+" MAD = *"+(p.p*p.qty)+" MAD*\n";});
   msg+="\n🔪 *Préparation :* "+(preps||"Frais tel quel")+"\n🚚 *Livraison :* "+(delMode==="exp"?"EXPRESS ⚡ ("+CFG.expDelay+")":"Standard 24h")+"\n💳 *Paiement :* "+pay+(notes?"\n📝 *Notes :* "+notes:"")+"\n\n💰 *Sous-total :* "+sub+" MAD\n🚚 *Livraison :* "+(df===0?"Gratuite":"+"+df+" MAD")+"\n✅ *TOTAL : "+tot+" MAD*\n📅 "+new Date().toLocaleDateString("fr-FR",{weekday:"long",year:"numeric",month:"long",day:"numeric"});
-  document.getElementById("mod-wa").href="https://wa.me/"+CFG.wa+"?text="+encodeURIComponent(msg);
+  // WhatsApp group confirmation (not direct number)
+  document.getElementById("mod-wa").href="https://chat.whatsapp.com/D11jvGbbWd5Kc2pyXl79SK";
+  var cmdId="cmd_"+Date.now()+"_"+Math.random().toString(36).slice(2,7);
+  // Write to fl_commandes (payload JSONB — same structure as ERP)
+  var cmdPayload={id:cmdId,payload:{nomClient:nom,telephone:tel,email:email||null,adresse:adr+(zone?" — "+zone:""),lignes:lignes,total:tot,livraison:delMode==="exp"?"express":"standard",fraisLivraison:df,paiement:pay,preparation:preps||"Frais tel quel",notes:notes||null,source:"site_web",statut:"recu",date:new Date().toISOString(),ribJustificatif:(pay==="virement"?virJustif||null:null)},updated_at:new Date().toISOString()};
+  function showConfirm(num){ btn.disabled=false; btn.innerHTML="✅ Commande envoyée — <span id='total-btn'>"+tot+" MAD</span>"; document.getElementById("mod-order-num").textContent=num||cmdId.split("_")[1]; document.getElementById("modal").classList.add("show"); }
   if(sb){
-    sb.from("fl_commandes_web").insert([orderData]).select("numero").then(function(r){
-      btn.disabled=false; btn.innerHTML="✅ Envoyer ma commande — <span id='total-btn'>"+tot+" MAD</span>";
-      if(r.error){console.error("[Supabase]",r.error);document.getElementById("mod-erp-info").style.display="none";}
-      else{var num=r.data&&r.data[0]&&r.data[0].numero; document.getElementById("mod-order-num").textContent=num||"—";}
-      document.getElementById("modal").classList.add("show");
+    sb.from("fl_commandes").insert([cmdPayload]).then(function(r){
+      if(r.error){
+        console.warn("[fl_commandes]",r.error.message);
+        // Fallback: try fl_commandes_web
+        sb.from("fl_commandes_web").insert([Object.assign({},orderData,{id:cmdId})]).then(function(){showConfirm(cmdId.slice(-6));});
+      } else { showConfirm(cmdId.slice(-6)); }
     });
-  } else {
-    btn.disabled=false; btn.innerHTML="✅ Envoyer ma commande — <span id='total-btn'>"+tot+" MAD</span>";
-    document.getElementById("mod-erp-info").style.display="none";
-    document.getElementById("modal").classList.add("show");
-  }
+  } else { showConfirm(cmdId.slice(-6)); }
 }
 
 // ── CONFIG PANEL ──
@@ -2010,9 +2082,11 @@ function openLogin(){
   var sess=getSession(); if(sess){showPortal(sess);setTimeout(function(){document.getElementById("mon-espace").scrollIntoView({behavior:"smooth"});},100);return;}
   document.getElementById("login-choice-modal").style.display="flex";
 }
-function showLoginForm(){
+function showLoginForm(tab){
   document.getElementById("login-choice-modal").style.display="none";
-  document.getElementById("loginModal").classList.add("open"); setTimeout(function(){var el=document.getElementById("loginPhone");if(el)el.focus();},120);
+  document.getElementById("loginModal").classList.add("open");
+  if(tab) setTimeout(function(){ switchLoginTab(tab); },50);
+  setTimeout(function(){var el=document.getElementById("loginPhone");if(el&&tab!=="signup")el.focus();},120);
 }
 function openProApp(){
   document.getElementById("login-choice-modal").style.display="none";
@@ -2191,6 +2265,8 @@ document.addEventListener("DOMContentLoaded",function(){
   setLang(currentLang);
   showSkeletons(8);
   sb=initSupabase(); syncFromSupabase(); loadCompanyContacts();
+  // Auto-refresh catalogue every 5 minutes
+  setInterval(function(){ syncFromSupabase(); }, 5*60*1000);
   renderProds(); updateCatCounts(); initReveal(); loadAvis();
   var sess=getSession(); if(sess) showPortal(sess);
   if(sess?.token){
@@ -2277,7 +2353,7 @@ var CHAT_FLOWS={
   },
   contact:{
     bot:{fr:["📞 **Nous contacter :**","🕐 Disponibles du Lundi au Samedi, 8h–19h.\nContactez-nous directement pour toute question urgente."],ar:["📞 **تواصل معنا :**","🕐 متاحون من الاثنين للسبت، 8ص–7م.\nتواصل معنا مباشرة لأي سؤال عاجل."],en:["📞 **Contact us:**","🕐 Available Monday to Saturday, 8am–7pm.\nContact us directly for any urgent question."]},
-    qr:[{fr:"💬 WhatsApp direct",ar:"💬 واتساب مباشر",en:"💬 Direct WhatsApp",action:"waDirect"},{fr:"📞 Appeler",ar:"📞 اتصل",en:"📞 Call",action:"callTeam"},{fr:"🔙 Menu",ar:"🔙 القائمة",en:"🔙 Menu",step:"home"}]
+    qr:[{fr:"👥 Chat avec l'équipe",ar:"👥 دردشة مع الفريق",en:"👥 Chat with team",action:"waTeamGroup"},{fr:"💬 WhatsApp direct",ar:"💬 واتساب مباشر",en:"💬 Direct WhatsApp",action:"waDirect"},{fr:"📞 Appeler",ar:"📞 اتصل",en:"📞 Call",action:"callTeam"},{fr:"🔙 Menu",ar:"🔙 القائمة",en:"🔙 Menu",step:"home"}]
   }
 };
 function chatAddMsg(who,text,delay){
@@ -2347,6 +2423,7 @@ function chatDoAction(action){
     waOrder:function(){ window.open(waBase+encodeURIComponent("Bonjour ! Je souhaite passer une commande 🛒"),"_blank"); done("Je vous redirige vers WhatsApp 💬 Notre équipe vous prend en charge !","يتم تحويلك إلى واتساب 💬 فريقنا سيهتم بك!","Redirecting to WhatsApp 💬 Our team will take care of you!"); },
     waTrack:function(){ window.open(waBase+encodeURIComponent("Bonjour, je voudrais suivre ma commande 📦"),"_blank"); done("Redirection WhatsApp pour le suivi 📦","تتبع طلبك عبر واتساب 📦","Tracking your order on WhatsApp 📦"); },
     waSignup:function(){ window.open(CONFIG.WHATSAPP_SIGNUP,"_blank"); done("Groupe WhatsApp Partenaires 🤝 Notre équipe vous contactera sous 24h !","مجموعة واتساب الشركاء 🤝 فريقنا سيتصل بك خلال 24 ساعة!","Partner WhatsApp group 🤝 Our team will contact you within 24h!"); },
+    waTeamGroup:function(){ window.open("https://chat.whatsapp.com/K9zqxKXd3qLEIMLt3Oh3lI","_blank"); done("Groupe WhatsApp de l'équipe ouvert 👥 Un conseiller va vous répondre !","تم فتح مجموعة واتساب للفريق 👥 سيرد عليك أحد المستشارين!","Team WhatsApp group opened 👥 An advisor will reply!"); },
     waDirect:function(){ window.open(waBase+encodeURIComponent("Bonjour Empire Fresh, j'ai une question."),"_blank"); done("En contact avec notre équipe 💬","على تواصل مع فريقنا 💬","In touch with our team 💬"); },
     waProduitsDispos:function(){ window.open(waBase+encodeURIComponent("Bonjour ! Quels produits sont disponibles aujourd'hui ? 🥦"),"_blank"); done("Demande envoyée à notre équipe 📋","تم إرسال الطلب لفريقنا 📋","Request sent to our team 📋"); },
     callTeam:function(){ window.open("tel:+"+CFG.wa); done("📞 Appel en cours — ouvrez votre téléphone","📞 مكالمة جارية — افتح هاتفك","📞 Calling — check your phone"); },
@@ -2392,7 +2469,7 @@ setTimeout(function(){ var dot=document.getElementById("chat-notif-dot"); if(dot
 
 // Expose globals
 window.filt=filt; window.fcat=fcat; window.setDel=setDel; window.setCt=setCt; window.upCart=upCart;
-window.submitOrder=submitOrder; window.openCfg=openCfg; window.closeCfg=closeCfg; window.cfgTab=cfgTab;
+window.submitOrder=submitOrder; window.onPayChange=onPayChange; window.openCfg=openCfg; window.closeCfg=closeCfg; window.cfgTab=cfgTab;
 window.saveConfig=saveConfig; window.refreshPriceBox=refreshPriceBox; window.syncFromSupabase=syncFromSupabase;
 window.testSupabase=testSupabase; window.showToast=showToast; window.toggleMenu=toggleMenu;
 window.closeMobileMenu=closeMobileMenu; window.openLogin=openLogin; window.closeLogin=closeLogin;
