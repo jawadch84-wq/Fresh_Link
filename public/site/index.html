@@ -871,7 +871,7 @@ function setLang(lang){
       <div class="cfg-grp">🔗 Application FreshLink</div>
       <div style="font-size:13px;color:var(--gy);line-height:1.8;margin-bottom:14px">Application de gestion ERP disponible sur : <a href="https://empire-fresh.netlify.app/" target="_blank" style="color:var(--g1);font-weight:700">empire-fresh.netlify.app</a></div>
       <div class="cfg-grp">📋 API FreshLink utilisées</div>
-      <div class="code-block">Vue : v_marketplace_catalogue
+      <div class="code-block">Table : fl_articles (visible_web=true)
 Table : fl_commandes_web
 Table : fl_company_contacts
 Table : fl_feedbacks
@@ -1472,6 +1472,18 @@ Realtime : fl_articles (changes)</div>
   </div>
 </div>
 
+<!-- PRO APP MESSAGE MODAL -->
+<div id="pro-app-msg-modal" style="display:none;position:fixed;inset:0;z-index:2600;background:rgba(0,0,0,.65);backdrop-filter:blur(5px);align-items:center;justify-content:center;padding:20px">
+  <div style="background:#fff;border-radius:20px;padding:36px 32px;max-width:420px;width:100%;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,.25)">
+    <div style="font-size:52px;margin-bottom:12px">📱</div>
+    <h2 style="color:#1a7a3c;margin-bottom:8px;font-size:1.4rem">Votre espace professionnel</h2>
+    <p style="color:#555;font-size:15px;line-height:1.6;margin-bottom:20px">Merci d'utiliser votre application <strong>FreshLink ERP</strong>.<br>Gérez vos commandes, stocks et factures directement depuis l'application dédiée à votre activité.</p>
+    <a href="https://empire-fresh.netlify.app/" target="_blank" style="display:inline-block;background:linear-gradient(135deg,#1a7a3c,#25a352);color:#fff;padding:12px 28px;border-radius:30px;font-weight:700;text-decoration:none;font-size:15px;margin-bottom:12px">🚀 Ouvrir FreshLink</a>
+    <br>
+    <button onclick="document.getElementById('pro-app-msg-modal').style.display='none'" style="background:none;border:2px solid #ddd;color:#666;padding:10px 24px;border-radius:30px;font-size:14px;cursor:pointer;margin-top:8px">Fermer</button>
+  </div>
+</div>
+
 <!-- LEGAL MODAL -->
 <div id="legal-modal">
   <div class="legal-box">
@@ -1485,24 +1497,61 @@ Realtime : fl_articles (changes)</div>
   <div class="modal-box">
     <button class="modal-close" onclick="closeLogin()">✕</button>
     <img class="modal-logo" src="./logo.png" alt="Empire Fresh" onerror="this.style.display='none'"/>
-    <h2 data-i18n="login_title">Connexion</h2>
-    <p class="modal-sub" data-i18n="login_sub">Accédez à votre espace client</p>
-    <div class="login-error" id="loginError"></div>
-    <form onsubmit="doLogin(event)" novalidate>
-      <div class="form-group">
-        <label data-i18n="lbl_phone">Numéro de téléphone</label>
-        <div class="phone-input-wrap"><span class="phone-flag">🇲🇦</span><input type="tel" id="loginPhone" placeholder="06 XX XX XX XX" autocomplete="tel" required/></div>
-      </div>
-      <div class="form-group">
-        <label data-i18n="lbl_pass">Mot de passe</label>
-        <input type="password" id="loginPass" placeholder="Mot de passe" autocomplete="current-password" required/>
-      </div>
-      <button type="submit" class="btn-submit" id="btnLoginSubmit" data-i18n="btn_login_ok">Se connecter</button>
-    </form>
-    <p style="margin-top:14px;text-align:center;font-size:13px;color:var(--gy)">
-      <span data-i18n="login_no_acc">Pas de compte ?</span>
-      <a href="#espace-pro" onclick="closeLogin()" style="color:var(--g1);font-weight:600;margin-left:6px" data-i18n="login_signup">Demander l'accès</a>
-    </p>
+    <!-- Tabs: Connexion / Créer un compte -->
+    <div style="display:flex;border-bottom:2px solid #eee;margin-bottom:18px">
+      <button id="tabLogin" onclick="switchLoginTab('login')" style="flex:1;padding:10px;border:none;background:none;font-weight:700;font-size:15px;color:var(--g1);border-bottom:3px solid var(--g1);cursor:pointer">Se connecter</button>
+      <button id="tabSignup" onclick="switchLoginTab('signup')" style="flex:1;padding:10px;border:none;background:none;font-weight:600;font-size:15px;color:#aaa;cursor:pointer">Créer un compte</button>
+    </div>
+    <!-- LOGIN PANEL -->
+    <div id="panelLogin">
+      <h2 data-i18n="login_title" style="margin-bottom:4px">Connexion</h2>
+      <p class="modal-sub" data-i18n="login_sub">Accédez à votre espace client</p>
+      <div class="login-error" id="loginError"></div>
+      <form onsubmit="doLogin(event)" novalidate>
+        <div class="form-group">
+          <label data-i18n="lbl_phone">Numéro de téléphone</label>
+          <div class="phone-input-wrap"><span class="phone-flag">🇲🇦</span><input type="tel" id="loginPhone" placeholder="06 XX XX XX XX" autocomplete="tel" required/></div>
+        </div>
+        <div class="form-group">
+          <label data-i18n="lbl_pass">Mot de passe</label>
+          <input type="password" id="loginPass" placeholder="Mot de passe" autocomplete="current-password" required/>
+        </div>
+        <button type="submit" class="btn-submit" id="btnLoginSubmit" data-i18n="btn_login_ok">Se connecter</button>
+      </form>
+      <p style="margin-top:12px;text-align:center;font-size:13px;color:var(--gy)">
+        <span>Pas encore de compte ?</span>
+        <a href="#" onclick="switchLoginTab('signup');return false" style="color:var(--g1);font-weight:600;margin-left:6px">Créer un compte</a>
+      </p>
+    </div>
+    <!-- SIGNUP PANEL -->
+    <div id="panelSignup" style="display:none">
+      <h2 style="margin-bottom:4px">Créer un compte</h2>
+      <p class="modal-sub">Rejoignez Empire Fresh en tant que particulier</p>
+      <div class="login-error" id="signupError"></div>
+      <form onsubmit="doSignup(event)" novalidate>
+        <div class="form-group">
+          <label>Prénom &amp; Nom</label>
+          <input type="text" id="signupName" placeholder="Mohammed Alami" autocomplete="name" required/>
+        </div>
+        <div class="form-group">
+          <label>Numéro de téléphone</label>
+          <div class="phone-input-wrap"><span class="phone-flag">🇲🇦</span><input type="tel" id="signupPhone" placeholder="06 XX XX XX XX" autocomplete="tel" required/></div>
+        </div>
+        <div class="form-group">
+          <label>Adresse (optionnel)</label>
+          <input type="text" id="signupAddr" placeholder="Quartier, Ville" autocomplete="street-address"/>
+        </div>
+        <div class="form-group">
+          <label>Mot de passe</label>
+          <input type="password" id="signupPass" placeholder="Choisir un mot de passe" required/>
+        </div>
+        <button type="submit" class="btn-submit" id="btnSignupSubmit">Créer mon compte</button>
+      </form>
+      <p style="margin-top:12px;text-align:center;font-size:13px;color:var(--gy)">
+        <span>Déjà un compte ?</span>
+        <a href="#" onclick="switchLoginTab('login');return false" style="color:var(--g1);font-weight:600;margin-left:6px">Se connecter</a>
+      </p>
+    </div>
   </div>
 </div>
 
@@ -1577,7 +1626,10 @@ function syncFromSupabase(){
   if(!sb) sb=initSupabase();
   if(!sb){ setERPBar("offline","Catalogue local (Supabase non configuré)",""); setSyncBadge("offline","Local"); renderProds(); updateCatCounts(); return; }
   setERPBar("loading","Synchronisation avec FreshLink ERP...",""); setSyncBadge("loading","Sync...");
-  sb.from("v_marketplace_catalogue").select("*").order("position_catalogue",{ascending:true})
+  sb.from("fl_articles")
+    .select("id,nom,famille,unite,prix,stock_actuel,photo,visible_web,promo_active,prix_promo,promo_taux,promo_label,tags,description,position_catalogue")
+    .eq("visible_web",true)
+    .order("position_catalogue",{ascending:true})
     .then(function(r){
       if(r.error) throw r.error;
       var data=r.data||[];
@@ -1585,7 +1637,7 @@ function syncFromSupabase(){
       PRODS=data.map(function(row){
         var cat=mapFamille(row.famille), tags=Array.isArray(row.tags)?row.tags:[], firstTag=tags[0]||"frais";
         var prix=row.promo_active&&row.prix_promo?parseFloat(row.prix_promo):parseFloat(row.prix||0);
-        return{id:row.id,em:getEmoji(row.nom,cat),n:row.nom||"",o:row.description||row.famille||"Maroc",p:prix,prixBase:parseFloat(row.prix||prix),u:row.unite||"kg",cat:cat,tags:tags,t:firstTag,dispo:row.stock_actuel>0,stock:row.stock_actuel,img:row.photo||"",promo:row.promo_active,promoLabel:row.promo_label||(row.promo_taux?"-"+row.promo_taux+"%":""),fromSupabase:true};
+        return{id:row.id,em:getEmoji(row.nom,cat),n:row.nom||"",o:row.description||row.famille||"Maroc",p:prix,prixBase:parseFloat(row.prix||prix),u:row.unite||"kg",cat:cat,tags:tags,t:firstTag,dispo:(row.stock_actuel||0)>0,stock:row.stock_actuel,img:row.photo||"",promo:row.promo_active,promoLabel:row.promo_label||(row.promo_taux?"-"+row.promo_taux+"%":""),fromSupabase:true};
       });
       sbSynced=true;
       var now=new Date().toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"});
@@ -1596,7 +1648,7 @@ function syncFromSupabase(){
     })
     .catch(function(err){
       console.warn("[Supabase] sync fallback:",err);
-      setERPBar("offline","Catalogue local",""); setSyncBadge("offline","Local");
+      setERPBar("offline","Catalogue local (vérifiez la table fl_articles)",""); setSyncBadge("offline","Local");
       renderProds(); updateCatCounts();
     });
 }
@@ -1840,12 +1892,22 @@ function showLoginForm(){
 }
 function openProApp(){
   document.getElementById("login-choice-modal").style.display="none";
-  window.open("https://empire-fresh.netlify.app/","_blank");
+  document.getElementById("pro-app-msg-modal").style.display="flex";
+}
+function switchLoginTab(tab){
+  var isLogin=tab==="login";
+  document.getElementById("panelLogin").style.display=isLogin?"block":"none";
+  document.getElementById("panelSignup").style.display=isLogin?"none":"block";
+  var tL=document.getElementById("tabLogin"), tS=document.getElementById("tabSignup");
+  if(tL){ tL.style.color=isLogin?"var(--g1)":"#aaa"; tL.style.borderBottom=isLogin?"3px solid var(--g1)":"none"; }
+  if(tS){ tS.style.color=isLogin?"#aaa":"var(--g1)"; tS.style.borderBottom=isLogin?"none":"3px solid var(--g1)"; }
 }
 function closeLogin(){
   document.getElementById("loginModal").classList.remove("open");
-  document.getElementById("loginError").classList.remove("show");
-  document.getElementById("loginPhone").value=""; document.getElementById("loginPass").value="";
+  var le=document.getElementById("loginError"); if(le) le.classList.remove("show");
+  var lp=document.getElementById("loginPhone"); if(lp) lp.value="";
+  var lpa=document.getElementById("loginPass"); if(lpa) lpa.value="";
+  switchLoginTab("login");
 }
 function closeLoginOutside(e){ if(e.target.id==="loginModal") closeLogin(); }
 document.addEventListener("keydown",function(e){if(e.key==="Escape")closeLogin();});
@@ -1864,6 +1926,33 @@ async function doLogin(e){
     else{saveSession(data);closeLogin();showPortal(data);showToast("✅ "+(data.user?.name||"Bienvenue !"));setTimeout(function(){document.getElementById("mon-espace").scrollIntoView({behavior:"smooth"});},200);}
   }catch(err){errEl.textContent=t("login_err_api");errEl.classList.add("show");}
   btnEl.disabled=false; btnEl.textContent=t("btn_login_ok");
+}
+async function doSignup(e){
+  e.preventDefault();
+  var name=document.getElementById("signupName").value.trim(), phone=document.getElementById("signupPhone").value.trim();
+  var addr=document.getElementById("signupAddr").value.trim(), pass=document.getElementById("signupPass").value.trim();
+  var errEl=document.getElementById("signupError"), btnEl=document.getElementById("btnSignupSubmit");
+  errEl.classList.remove("show");
+  if(!name||!phone||!pass){errEl.textContent="Veuillez remplir tous les champs obligatoires.";errEl.classList.add("show");return;}
+  if(pass.length<6){errEl.textContent="Le mot de passe doit contenir au moins 6 caractères.";errEl.classList.add("show");return;}
+  btnEl.disabled=true; btnEl.textContent="⏳ Création...";
+  try{
+    var res=await fetch(CONFIG.API_URL+"/api/ext/signup",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name,phone,address:addr,password:pass,type:"particulier"})});
+    var data=await res.json();
+    if(!res.ok){errEl.textContent=data.error||"Erreur lors de la création du compte.";errEl.classList.add("show");}
+    else{
+      if(data.user||data.token){saveSession(data);closeLogin();showPortal(data);showToast("✅ Compte créé ! Bienvenue "+(data.user?.name||name)+" !");}
+      else{showToast("✅ Compte créé ! Vous pouvez maintenant vous connecter.");switchLoginTab("login");}
+    }
+  }catch(err){
+    // Fallback: if no signup API, send via WhatsApp
+    errEl.textContent="API indisponible. Nous vous contactons par WhatsApp pour finaliser votre inscription.";errEl.classList.add("show");
+    setTimeout(function(){
+      var waMsg=encodeURIComponent("🆕 Nouvelle inscription Empire Fresh\n👤 Nom : "+name+"\n📱 Tel : "+phone+(addr?"\n📍 Adresse : "+addr:""));
+      window.open("https://wa.me/"+CFG.wa+"?text="+waMsg,"_blank");
+    },1500);
+  }
+  btnEl.disabled=false; btnEl.textContent="Créer mon compte";
 }
 function showPortal(data){
   document.getElementById("mon-espace").classList.add("visible");
@@ -2054,7 +2143,7 @@ window.filterAvis=filterAvis; window.setStars=setStars; window.submitReview=subm
 window.footerSecretClick=footerSecretClick; window.checkAdminPin=checkAdminPin;
 window.openLegal=openLegal; window.closeLegal=closeLegal;
 window.toggleChat=toggleChat; window.chatAction=chatAction; window.chatSend=chatSend;
-window.showLoginForm=showLoginForm; window.openProApp=openProApp;
+window.showLoginForm=showLoginForm; window.openProApp=openProApp; window.switchLoginTab=switchLoginTab; window.doSignup=doSignup;
 
 })();
 </script>
