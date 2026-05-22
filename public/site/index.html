@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>Empire Fresh — Fruits &amp; Légumes Frais · Casablanca</title>
 <meta name="description" content="Empire Fresh — Distribution fruits et légumes frais Casablanca. CHR, marchands et particuliers. Livraison standard 24h et express 2h."/>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='48' fill='%231B4332'/><text y='.9em' font-size='60' x='50%' dominant-baseline='middle' text-anchor='middle'>🍃</text></svg>"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Noto+Sans+Arabic:wght@400;500;600;700;800&family=Playfair+Display:wght@700;900&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
@@ -476,6 +477,58 @@ html[dir="rtl"] .modal-close{right:auto;left:14px}
 @keyframes slideStrip{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 .reveal{opacity:0;transform:translateY(28px);transition:opacity .6s cubic-bezier(.22,1,.36,1),transform .6s cubic-bezier(.22,1,.36,1)}
 .reveal.visible{opacity:1;transform:translateY(0)}
+/* ── HARVEST ANIMATION SECTION ── */
+.harvest-sec{padding:0;overflow:hidden;background:linear-gradient(135deg,#0a1a0c,#1B4332,#0d2b14);position:relative}
+.harvest-track{display:flex;align-items:center;gap:0;width:100%;overflow:hidden;height:120px;position:relative}
+.harvest-scene{display:flex;align-items:flex-end;gap:0;white-space:nowrap;animation:harvestMove 18s linear infinite;will-change:transform}
+@keyframes harvestMove{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+.harvest-scene:hover{animation-play-state:paused}
+.hs-item{display:inline-flex;flex-direction:column;align-items:center;gap:4px;padding:0 20px;color:rgba(255,255,255,.85);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.8px}
+.hs-icon{font-size:38px;animation:bounceIcon 2s ease-in-out infinite}
+.hs-item:nth-child(odd) .hs-icon{animation-delay:.3s}
+.hs-item:nth-child(3n) .hs-icon{animation-delay:.7s}
+@keyframes bounceIcon{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.harvest-truck{display:inline-flex;flex-direction:column;align-items:center;gap:4px;padding:0 30px;color:var(--o2);font-size:11px;font-weight:700}
+.harvest-truck .hs-icon{animation:truckShake .5s ease-in-out infinite alternate}
+@keyframes truckShake{from{transform:translateX(-2px)}to{transform:translateX(2px)}}
+.harvest-arrow{font-size:24px;color:rgba(255,255,255,.3);padding:0 8px;align-self:center}
+
+/* ── STORAGE TIPS SECTION ── */
+.storage-sec{padding:64px 0;background:#f0fdf4}
+.storage-tabs{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:24px 0 32px}
+.storage-tab{padding:8px 16px;border-radius:50px;font-size:22px;cursor:pointer;background:#fff;border:2px solid #e5e7eb;transition:all .25s cubic-bezier(.22,1,.36,1);line-height:1}
+.storage-tab:hover{border-color:var(--g1);transform:scale(1.08)}
+.storage-tab.on{border-color:var(--g1);background:var(--gp);box-shadow:0 4px 14px rgba(27,67,50,.15);transform:scale(1.1)}
+.storage-card{background:#fff;border-radius:20px;border:1.5px solid #dcfce7;padding:28px;display:none;animation:fadeSlideUp .4s both}
+.storage-card.show{display:block}
+.storage-meta{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:20px 0}
+.storage-meta-item{background:#f0fdf4;border-radius:12px;padding:14px;text-align:center}
+.storage-meta-val{font-size:18px;font-weight:800;color:var(--g1);display:block}
+.storage-meta-lbl{font-size:11px;color:var(--gy);margin-top:3px;display:block}
+.storage-tips-list{display:flex;flex-direction:column;gap:8px;margin-top:16px}
+.storage-tip{display:flex;align-items:flex-start;gap:10px;font-size:14px;color:#374151;line-height:1.6;padding:10px 13px;background:#f9fafb;border-radius:10px;border-left:3px solid var(--g1)}
+.storage-tip::before{content:"✅";flex-shrink:0}
+
+/* ── RECIPE SECTION ── */
+.recipe-sec{padding:64px 0;background:linear-gradient(135deg,#fffbeb,#fef3c7)}
+.recipe-day-badge{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,var(--o1),var(--o2));color:var(--gd);padding:6px 18px;border-radius:20px;font-size:12px;font-weight:700;margin-bottom:16px}
+.recipe-card{background:#fff;border-radius:20px;padding:32px;box-shadow:0 8px 32px rgba(184,150,12,.12);border:1.5px solid #fde68a;max-width:780px;margin:0 auto}
+.recipe-meta{display:flex;gap:20px;flex-wrap:wrap;margin:16px 0;padding:14px;background:#fffbeb;border-radius:12px}
+.recipe-meta-item{display:flex;align-items:center;gap:6px;font-size:13px;color:#92400e;font-weight:600}
+.recipe-ingredients{background:#f0fdf4;border-radius:12px;padding:18px;margin:16px 0}
+.recipe-ingredients h4{font-size:14px;font-weight:800;color:var(--gd);margin-bottom:10px}
+.recipe-ing-list{display:flex;flex-direction:column;gap:6px}
+.recipe-ing{display:flex;align-items:center;gap:8px;font-size:13px;color:#374151}
+.recipe-ing::before{content:"🌿";font-size:12px}
+.recipe-steps{margin:16px 0}
+.recipe-steps h4{font-size:14px;font-weight:800;color:var(--gd);margin-bottom:10px}
+.recipe-step{display:flex;gap:12px;margin-bottom:10px;align-items:flex-start}
+.recipe-step-num{width:28px;height:28px;background:var(--gp);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:var(--g1);flex-shrink:0}
+.recipe-step-txt{font-size:14px;color:#374151;line-height:1.7;padding-top:4px}
+.recipe-nav{display:flex;gap:10px;justify-content:center;margin-top:24px;flex-wrap:wrap}
+.recipe-nav-btn{padding:8px 18px;border-radius:50px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid var(--o1);background:#fff;color:var(--o1);transition:.2s;font-family:'Inter',sans-serif}
+.recipe-nav-btn:hover,.recipe-nav-btn.on{background:var(--o1);color:var(--gd)}
+
 /* RESPONSIVE */
 @media(max-width:1024px){.hero-cards{display:none}.pgrid{grid-template-columns:repeat(3,1fr)}.cats{grid-template-columns:repeat(2,1fr)}.erp-g{grid-template-columns:1fr;gap:32px}.footer-cols{grid-template-columns:1fr 1fr;gap:24px}.cfg-drawer{width:100%;right:-100%}.wa-section-grid{grid-template-columns:1fr}}
 @media(max-width:768px){.nav-links{display:none}.hamburger{display:flex}.hero-inner{grid-template-columns:1fr}.hero{padding:52px 16px}.hero h1{font-size:32px}.pro-grid{grid-template-columns:1fr}.ogrid{grid-template-columns:1fr}.tg{grid-template-columns:1fr}.footer-cols{grid-template-columns:1fr}.frow{grid-template-columns:1fr}.form-row{grid-template-columns:1fr}.zone-grid{grid-template-columns:1fr}.delivery-modes{grid-template-columns:1fr}.pgrid{grid-template-columns:repeat(2,1fr)}.popts{grid-template-columns:repeat(2,1fr)}.dopts{grid-template-columns:1fr}.container{padding:0 16px}}
@@ -974,12 +1027,33 @@ GET  /api/ext/commandes/:id → suivi commande</div>
 <nav class="navbar">
   <div class="nav-inner">
     <a href="#" class="nav-brand">
-      <img class="nav-logo" src="./logo.png" alt="Empire Fresh" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>
-      <div class="nav-logo-fallback">🌿</div>
-      <div class="nav-brand-text">
-        <span class="nav-brand-name">Empire Fresh</span>
-        <span class="nav-brand-sub">Distribution Alimentaire</span>
-      </div>
+<svg width="140" height="44" viewBox="0 0 280 88" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Warehouse outline -->
+  <path d="M60 38 L60 56 L120 56 L120 38 L90 24 Z" stroke="#22c55e" stroke-width="2.5" fill="none"/>
+  <rect x="68" y="42" width="10" height="14" fill="#22c55e" opacity=".4"/>
+  <rect x="102" y="42" width="10" height="14" fill="#22c55e" opacity=".4"/>
+  <!-- Fruit (orange circle) -->
+  <circle cx="90" cy="31" r="9" fill="#B8960C"/>
+  <path d="M90 22 Q87 16 83 14" stroke="#22c55e" stroke-width="2" stroke-linecap="round" fill="none"/>
+  <path d="M90 22 Q93 15 90 12" stroke="#22c55e" stroke-width="2" stroke-linecap="round" fill="none"/>
+  <!-- EMPIRE text -->
+  <text x="134" y="32" font-family="'Inter',sans-serif" font-size="22" font-weight="900" fill="#1B4332" letter-spacing="2">EMPIRE</text>
+  <!-- FRESH text in gold -->
+  <text x="134" y="54" font-family="'Inter',sans-serif" font-size="22" font-weight="900" fill="#B8960C" letter-spacing="2">FRESH</text>
+  <!-- Line separator -->
+  <line x1="134" y1="58" x2="278" y2="58" stroke="#B8960C" stroke-width="1.2" opacity=".6"/>
+  <!-- Tagline -->
+  <text x="134" y="72" font-family="'Inter',sans-serif" font-size="7.5" fill="#1B4332" letter-spacing="1.2" opacity=".75">FRUIT &amp; VEGETABLE · CASABLANCA</text>
+  <!-- Truck -->
+  <rect x="38" y="60" width="22" height="12" rx="2" fill="#1B4332"/>
+  <rect x="26" y="64" width="14" height="8" rx="1.5" fill="#22c55e"/>
+  <circle cx="32" cy="72" r="3" fill="#1B4332"/><circle cx="32" cy="72" r="1.5" fill="#ccc"/>
+  <circle cx="54" cy="72" r="3" fill="#1B4332"/><circle cx="54" cy="72" r="1.5" fill="#ccc"/>
+  <!-- Speed lines -->
+  <line x1="16" y1="66" x2="26" y2="66" stroke="#B8960C" stroke-width="1.5" stroke-linecap="round" opacity=".7"/>
+  <line x1="10" y1="69" x2="26" y2="69" stroke="#B8960C" stroke-width="1.5" stroke-linecap="round" opacity=".5"/>
+  <line x1="14" y1="72" x2="26" y2="72" stroke="#B8960C" stroke-width="1.5" stroke-linecap="round" opacity=".4"/>
+</svg>
     </a>
     <ul class="nav-links">
       <li><a href="#services"   data-i18n="nav_services">Services</a></li>
@@ -1076,6 +1150,52 @@ GET  /api/ext/commandes/:id → suivi commande</div>
 <!-- STATS BAR -->
 <div class="stats-bar"><div class="container"><div class="stats-inner" id="statsInner"></div></div></div>
 
+<!-- HARVEST ANIMATION -->
+<div class="harvest-sec" aria-hidden="true">
+  <div class="harvest-track">
+    <div class="harvest-scene">
+      <!-- Scene 1 (repeated twice for seamless loop) -->
+      <div class="hs-item"><span class="hs-icon">🌱</span><span class="hs-lbl" data-i18n="ha_grow">Culture</span></div>
+      <span class="harvest-arrow">→</span>
+      <div class="hs-item"><span class="hs-icon">🍅</span><span class="hs-lbl" data-i18n="ha_harvest">Récolte</span></div>
+      <div class="hs-item"><span class="hs-icon">🥦</span></div>
+      <div class="hs-item"><span class="hs-icon">🥕</span></div>
+      <div class="hs-item"><span class="hs-icon">🍋</span></div>
+      <div class="hs-item"><span class="hs-icon">🍎</span></div>
+      <div class="hs-item"><span class="hs-icon">🥬</span></div>
+      <div class="hs-item"><span class="hs-icon">🌽</span></div>
+      <span class="harvest-arrow">→</span>
+      <div class="hs-item"><span class="hs-icon">⚖️</span><span class="hs-lbl" data-i18n="ha_sort">Tri qualité</span></div>
+      <span class="harvest-arrow">→</span>
+      <div class="hs-item"><span class="hs-icon">📦</span><span class="hs-lbl" data-i18n="ha_pack">Emballage</span></div>
+      <span class="harvest-arrow">→</span>
+      <div class="harvest-truck"><span class="hs-icon">🚚</span><span class="hs-lbl" data-i18n="ha_deliver">Livraison</span></div>
+      <span class="harvest-arrow">→</span>
+      <div class="hs-item"><span class="hs-icon">🏪</span><span class="hs-lbl" data-i18n="ha_client">Client</span></div>
+      <span style="display:inline-block;width:60px"></span>
+      <!-- Scene 2 (duplicate for seamless loop) -->
+      <div class="hs-item"><span class="hs-icon">🌱</span><span class="hs-lbl" data-i18n="ha_grow">Culture</span></div>
+      <span class="harvest-arrow">→</span>
+      <div class="hs-item"><span class="hs-icon">🍅</span><span class="hs-lbl" data-i18n="ha_harvest">Récolte</span></div>
+      <div class="hs-item"><span class="hs-icon">🥦</span></div>
+      <div class="hs-item"><span class="hs-icon">🥕</span></div>
+      <div class="hs-item"><span class="hs-icon">🍋</span></div>
+      <div class="hs-item"><span class="hs-icon">🍎</span></div>
+      <div class="hs-item"><span class="hs-icon">🥬</span></div>
+      <div class="hs-item"><span class="hs-icon">🌽</span></div>
+      <span class="harvest-arrow">→</span>
+      <div class="hs-item"><span class="hs-icon">⚖️</span><span class="hs-lbl" data-i18n="ha_sort">Tri qualité</span></div>
+      <span class="harvest-arrow">→</span>
+      <div class="hs-item"><span class="hs-icon">📦</span><span class="hs-lbl" data-i18n="ha_pack">Emballage</span></div>
+      <span class="harvest-arrow">→</span>
+      <div class="harvest-truck"><span class="hs-icon">🚚</span><span class="hs-lbl" data-i18n="ha_deliver">Livraison</span></div>
+      <span class="harvest-arrow">→</span>
+      <div class="hs-item"><span class="hs-icon">🏪</span><span class="hs-lbl" data-i18n="ha_client">Client</span></div>
+      <span style="display:inline-block;width:60px"></span>
+    </div>
+  </div>
+</div>
+
 <!-- SERVICES -->
 <section id="services" class="reveal">
   <div class="container">
@@ -1091,6 +1211,23 @@ GET  /api/ext/commandes/:id → suivi commande</div>
       <div class="service-card"><div class="service-icon">🏨</div><div class="service-title" data-i18n="svc4_title">Tarifs CHR &amp; Pro</div><div class="service-desc" data-i18n="svc4_desc">Prix négociés.</div></div>
       <div class="service-card"><div class="service-icon">👤</div><div class="service-title" data-i18n="svc5_title">Espace Client</div><div class="service-desc" data-i18n="svc5_desc">Commandes, fidélité, remises.</div></div>
       <div class="service-card"><div class="service-icon">🌿</div><div class="service-title" data-i18n="svc6_title">Qualité contrôlée</div><div class="service-desc" data-i18n="svc6_desc">Sélection quotidienne.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- STORAGE TIPS -->
+<section class="storage-sec reveal" id="conservation">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-tag" data-i18n="stor_tag">🧊 Conservation</span>
+      <h2 class="section-title" data-i18n="stor_title">Conseils de stockage</h2>
+      <p class="section-sub" data-i18n="stor_sub">Gardez vos fruits &amp; légumes frais plus longtemps — sélectionnez un produit</p>
+    </div>
+    <div class="storage-tabs" id="storage-tabs">
+      <!-- rendered by renderStorageTabs() -->
+    </div>
+    <div id="storage-content">
+      <!-- rendered by renderStorageCard() -->
     </div>
   </div>
 </section>
