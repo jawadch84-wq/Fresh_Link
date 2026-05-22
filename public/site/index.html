@@ -754,6 +754,18 @@ const TEXTS = {
     wa_signup_title:"Devenir Partenaire", wa_signup_desc:"Rejoignez notre réseau de partenaires professionnels et accédez aux tarifs exclusifs.",
     wa_join:"Rejoindre le groupe",
     avis_title:"Ce que disent nos partenaires", avis_sub:"Avis vérifiés — clients et fournisseurs",
+    stor_tag:"Conservation",
+    stor_title:"Conseils de stockage",
+    stor_sub:"Gardez vos fruits & légumes frais plus longtemps",
+    rec_badge:"Recette du jour",
+    rec_title:"Une recette par jour",
+    rec_sub:"Des idées fraîches pour cuisiner vos fruits & légumes Empire Fresh",
+    ha_grow:"Culture",
+    ha_harvest:"Récolte",
+    ha_sort:"Tri qualité",
+    ha_pack:"Emballage",
+    ha_deliver:"Livraison",
+    ha_client:"Client",
     ft_links:"Liens rapides", ft_contact:"Contact", ft_legal:"Légal",
     ft_copy:"© 2026 Empire Fresh. Tous droits réservés.", ft_made:"Synchronisé FreshLink ERP ⚡",
   },
@@ -816,6 +828,18 @@ const TEXTS = {
     wa_signup_title:"كن شريكا", wa_signup_desc:"انضم لشبكة شركائنا المهنيين واستفد من الأثمنة الخاصة.",
     wa_join:"انضم للمجموعة",
     avis_title:"ما يقوله شركاؤنا", avis_sub:"آراء موثقة — عملاء وموردون",
+    stor_tag:"التخزين",
+    stor_title:"نصائح الحفظ",
+    stor_sub:"احتفظ بفواكهك وخضروارك طازجة أطول فترة ممكنة",
+    rec_badge:"وصفة اليوم",
+    rec_title:"وصفة في اليوم",
+    rec_sub:"أفكار طازجة لطهي فواكه وخضروات Empire Fresh",
+    ha_grow:"الزراعة",
+    ha_harvest:"الحصاد",
+    ha_sort:"الفرز",
+    ha_pack:"التعبئة",
+    ha_deliver:"التوصيل",
+    ha_client:"العميل",
     ft_links:"روابط سريعة", ft_contact:"التواصل", ft_legal:"قانوني",
     ft_copy:"© 2026 Empire Fresh. جميع الحقوق محفوظة.", ft_made:"مزامن مع FreshLink ERP ⚡",
   },
@@ -878,6 +902,18 @@ const TEXTS = {
     wa_signup_title:"Become a Partner", wa_signup_desc:"Join our professional partner network and access exclusive pricing.",
     wa_join:"Join the group",
     avis_title:"What our partners say", avis_sub:"Verified reviews — clients and suppliers",
+    stor_tag:"Storage",
+    stor_title:"Storage tips",
+    stor_sub:"Keep your fruits & vegetables fresh longer",
+    rec_badge:"Recipe of the day",
+    rec_title:"One recipe per day",
+    rec_sub:"Fresh ideas to cook your Empire Fresh fruits & vegetables",
+    ha_grow:"Farming",
+    ha_harvest:"Harvest",
+    ha_sort:"Sorting",
+    ha_pack:"Packing",
+    ha_deliver:"Delivery",
+    ha_client:"Customer",
     ft_links:"Quick links", ft_contact:"Contact", ft_legal:"Legal",
     ft_copy:"© 2026 Empire Fresh. All rights reserved.", ft_made:"Synced with FreshLink ERP ⚡",
   },
@@ -901,6 +937,7 @@ function setLang(lang){
   document.querySelectorAll("[data-i18n-ph]").forEach(el=>{ el.placeholder=t(el.dataset.i18nPh); });
   document.querySelectorAll("option[data-i18n]").forEach(o=>{ o.textContent=t(o.dataset.i18n); });
   renderZones(); renderStats(); renderProducts(activeCategory);
+  renderStorageTabs(); renderStorageCard(); renderRecipe(); renderRecipeNav();
 }
 </script>
 
@@ -1656,6 +1693,23 @@ GET  /api/ext/commandes/:id → suivi commande</div>
   </div>
 </section>
 
+<!-- RECETTE DU JOUR -->
+<section class="recipe-sec reveal" id="recettes">
+  <div class="container">
+    <div class="section-header">
+      <div class="recipe-day-badge">👨‍🍳 <span data-i18n="rec_badge">Recette du jour</span></div>
+      <h2 class="section-title" data-i18n="rec_title">Une recette par jour</h2>
+      <p class="section-sub" data-i18n="rec_sub">Des idées fraîches pour cuisiner vos fruits &amp; légumes Empire Fresh</p>
+    </div>
+    <div class="recipe-card" id="recipe-card">
+      <!-- rendered by renderRecipe() -->
+    </div>
+    <div class="recipe-nav" id="recipe-nav">
+      <!-- rendered by renderRecipeNav() -->
+    </div>
+  </div>
+</section>
+
 <!-- FOOTER -->
 <footer id="contact">
   <div class="container">
@@ -1678,7 +1732,8 @@ GET  /api/ext/commandes/:id → suivi commande</div>
         <ul class="footer-links">
           <li><a href="#catalogue">Catalogue</a></li>
           <li><a href="#commander">Commander</a></li>
-          <li><a href="#espace-pro">Espace Pro</a></li>
+          <li><a href="#conservation">🧊 Conservation</a></li>
+          <li><a href="#recettes">👨‍🍳 Recettes</a></li>
           <li><a href="#livraison">Zones livraison</a></li>
           <li><a href="#" onclick="openGuide();return false;">📖 Guide FreshLink</a></li>
         </ul>
@@ -2785,6 +2840,214 @@ function syncGalleryAdminUI(){
   renderGalleryAdmin();
 }
 
+// ── STORAGE TIPS DATA ──
+var STORAGE_TIPS = [
+  { id:"tomate", em:"🍅",
+    fr:{ nom:"Tomate", temp:"12–14°C", duree:"5–7 jours", humidite:"85–90%", conseils:["Ne jamais stocker au réfrigérateur — le froid altère la saveur","Conserver à température ambiante, à l'abri du soleil direct","Séparer les tomates mûres des vertes — les mûres accélèrent les autres","Tige vers le haut pour conserver la fraîcheur plus longtemps"] },
+    ar:{ nom:"طماطم", temp:"12-14°م", duree:"5-7 أيام", humidite:"85-90%", conseils:["لا تضعها في الثلاجة — البرودة تفسد طعمها","احفظها في درجة حرارة الغرفة بعيداً عن الشمس","افصل الناضجة عن الخضراء — الناضجة تسرّع نضج الأخرى","الساق لأعلى يحافظ على الطازجية أطول"] },
+    en:{ nom:"Tomato", temp:"12–14°C", duree:"5–7 days", humidite:"85–90%", conseils:["Never refrigerate — cold destroys the flavour","Store at room temp, away from direct sunlight","Separate ripe from unripe — ripe ones speed up others","Stem side up to preserve freshness longer"] }
+  },
+  { id:"carotte", em:"🥕",
+    fr:{ nom:"Carotte", temp:"0–4°C", duree:"3–4 semaines", humidite:"95–100%", conseils:["Retirer les fanes (tiges) avant stockage — elles pompent l'humidité","Conserver dans un sac perforé au réfrigérateur","Ne pas stocker près des pommes ou poires — éthylène les rend amères","Peuvent être stockées dans du sable humide hors frigo"] },
+    ar:{ nom:"جزر", temp:"0-4°م", duree:"3-4 أسابيع", humidite:"95-100%", conseils:["أزل الأوراق قبل التخزين — تمتص الرطوبة","احفظها في كيس مثقوب في الثلاجة","لا تضعها قرب التفاح أو الكمثرى — تصبح مرّة","يمكن تخزينها في رمل رطب خارج الثلاجة"] },
+    en:{ nom:"Carrot", temp:"0–4°C", duree:"3–4 weeks", humidite:"95–100%", conseils:["Remove tops before storage — they draw out moisture","Store in a perforated bag in the fridge","Keep away from apples/pears — ethylene makes them bitter","Can be stored in damp sand outside fridge"] }
+  },
+  { id:"citron", em:"🍋",
+    fr:{ nom:"Citron", temp:"7–10°C", duree:"3–4 semaines", humidite:"85–90%", conseils:["Au réfrigérateur dans un sac hermétique — dure 4 semaines","À température ambiante : 1–2 semaines seulement","Les citrons coupés : filmer et utiliser sous 3 jours","Le jus se congèle très bien en glaçons"] },
+    ar:{ nom:"ليمون", temp:"7-10°م", duree:"3-4 أسابيع", humidite:"85-90%", conseils:["في الثلاجة بكيس محكم الإغلاق — يدوم 4 أسابيع","في درجة حرارة الغرفة: أسبوع إلى أسبوعين فقط","الليمون المقطوع: غطّه واستخدمه خلال 3 أيام","العصير يتجمد جيداً في قالب مكعبات الثلج"] },
+    en:{ nom:"Lemon", temp:"7–10°C", duree:"3–4 weeks", humidite:"85–90%", conseils:["Fridge in a sealed bag — lasts 4 weeks","At room temp: 1–2 weeks only","Cut lemons: wrap and use within 3 days","Juice freezes perfectly in ice cube trays"] }
+  },
+  { id:"pomme", em:"🍎",
+    fr:{ nom:"Pomme", temp:"0–4°C", duree:"4–6 semaines", humidite:"90–95%", conseils:["Stocker séparément des autres fruits — elles dégagent de l'éthylène","Au réfrigérateur dans le bac à légumes","Vérifier régulièrement — une pomme pourrie contamine les autres","Peuvent se conserver jusqu'à 3 mois en cave fraîche"] },
+    ar:{ nom:"تفاحة", temp:"0-4°م", duree:"4-6 أسابيع", humidite:"90-95%", conseils:["خزّنها منفصلة عن الفواكه الأخرى — تطلق غاز الإيثيلين","في الثلاجة في درجة الخضروات","افحصها بانتظام — واحدة فاسدة تفسد الباقي","يمكن الاحتفاظ بها 3 أشهر في مكان بارد"] },
+    en:{ nom:"Apple", temp:"0–4°C", duree:"4–6 weeks", humidite:"90–95%", conseils:["Store separately — they emit ethylene that ripens other fruits","In fridge crisper drawer","Check regularly — one bad apple spoils the bunch","Can last up to 3 months in a cool cellar"] }
+  },
+  { id:"avocat", em:"🥑",
+    fr:{ nom:"Avocat", temp:"Varie", duree:"2–7 jours", humidite:"85–90%", conseils:["Vert et dur : laisser à température ambiante 2–4 jours pour mûrir","Mûr et souple : passer au réfrigérateur jusqu'à 5 jours","Coupé : citronner et filmer pour éviter le noircissement","Avec un noyau dans le bol : ralentit l'oxydation"] },
+    ar:{ nom:"أفوكادو", temp:"متغير", duree:"2-7 أيام", humidite:"85-90%", conseils:["أخضر وصلب: اتركه في درجة حرارة الغرفة 2-4 أيام لينضج","ناضج وطري: ضعه في الثلاجة حتى 5 أيام","مقطوع: ضع عليه ليموناً وغطّه لمنع التحول للسواد","النواة في الوعاء تبطئ الأكسدة"] },
+    en:{ nom:"Avocado", temp:"Varies", duree:"2–7 days", humidite:"85–90%", conseils:["Hard and green: ripen at room temp for 2–4 days","Ripe and soft: refrigerate up to 5 days","Cut: squeeze lemon juice and wrap to prevent browning","Keeping the pit in the bowl slows oxidation"] }
+  },
+  { id:"menthe", em:"🌿",
+    fr:{ nom:"Menthe & Herbes", temp:"2–4°C", duree:"1–2 semaines", humidite:"95%", conseils:["Traiter comme un bouquet de fleurs : tiges dans l'eau au frigo","Ou envelopper dans un linge humide dans un sac","La menthe se congèle très bien entière pour les tisanes","Ne pas laver avant stockage — l'humidité accélère la détérioration"] },
+    ar:{ nom:"نعناع وأعشاب", temp:"2-4°م", duree:"أسبوع إلى أسبوعين", humidite:"95%", conseils:["عاملها كباقة ورد: ضع الأعواد في ماء في الثلاجة","أو لفّها في قماش مبلل داخل كيس","النعناع يتجمد بشكل ممتاز للشاي","لا تغسلها قبل التخزين — الرطوبة تسرّع التلف"] },
+    en:{ nom:"Mint & Herbs", temp:"2–4°C", duree:"1–2 weeks", humidite:"95%", conseils:["Treat like flowers: stems in water in the fridge","Or wrap in a damp cloth inside a bag","Mint freezes perfectly whole for teas","Don't wash before storing — moisture speeds decay"] }
+  },
+  { id:"courgette", em:"🥒",
+    fr:{ nom:"Courgette / Concombre", temp:"8–12°C", duree:"1 semaine", humidite:"90–95%", conseils:["Ne pas stocker au frigo — trop froid pour eux (sous 10°C = dommage)","Idéal dans un endroit frais et sombre","Une fois coupé : filmer et réfrigérer, utiliser sous 3 jours","Loin des tomates et melons — l'éthylène les jaunit"] },
+    ar:{ nom:"كوسة / خيار", temp:"8-12°م", duree:"أسبوع", humidite:"90-95%", conseils:["لا تضعها في الثلاجة — البرودة الشديدة تضرها (أقل من 10°م)","المكان المثالي: بارد ومظلم","بعد القطع: غطّها وضعها في الثلاجة، استخدم خلال 3 أيام","بعيداً عن الطماطم والشمام — الإيثيلين يصفّرها"] },
+    en:{ nom:"Zucchini / Cucumber", temp:"8–12°C", duree:"1 week", humidite:"90–95%", conseils:["Don't refrigerate — too cold for them (below 10°C causes damage)","Best in a cool, dark spot","Once cut: wrap and refrigerate, use within 3 days","Away from tomatoes and melons — ethylene yellows them"] }
+  },
+  { id:"oignon", em:"🧅",
+    fr:{ nom:"Oignon & Ail", temp:"Ambiante", duree:"2–3 mois", humidite:"65–70%", conseils:["Endroit sec, sombre et bien aéré — jamais au réfrigérateur","Ne pas stocker avec les pommes de terre — accélèrent mutuellement la détérioration","Le filet ou panier en osier permet une bonne circulation d'air","Une fois coupé : mettre au frigo et utiliser sous 5 jours"] },
+    ar:{ nom:"بصل وثوم", temp:"حرارة الغرفة", duree:"2-3 أشهر", humidite:"65-70%", conseils:["مكان جاف ومظلم وجيد التهوية — أبداً في الثلاجة","لا تخزّن مع البطاطا — كل منهما يسرّع فساد الآخر","الشبكة أو السلة تسمح بتهوية جيدة","بعد القطع: ثلاجة واستخدم خلال 5 أيام"] },
+    en:{ nom:"Onion & Garlic", temp:"Room temp", duree:"2–3 months", humidite:"65–70%", conseils:["Dry, dark, well-ventilated — never in the fridge","Don't store with potatoes — they hasten each other's decay","A mesh bag or wicker basket allows good airflow","Once cut: fridge and use within 5 days"] }
+  }
+];
+var currentStorageId = "tomate";
+
+function renderStorageTabs(){
+  var lk=currentLang==="ar"?"ar":currentLang==="en"?"en":"fr";
+  var container=document.getElementById("storage-tabs"); if(!container) return;
+  container.innerHTML=STORAGE_TIPS.map(function(item){
+    return '<button class="storage-tab'+(item.id===currentStorageId?" on":"")
+      +'" onclick="showStorageItem(\''+item.id+'\')" title="'+item[lk].nom+'">'
+      +item.em+'</button>';
+  }).join("");
+}
+function showStorageItem(id){
+  currentStorageId=id;
+  renderStorageTabs();
+  renderStorageCard();
+}
+function renderStorageCard(){
+  var lk=currentLang==="ar"?"ar":currentLang==="en"?"en":"fr";
+  var item=STORAGE_TIPS.find(function(x){return x.id===currentStorageId;});
+  if(!item) return;
+  var d=item[lk];
+  var container=document.getElementById("storage-content"); if(!container) return;
+  var tempLbl=lk==="ar"?"درجة الحرارة":lk==="en"?"Temperature":"Température";
+  var durLbl=lk==="ar"?"المدة":lk==="en"?"Duration":"Durée";
+  var humLbl=lk==="ar"?"الرطوبة":lk==="en"?"Humidity":"Humidité";
+  var tipsLbl=lk==="ar"?"نصائح الاحتفاظ":lk==="en"?"Storage tips":"Conseils de conservation";
+  container.innerHTML='<div class="storage-card show">'
+    +'<div style="display:flex;align-items:center;gap:14px;margin-bottom:8px">'
+    +'<span style="font-size:52px">'+item.em+'</span>'
+    +'<div><div style="font-size:22px;font-weight:800;color:var(--gd)">'+d.nom+'</div>'
+    +'<div style="font-size:13px;color:var(--gy)">'+tipsLbl+'</div></div></div>'
+    +'<div class="storage-meta">'
+    +'<div class="storage-meta-item"><span class="storage-meta-val">🌡️ '+d.temp+'</span><span class="storage-meta-lbl">'+tempLbl+'</span></div>'
+    +'<div class="storage-meta-item"><span class="storage-meta-val">⏱️ '+d.duree+'</span><span class="storage-meta-lbl">'+durLbl+'</span></div>'
+    +'<div class="storage-meta-item"><span class="storage-meta-val">💧 '+d.humidite+'</span><span class="storage-meta-lbl">'+humLbl+'</span></div>'
+    +'</div>'
+    +'<div class="storage-tips-list">'
+    +d.conseils.map(function(c){return'<div class="storage-tip">'+c+'</div>';}).join("")
+    +'</div></div>';
+}
+
+// ── RECIPES DATA ──
+var RECIPES = [
+  { emoji:"🥗",
+    fr:{ nom:"Salade Marocaine Fraîche", temps:"15 min", portions:"4 personnes", diff:"Facile",
+      ingredients:["3 tomates mûres, en dés","1 concombre, en rondelles","1/2 oignon rouge, émincé","Coriandre fraîche, ciselée","Jus d'1 citron","3 c.s. huile d'olive","Sel, cumin"],
+      etapes:["Couper les tomates et le concombre en petits dés réguliers","Émincer finement l'oignon rouge","Mélanger tous les légumes dans un saladier","Assaisonner : huile d'olive, jus de citron, sel, cumin","Parsemer de coriandre fraîche et servir immédiatement"] },
+    ar:{ nom:"سلطة مغربية طازجة", temps:"15 دقيقة", portions:"4 أشخاص", diff:"سهل",
+      ingredients:["3 طماطم ناضجة مقطعة","خيارة مقطعة","نصف بصلة حمراء مفرومة","كزبرة طازجة مفرومة","عصير ليمونة","3 ملاعق زيت زيتون","ملح، كمون"],
+      etapes:["قطّع الطماطم والخيار قطعاً صغيرة متساوية","أفرم البصلة الحمراء بشكل ناعم","اخلط كل الخضار في طبق","أضف التوابل: زيت الزيتون والليمون والملح والكمون","رشّ الكزبرة الطازجة وقدّم فوراً"] },
+    en:{ nom:"Fresh Moroccan Salad", temps:"15 min", portions:"4 servings", diff:"Easy",
+      ingredients:["3 ripe tomatoes, diced","1 cucumber, sliced","1/2 red onion, thinly sliced","Fresh coriander, chopped","Juice of 1 lemon","3 tbsp olive oil","Salt, cumin"],
+      etapes:["Dice tomatoes and cucumber into small even pieces","Finely slice the red onion","Toss all vegetables in a salad bowl","Season: olive oil, lemon juice, salt, cumin","Sprinkle fresh coriander and serve immediately"] }
+  },
+  { emoji:"🥘",
+    fr:{ nom:"Tajine de Légumes du Marché", temps:"50 min", portions:"4 personnes", diff:"Moyen",
+      ingredients:["2 pommes de terre, en quartiers","2 carottes, en bâtonnets","1 courgette, en rondelles","1 oignon, émincé","2 tomates, concassées","Ras-el-hanout, gingembre, safran","Coriandre, persil, huile d'olive"],
+      etapes:["Faire revenir l'oignon dans l'huile d'olive","Ajouter les épices et laisser parfumer 1 min","Ajouter les tomates et cuire 5 min","Disposer les légumes en couches dans le tajine","Couvrir et cuire à feu doux 35 min","Garnir de coriandre fraîche"] },
+    ar:{ nom:"طاجين خضروات السوق", temps:"50 دقيقة", portions:"4 أشخاص", diff:"متوسط",
+      ingredients:["2 بطاطا مقطعة أرباعاً","2 جزرة مقطعة عصياً","كوسة مقطعة حلقات","بصلة مفرومة","طماطمتان مقطعتان","رأس الحانوت، زنجبيل، زعفران","كزبرة، بقدونس، زيت زيتون"],
+      etapes:["قلّي البصلة في زيت الزيتون","أضف التوابل واتركها تتعطر دقيقة","أضف الطماطم واطهها 5 دقائق","رتّب الخضار بطبقات في الطاجين","غطّه واطهه على نار هادئة 35 دقيقة","زيّنه بالكزبرة الطازجة"] },
+    en:{ nom:"Market Vegetable Tajine", temps:"50 min", portions:"4 servings", diff:"Medium",
+      ingredients:["2 potatoes, quartered","2 carrots, in sticks","1 zucchini, in rounds","1 onion, sliced","2 tomatoes, crushed","Ras-el-hanout, ginger, saffron","Coriander, parsley, olive oil"],
+      etapes:["Sauté onion in olive oil","Add spices and let them bloom 1 min","Add tomatoes and cook 5 min","Layer vegetables in the tajine","Cover and cook on low heat 35 min","Garnish with fresh coriander"] }
+  },
+  { emoji:"🍹",
+    fr:{ nom:"Smoothie Vert Énergie", temps:"5 min", portions:"2 verres", diff:"Très facile",
+      ingredients:["1 banane mûre","1 poignée d'épinards ou menthe","1 pomme verte","Jus d'1/2 citron","200 ml eau ou lait végétal","1 c.s. miel (optionnel)","Quelques glaçons"],
+      etapes:["Laver et couper tous les fruits","Mettre tous les ingrédients dans le blender","Mixer 45 secondes à pleine puissance","Ajuster la consistance avec de l'eau","Servir immédiatement avec des glaçons"] },
+    ar:{ nom:"عصير أخضر للطاقة", temps:"5 دقائق", portions:"كأسان", diff:"سهل جداً",
+      ingredients:["موزة ناضجة","حفنة سبانخ أو نعناع","تفاحة خضراء","عصير نصف ليمونة","200 مل ماء أو حليب نباتي","ملعقة عسل (اختياري)","بضع مكعبات ثلج"],
+      etapes:["اغسل وقطّع كل الفواكه","ضع كل المكونات في الخلاط","اخلط 45 ثانية بأقصى قوة","اضبط القوام بإضافة ماء","قدّم فوراً مع مكعبات الثلج"] },
+    en:{ nom:"Green Energy Smoothie", temps:"5 min", portions:"2 glasses", diff:"Very easy",
+      ingredients:["1 ripe banana","1 handful spinach or mint","1 green apple","Juice of 1/2 lemon","200 ml water or plant milk","1 tbsp honey (optional)","A few ice cubes"],
+      etapes:["Wash and chop all fruits","Put all ingredients in blender","Blend 45 seconds at full power","Adjust consistency with water","Serve immediately with ice"] }
+  },
+  { emoji:"🥕",
+    fr:{ nom:"Carottes Confites au Cumin", temps:"25 min", portions:"4 personnes", diff:"Facile",
+      ingredients:["6 carottes moyennes","2 c.s. huile d'olive","1 c.c. cumin en poudre","1 c.c. paprika","1/2 c.c. cannelle","Sel, persil frais","Jus d'1/2 citron"],
+      etapes:["Éplucher et couper les carottes en rondelles","Cuire à la vapeur 10 min (al dente)","Dans une poêle : huile, cumin, paprika, 1 min","Ajouter les carottes et faire revenir 5 min","Déglacer avec le jus de citron","Parsemer de persil frais et servir"] },
+    ar:{ nom:"جزر بالكمون", temps:"25 دقيقة", portions:"4 أشخاص", diff:"سهل",
+      ingredients:["6 جزرات متوسطة","2 ملعقة زيت زيتون","ملعقة صغيرة كمون","ملعقة صغيرة فلفل حلو","نصف ملعقة قرفة","ملح، بقدونس طازج","عصير نصف ليمونة"],
+      etapes:["قشّر الجزر وقطّعها حلقات","ابخّرها 10 دقائق (طرية قليلاً)","في مقلاة: زيت، كمون، فلفل حلو، دقيقة","أضف الجزر وقلّبها 5 دقائق","أضف عصير الليمون","رشّ البقدونس الطازج وقدّم"] },
+    en:{ nom:"Cumin-Spiced Carrots", temps:"25 min", portions:"4 servings", diff:"Easy",
+      ingredients:["6 medium carrots","2 tbsp olive oil","1 tsp ground cumin","1 tsp paprika","1/2 tsp cinnamon","Salt, fresh parsley","Juice of 1/2 lemon"],
+      etapes:["Peel and slice carrots into rounds","Steam 10 min until al dente","In a pan: oil, cumin, paprika, 1 min","Add carrots and sauté 5 min","Deglaze with lemon juice","Sprinkle fresh parsley and serve"] }
+  },
+  { emoji:"🍲",
+    fr:{ nom:"Soupe Harira aux Légumes", temps:"45 min", portions:"6 personnes", diff:"Moyen",
+      ingredients:["2 tomates, concassées","1 oignon, haché","100g de lentilles corail","1 botte de coriandre + persil","1 citron","Concentré de tomate, cumin, gingembre","Farine, huile d'olive, vermicelles"],
+      etapes:["Faire revenir l'oignon avec les épices","Ajouter les tomates et le concentré","Verser 1,5L d'eau et les lentilles","Cuire 20 min à feu moyen","Délayer 2 c.s. farine dans eau froide et ajouter","Ajouter vermicelles et herbes fraîches, cuire 5 min","Servir avec citron"] },
+    ar:{ nom:"حريرة بالخضروات", temps:"45 دقيقة", portions:"6 أشخاص", diff:"متوسط",
+      ingredients:["طماطمتان مقطعتان","بصلة مفرومة","100 غ عدس أحمر","باقة كزبرة وبقدونس","ليمونة","معجون طماطم، كمون، زنجبيل","طحين، زيت زيتون، شعيرية"],
+      etapes:["قلّي البصلة مع التوابل","أضف الطماطم والمعجون","أضف 1.5 لتر ماء والعدس","اطهه 20 دقيقة على نار متوسطة","اخلط 2 ملعقة طحين في ماء بارد وأضفه","أضف الشعيرية والأعشاب، اطه 5 دقائق","قدّمه مع الليمون"] },
+    en:{ nom:"Harira Soup with Vegetables", temps:"45 min", portions:"6 servings", diff:"Medium",
+      ingredients:["2 tomatoes, crushed","1 onion, chopped","100g red lentils","1 bunch coriander + parsley","1 lemon","Tomato paste, cumin, ginger","Flour, olive oil, vermicelli"],
+      etapes:["Sauté onion with spices","Add tomatoes and tomato paste","Add 1.5L water and lentils","Cook 20 min on medium heat","Mix 2 tbsp flour in cold water and add","Add vermicelli and fresh herbs, cook 5 min","Serve with lemon wedges"] }
+  },
+  { emoji:"🥗",
+    fr:{ nom:"Salade de Roquette aux Agrumes", temps:"10 min", portions:"4 personnes", diff:"Très facile",
+      ingredients:["2 poignées de roquette ou laitue","2 oranges, en suprêmes","1 avocat, en tranches","Graines de grenade (optionnel)","Vinaigrette : huile d'olive, vinaigre balsamique, miel","Sel, poivre"],
+      etapes:["Laver et sécher la roquette","Peler les oranges et prélever les suprêmes","Trancher l'avocat","Disposer joliment dans le plat","Préparer la vinaigrette et arroser","Ajouter les graines de grenade"] },
+    ar:{ nom:"سلطة الجرجير والحمضيات", temps:"10 دقائق", portions:"4 أشخاص", diff:"سهل جداً",
+      ingredients:["حفنتان جرجير أو خس","برتقالتان مقطعتان","أفوكادو مقطع شرائح","حبوب رمان (اختياري)","صلصة: زيت زيتون، خل بلسمي، عسل","ملح، فلفل"],
+      etapes:["اغسل الجرجير وجففه","قشّر البرتقال وقطّعه","قطّع الأفوكادو شرائح","رتّب المكونات بشكل جميل في الطبق","حضّر الصلصة ورشّها","أضف حبوب الرمان"] },
+    en:{ nom:"Rocket & Citrus Salad", temps:"10 min", portions:"4 servings", diff:"Very easy",
+      ingredients:["2 handfuls rocket or lettuce","2 oranges, segmented","1 avocado, sliced","Pomegranate seeds (optional)","Dressing: olive oil, balsamic, honey","Salt, pepper"],
+      etapes:["Wash and dry the rocket","Peel oranges and segment them","Slice the avocado","Arrange beautifully on the plate","Prepare dressing and drizzle","Add pomegranate seeds"] }
+  },
+  { emoji:"🍌",
+    fr:{ nom:"Banana Bread Marocain", temps:"60 min", portions:"8 tranches", diff:"Facile",
+      ingredients:["3 bananes très mûres","180g farine","90g sucre","60ml huile végétale","2 œufs","1 c.c. bicarbonate","Cannelle, noix de coco râpée (optionnel)"],
+      etapes:["Préchauffer le four à 180°C","Écraser les bananes à la fourchette","Mélanger bananes, sucre, huile, œufs","Incorporer farine, bicarbonate, cannelle","Verser dans un moule graissé","Cuire 50–55 min","Vérifier avec un couteau — doit ressortir propre"] },
+    ar:{ nom:"كيك الموز المغربي", temps:"60 دقيقة", portions:"8 شرائح", diff:"سهل",
+      ingredients:["3 موزات ناضجة جداً","180 غ طحين","90 غ سكر","60 مل زيت نباتي","بيضتان","ملعقة صغيرة بيكربونات","قرفة، جوز الهند المبشور (اختياري)"],
+      etapes:["سخّن الفرن إلى 180°م","اهرس الموز بالشوكة","اخلط الموز والسكر والزيت والبيض","أضف الطحين والبيكربونات والقرفة","اسكب في قالب مدهون","اخبز 50-55 دقيقة","اختبر بسكين — يجب أن يخرج نظيفاً"] },
+    en:{ nom:"Moroccan Banana Bread", temps:"60 min", portions:"8 slices", diff:"Easy",
+      ingredients:["3 very ripe bananas","180g flour","90g sugar","60ml vegetable oil","2 eggs","1 tsp bicarbonate","Cinnamon, shredded coconut (optional)"],
+      etapes:["Preheat oven to 180°C","Mash bananas with a fork","Mix bananas, sugar, oil, eggs","Fold in flour, bicarbonate, cinnamon","Pour into greased tin","Bake 50–55 min","Test with a knife — should come out clean"] }
+  }
+];
+
+var currentRecipeIdx = new Date().getDay(); // 0-6, one recipe per day of week
+
+function renderRecipe(){
+  var lk=currentLang==="ar"?"ar":currentLang==="en"?"en":"fr";
+  var rec=RECIPES[currentRecipeIdx]; if(!rec) return;
+  var d=rec[lk];
+  var days=["Dimanche","Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi"];
+  var daysAr=["الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
+  var daysEn=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+  var dayName=lk==="ar"?daysAr[currentRecipeIdx]:lk==="en"?daysEn[currentRecipeIdx]:days[currentRecipeIdx];
+  var diffLbl=lk==="ar"?"الصعوبة":lk==="en"?"Difficulty":"Difficulté";
+  var ingLbl=lk==="ar"?"المكونات":lk==="en"?"Ingredients":"Ingrédients";
+  var stepsLbl=lk==="ar"?"طريقة التحضير":lk==="en"?"Preparation":"Préparation";
+  var card=document.getElementById("recipe-card"); if(!card) return;
+  card.innerHTML='<div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">'
+    +'<span style="font-size:52px">'+rec.emoji+'</span>'
+    +'<div><div style="font-size:10px;font-weight:700;color:var(--o1);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:4px">'+dayName+'</div>'
+    +'<h3 style="font-size:20px;font-weight:800;color:var(--gd);margin-bottom:0">'+d.nom+'</h3></div></div>'
+    +'<div class="recipe-meta">'
+    +'<div class="recipe-meta-item"><span>⏱️</span><span>'+d.temps+'</span></div>'
+    +'<div class="recipe-meta-item"><span>👥</span><span>'+d.portions+'</span></div>'
+    +'<div class="recipe-meta-item"><span>⭐</span><span>'+d.diff+'</span></div>'
+    +'</div>'
+    +'<div class="recipe-ingredients"><h4>🌿 '+ingLbl+'</h4><div class="recipe-ing-list">'
+    +d.ingredients.map(function(ing){return'<div class="recipe-ing">'+ing+'</div>';}).join("")
+    +'</div></div>'
+    +'<div class="recipe-steps"><h4>👨‍🍳 '+stepsLbl+'</h4>'
+    +d.etapes.map(function(step,i){return'<div class="recipe-step"><div class="recipe-step-num">'+(i+1)+'</div><div class="recipe-step-txt">'+step+'</div></div>';}).join("")
+    +'</div>';
+}
+function renderRecipeNav(){
+  var lk=currentLang==="ar"?"ar":currentLang==="en"?"en":"fr";
+  var nav=document.getElementById("recipe-nav"); if(!nav) return;
+  nav.innerHTML=RECIPES.map(function(r,i){
+    return'<button class="recipe-nav-btn'+(i===currentRecipeIdx?" on":"")
+      +'" onclick="switchRecipe('+i+')" title="'+r[lk].nom+'">'+r.emoji+'</button>';
+  }).join("");
+}
+function switchRecipe(idx){
+  currentRecipeIdx=idx;
+  renderRecipe(); renderRecipeNav();
+}
+
 // ── SCROLL PROGRESS ──
 (function(){
   var bar=document.getElementById("scroll-progress");
@@ -2810,6 +3073,8 @@ document.addEventListener("DOMContentLoaded",function(){
   setLang(currentLang);
   showSkeletons(8);
   loadGalleryState(); renderGallery();
+  renderStorageTabs(); renderStorageCard();
+  currentRecipeIdx=new Date().getDay(); renderRecipe(); renderRecipeNav();
   sb=initSupabase(); syncFromSupabase(); loadCompanyContacts();
   // Auto-refresh catalogue every 5 minutes
   setInterval(function(){ syncFromSupabase(); }, 5*60*1000);
@@ -3025,6 +3290,7 @@ window.orderWhatsApp=orderWhatsApp; window.joinWaSignup=joinWaSignup;
 function openGuide(){ var m=document.getElementById("guide-modal"); if(m){m.style.display="flex";document.body.style.overflow="hidden";} }
 function closeGuide(){ var m=document.getElementById("guide-modal"); if(m){m.style.display="none";document.body.style.overflow="";} }
 window.openGuide=openGuide; window.closeGuide=closeGuide;
+window.showStorageItem=showStorageItem; window.switchRecipe=switchRecipe;
 window.filterAvis=filterAvis; window.setStars=setStars; window.submitReview=submitReview;
 window.toggleGallerySection=toggleGallerySection; window.addGalleryItem=addGalleryItem; window.removeGalleryItem=removeGalleryItem; window.closeLightbox=closeLightbox;
 window.footerSecretClick=footerSecretClick; window.checkAdminPin=checkAdminPin;
